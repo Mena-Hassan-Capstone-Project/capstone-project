@@ -5,6 +5,40 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: #FDE6E6;
+  font-family: 'Poppins', sans-serif;
+}
+
+h1{
+  font-size: 55px;
+}
+
+h2{
+  font-size: 25px;
+}
+
+.input{
+  background-color: #AC9494;
+  color: white;
+  font-family: 'Poppins', sans-serif;
+  font-size: 20px;
+  border-radius: 10px;
+  border: none;
+}
+::-webkit-input-placeholder {
+  color: white;
+}
+
+.login-btn{
+  color: white;
+  background-color: #BE6A6A;
+  width: 130px;
+  height: 50px; 
+  border-radius: 50px;
+  font-size: 20px;
+  font-family: 'Poppins', sans-serif;
+  border: none;
+  cursor: pointer;
 }
 
 code {

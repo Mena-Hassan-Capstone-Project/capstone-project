@@ -1,13 +1,16 @@
 import * as React from "react"
 import "./Login.css"
 
-export default function Login({createParser}) {
+export default function Login({createLoginParser}) {
   return (
     <div className="login" id="login">
-        <p>Login</p>
-        <input id = "email" type="text" placeholder="email" />
-        <input id = "password" type="text" placeholder="password" />
-        <button onClick = {() => createParser()}>
+        <h1>Login</h1>
+        <h2>Log in and start connecting!</h2>
+        <input className = "input login-input" id = "email" type="email" placeholder="Email" />
+        <br />
+        <input className = "input login-input" id = "password" type="text" placeholder="Password" />
+        <br />
+        <button className = "login-btn" onClick = {() => createLoginParser()}>
             Log In
         </button>
     </div> 
