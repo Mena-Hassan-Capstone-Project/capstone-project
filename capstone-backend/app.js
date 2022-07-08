@@ -6,7 +6,6 @@ const app = express()
 app.use(bodyParser.json())
 app.use(morgan('tiny'))
 var cors = require('cors')
-const { User } = require('parse/node')
 
 app.use(cors())
 
@@ -18,7 +17,7 @@ app.post('/login', async(req, res) => {
 
     try{
         let user = await Parse.User.logIn(infoUser.email, infoUser.password)
-        res.send({user : user, loginMessage: "User logged in!", RegisterMessage: '', typeStatus: "success",  infoUser: infoUser});
+        res.send({userInfo : user, loginMessage: "User logged in!", RegisterMessage: '', typeStatus: "success",  infoUser: infoUser});
       } catch (error){
         res.send({loginMessage: error.message, RegisterMessage: '', typeStatus: "danger",  infoUser: infoUser});
       }
@@ -56,14 +55,47 @@ app.post('/verify', async(req, res) => {
             currentUser.set("university", infoUser.university)
             currentUser.set("DOB", infoUser.dob)
             await currentUser.save()
-            res.send({loginMessage: "User verified!", RegisterMessage: '', typeStatus: "success",  infoUser: infoUser});
+            res.send({userInfo: currentUser, loginMessage: "User verified!", RegisterMessage: '', typeStatus: "success",  infoUser: infoUser});
         } else {
-            res.send({loginMessage: "Can't get current user", RegisterMessage: '', typeStatus: "success",  infoUser: infoUser});
+            res.send({loginMessage: "Can't get current user", RegisterMessage: '', typeStatus: "danger",  infoUser: infoUser});
         }
       } catch (error){
         res.send({loginMessage: error.message, RegisterMessage: '', typeStatus: "danger",  infoUser: infoUser});
       }
 })
 
+app.post('/user/basic', async(req, res) => {
+    Parse.User.enableUnsafeCurrentUser()
+    let infoUser = req.body
 
+    try{
+        let currentUser = Parse.User.current();
+        console.log("hello")
+        if (currentUser) {
+            console.log("photo name", infoUser.profile_photo)
+            if(infoUser.year != ""){
+                currentUser.set("grad_year", infoUser.year)
+            }
+            if(infoUser.major != ""){
+                currentUser.set("major", infoUser.major)
+            }
+            if(infoUser.hometown != ""){
+                currentUser.set("hometown", infoUser.hometown)
+            }
+            if(infoUser.profile_photo != ""){
+                console.log("profile_pic", {"name" : infoUser.profile_photo})
+                currentUser.set("profile_pic", {"name" : infoUser.profile_photo})
+            }
+            else{
+                console.log("no profile photo")
+            }
+            await currentUser.save()
+            res.send({userInfo: currentUser, loginMessage: "User basic info saved!", RegisterMessage: '', typeStatus: "success",  infoUser: infoUser});
+        } else {
+            res.send({userInfo: "", loginMessage: "Can't get current user", RegisterMessage: '', typeStatus: "danger",  infoUser: infoUser});
+        }
+      } catch (error){
+        res.send({loginMessage: error.message, RegisterMessage: '', typeStatus: "danger",  infoUser: infoUser});
+      }
+})
 module.exports = app;

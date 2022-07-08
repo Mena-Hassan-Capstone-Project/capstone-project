@@ -1,0 +1,28 @@
+.row {
+  display: flex;
+  padding-top: 50px;
+}
+
+/* Create two equal columns that sits next to each other */
+.column {
+  flex: 75%;
+  height: 300px; /* Should be removed. Only for demonstration */
+}
+
+.basic-input{
+  height: 50px;
+  width: 350px;
+  margin-top: 25px;
+}
+
+.active{
+  color: #A74B4B;
+}
+
+.menu-item{
+  cursor: pointer;
+}
+
+.user-info{
+  font-size: 25px;
+}

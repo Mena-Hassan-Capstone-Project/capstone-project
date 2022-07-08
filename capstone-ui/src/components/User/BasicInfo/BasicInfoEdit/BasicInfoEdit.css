@@ -1,0 +1,16 @@
+.row {
+    display: flex;
+  }
+  
+  /* Create two equal columns that sits next to each other */
+  .column {
+    flex: 75%;
+    padding: 10px;
+    height: 300px; /* Should be removed. Only for demonstration */
+  }
+
+  .basic-input{
+    height: 50px;
+    width: 350px;
+    margin-top: 25px;
+}
