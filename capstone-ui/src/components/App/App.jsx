@@ -18,12 +18,49 @@ export default function App() {
 
   const PORT = '3001'
 
+  const goToBasic = () => {
+    navigate('/user/basic')
+  }
+
+  const goToEditInfo = () => {
+    navigate('/user/basic/edit')
+  }
+
+  const goToInterests = () => {
+    navigate('/user/interests')
+  }
+
+  const goToMedia = () => {
+    navigate('/user/media')
+  }
+
+  const logOut = () => {
+    axios.post(`http://localhost:${PORT}/logout`, {
+    })
+    .then(function(response){
+      console.log(response)
+      setUserInfo("")
+      navigate('/login')
+    })
+    .catch(function(err){
+      console.log(err)
+    })
+  }
+
   const saveBasicInfo = () => {
+    var tags = []
+    if(userInfo.tags){
+      tags = userInfo.tags
+    }
+    console.log("tags", tags)
+    if(tags.indexOf(document.getElementById('tags').value) == -1){
+      tags.push(document.getElementById('tags').value)
+    }
     axios.post(`http://localhost:${PORT}/user/basic`, {
       year: document.getElementById('year').value,
       major: document.getElementById('major').value,
       hometown: document.getElementById('hometown').value,
-      profile_photo : ""
+      tags: tags,
     })
     .then(function(response){
       console.log("Edited data:", response)
@@ -87,7 +124,7 @@ export default function App() {
   return (
     <div className="App">
       <main>
-      <Navbar userInfo = {userInfo}/>
+      <Navbar userInfo = {userInfo} logOut = {logOut}/>
       <Routes>
         <Route 
         path = "/login"
@@ -103,19 +140,19 @@ export default function App() {
         />
         <Route 
         path = "/user/basic"
-        element = {<BasicInfo userInfo = {userInfo}></BasicInfo>}
+        element = {<BasicInfo userInfo = {userInfo} goToInterests={goToInterests} goToMedia={goToMedia} goToEditInfo={goToEditInfo}></BasicInfo>}
         />
         <Route 
         path = "/user/basic/edit"
-        element = {<BasicInfoEdit userInfo = {userInfo} saveBasicInfo={saveBasicInfo}></BasicInfoEdit>}
+        element = {<BasicInfoEdit userInfo = {userInfo} saveBasicInfo={saveBasicInfo} setUserInfo = {setUserInfo}></BasicInfoEdit>}
         />
         <Route 
         path = "/user/interests"
-        element = {<Interests></Interests>}
+        element = {<Interests userInfo = {userInfo} goToBasic={goToBasic} goToMedia={goToMedia}></Interests>}
         />
         <Route 
         path = "/user/media"
-        element = {<Media></Media>}
+        element = {<Media userInfo = {userInfo} goToBasic={goToBasic} goToInterests={goToInterests}></Media>}
         />
       </Routes>
       </main>

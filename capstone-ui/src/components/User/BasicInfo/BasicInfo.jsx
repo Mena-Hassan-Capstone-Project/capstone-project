@@ -1,26 +1,13 @@
 import * as React from "react"
 import "./BasicInfo.css"
-import {useNavigate} from 'react-router-dom'
 
-export default function BasicInfo({userInfo}) {
-  const navigate = useNavigate();
-
-  const goToInterests = () => {
-    navigate('/user/interests')
-  }
-
-  const goToMedia = () => {
-    navigate('/user/media')
-  }
-
-  const goToEditInfo = () => {
-    navigate('/user/basic/edit')
-  }
+export default function BasicInfo({userInfo, goToInterests, goToMedia, goToEditInfo}) {
 
   return (
     <div className="basicInfo" id="basicInfo">
         <div className="row">
         <div className="column">
+        <img src={userInfo.profile_photo} alt="" className="profile-img"/>
             <h2>{userInfo.preferredName}</h2>
             <div className="user-info">
               <p className="menu-item active">Basic Info</p>
@@ -34,6 +21,11 @@ export default function BasicInfo({userInfo}) {
             <p><b>Major: </b>{userInfo.major}</p>
             <p><b>Hometown: </b>{userInfo.hometown}</p>
             <p><b>Tags: </b></p>
+            {userInfo.tags.map((tag, index) => (
+              <div key={index} className="tag-item">
+               <p className="tag-text">{tag}</p>
+              </div>
+            ))}
           </div>
           <button className = "login-btn" onClick = {goToEditInfo}>
             Edit

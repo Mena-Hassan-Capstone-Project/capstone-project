@@ -3,7 +3,9 @@ const express = require('express')
 const morgan = require('morgan')
 const bodyParser = require('body-parser')
 const app = express()
-app.use(bodyParser.json())
+app.use(bodyParser.json({limit: '50mb'}));
+app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
+app.use(express.json());
 app.use(morgan('tiny'))
 var cors = require('cors')
 
@@ -20,6 +22,16 @@ app.post('/login', async(req, res) => {
         res.send({userInfo : user, loginMessage: "User logged in!", RegisterMessage: '', typeStatus: "success",  infoUser: infoUser});
       } catch (error){
         res.send({loginMessage: error.message, RegisterMessage: '', typeStatus: "danger",  infoUser: infoUser});
+      }
+})
+
+app.post('/logout', async(req, res) => {
+
+    try{
+        await Parse.User.logOut()
+        res.send({logoutMessage: "User logged out!", RegisterMessage: '', typeStatus: "success"});
+      } catch (error){
+        res.send({logoutMessage: error.message, RegisterMessage: '', typeStatus: "danger"});
       }
 })
 
@@ -70,24 +82,21 @@ app.post('/user/basic', async(req, res) => {
 
     try{
         let currentUser = Parse.User.current();
-        console.log("hello")
         if (currentUser) {
-            console.log("photo name", infoUser.profile_photo)
-            if(infoUser.year != ""){
+            if(infoUser.year && infoUser.year != ""){
                 currentUser.set("grad_year", infoUser.year)
             }
-            if(infoUser.major != ""){
+            if(infoUser.major && infoUser.major != ""){
                 currentUser.set("major", infoUser.major)
             }
-            if(infoUser.hometown != ""){
+            if(infoUser.hometown && infoUser.hometown != ""){
                 currentUser.set("hometown", infoUser.hometown)
             }
-            if(infoUser.profile_photo != ""){
-                console.log("profile_pic", {"name" : infoUser.profile_photo})
-                currentUser.set("profile_pic", {"name" : infoUser.profile_photo})
+            if(infoUser.profile_photo && infoUser.profile_photo != ""){
+                currentUser.set("profile_photo", infoUser.profile_photo)
             }
-            else{
-                console.log("no profile photo")
+            if(infoUser.tags && infoUser.tags != ""){
+                currentUser.set("tags", infoUser.tags)
             }
             await currentUser.save()
             res.send({userInfo: currentUser, loginMessage: "User basic info saved!", RegisterMessage: '', typeStatus: "success",  infoUser: infoUser});

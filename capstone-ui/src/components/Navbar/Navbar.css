@@ -5,6 +5,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
+    width: 100%;
 }
 
 .navbar .content {
@@ -18,4 +19,12 @@
 .welcome-navbar{
     padding-left: 25px;
     font-size: 20px;
+    float: left;
+}
+
+.stick-to-right {
+    width: 100%;
+    float: right;
+    display: block;
+    margin-left: 350px;
 }

@@ -14,3 +14,37 @@
     width: 350px;
     margin-top: 25px;
 }
+
+.tag-item{
+  background-color: #A74B4B;
+  color: white;
+  width: 120px;
+  align-items: center;
+  border-radius: 10px;
+  display: inline-block;
+  margin-left: 5px;
+  margin-right: 5px;
+  font-size: 20px;
+  padding: 5px;
+}
+
+.tag-text{
+  display: inline;
+}
+.remove-tag{
+  display: inline;
+  cursor: pointer;
+}
+
+.tags-dropdown{
+  border-radius: 10px;
+  padding: 3px;
+  margin-left: 10px;
+  font-size: 16px;
+  border: #a3a3a3;
+}
+
+.add-tag{
+  font-size: 16px;
+  font-family: 'Poppins', sans-serif;
+}

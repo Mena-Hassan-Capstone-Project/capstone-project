@@ -4,8 +4,8 @@ import ImageUploading from 'react-images-uploading';
 import axios from "axios"
 
 
-export default function ProfilePhoto() {
-    const [images, setImages] = React.useState([]);
+export default function ProfilePhoto({imageList}) {
+    const [images, setImages] = React.useState(imageList);
     const maxNumber = 1;
 
     const onChange = (imageList, addUpdateIndex) => {
@@ -17,10 +17,10 @@ export default function ProfilePhoto() {
     const PORT = '3001'
 
     const saveProfilePic = () => {
-      var profile_file = images[0].file
+      var profile_img = images[0]
       console.log("Profile image:", images[0])
       axios.post(`http://localhost:${PORT}/user/basic`, {
-        profile_photo: profile_file.name,
+        profile_photo: profile_img.data_url,
       })
       .then(function(response){
         console.log("Profile Response:", response)

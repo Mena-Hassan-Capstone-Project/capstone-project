@@ -3,13 +3,14 @@ import "./BasicInfoEdit.css"
 import ProfilePhoto from "../../ProfilePhoto/ProfilePhoto"
 
 
-export default function BasicInfoEdit({userInfo, saveBasicInfo}) {
+export default function BasicInfoEdit({userInfo, saveBasicInfo, setUserInfo}) {
+  console.log(userInfo.tags)
 
   return (
     <div className="basicInfoEdit" id="basicInfoEdit">
         <div className="row">
         <div className="column">
-        <ProfilePhoto></ProfilePhoto>
+        <ProfilePhoto imageList={[{"data_url" : userInfo.profile_photo}]}></ProfilePhoto>
             <h2>{userInfo.preferredName}</h2>
             <div className="user-info">
               <p className="menu-item active">Basic Info</p>
@@ -24,6 +25,33 @@ export default function BasicInfoEdit({userInfo, saveBasicInfo}) {
             <br />
             <input className = "input basic-input" id = "hometown" type="text" placeholder="Hometown" />
             <p className="user-info"><b>Tags: </b></p>
+            <div>
+              <label className = "add-tag" for = "tags">Add Tag: </label>
+              <select name="tags" id="tags" className="tags-dropdown">
+                <option value="Gapper">Gapper</option>
+                <option value="FGLI">FGLI</option>
+                <option value="Athlete">Athlete</option>
+              </select>
+            </div>
+            <br />
+            {
+              userInfo.tags && userInfo.tags.length != 0 ?
+              userInfo.tags.map((tag, index) => (
+              <div key={index} className="tag-item">
+               <p className="tag-text">{tag}</p>
+               <p className="remove-tag" onClick={
+                () => {
+                  console.log("tags", userInfo.tags)
+                  var newTags = userInfo.tags
+                  newTags.splice(index, 1)
+                  console.log(newTags)
+                  setUserInfo({...userInfo, tags:newTags})
+                }
+                }> x</p>
+              </div>
+            ))
+            : null
+            }
             <br />
             <button className = "login-btn" onClick = {() => saveBasicInfo()}>
             Save
