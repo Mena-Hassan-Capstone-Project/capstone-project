@@ -4,9 +4,9 @@ import ImageUploading from 'react-images-uploading';
 import axios from "axios"
 
 
-export default function ProfilePhoto({imageList}) {
+export default function ProfilePhoto({imageList, maxImages}) {
     const [images, setImages] = React.useState(imageList);
-    const maxNumber = 1;
+    const maxNumber = {maxImages};
 
     const onChange = (imageList, addUpdateIndex) => {
         // data for submit

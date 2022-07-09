@@ -1,9 +1,9 @@
 import * as React from "react"
 import "./Media.css"
-import ProfilePhoto from "../ProfilePhoto/ProfilePhoto"
 
 
-export default function Media({userInfo, goToBasic, goToInterests}) {
+export default function Media({userInfo, goToBasic, goToInterests, goToEditMedia}) {
+  console.log("userInfo media: ", userInfo.media)
   return (
     <div className="media" id="media">
         <div className="row">
@@ -17,9 +17,16 @@ export default function Media({userInfo, goToBasic, goToInterests}) {
             </div>
         </div>
         <div className="column col-2" >
-          Media
+            {userInfo.media.map((pic, index) => (
+              <div key={index} className="media-item">
+               <img src={pic.data_url} alt="" className="media-img"/>
+              </div>
+            ))}     
+      <button className = "login-btn" onClick = {goToEditMedia}>
+            Edit
+        </button>
         </div>
-        </div>
+        </div>  
     </div> 
   )
 }

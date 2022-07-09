@@ -98,6 +98,10 @@ app.post('/user/basic', async(req, res) => {
             if(infoUser.tags && infoUser.tags != ""){
                 currentUser.set("tags", infoUser.tags)
             }
+            if(infoUser.media){
+                let img_data = infoUser.media.map(image => image.data_url);
+                currentUser.set("media", img_data)
+            }
             await currentUser.save()
             res.send({userInfo: currentUser, loginMessage: "User basic info saved!", RegisterMessage: '', typeStatus: "success",  infoUser: infoUser});
         } else {

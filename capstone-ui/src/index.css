@@ -37,6 +37,8 @@ h2{
   font-family: 'Poppins', sans-serif;
   border: none;
   cursor: pointer;
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
 
 code {

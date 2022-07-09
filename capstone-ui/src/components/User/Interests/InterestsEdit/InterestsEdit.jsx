@@ -1,8 +1,8 @@
 import * as React from "react"
-import "./Interests.css"
+import "./InterestsEdit.css"
 
 
-export default function Interests({userInfo, goToBasic, goToMedia, gotToEditInterests}) {
+export default function InterestsEdit({userInfo, goToBasic, goToMedia, saveInterests}) {
   return (
     <div className="interests" id="interests">
         <div className="row">
@@ -13,7 +13,7 @@ export default function Interests({userInfo, goToBasic, goToMedia, gotToEditInte
               <p onClick = {goToBasic} className="menu-item">Basic Info</p>
               <p className="menu-item active">Interests</p>
               <p onClick = {goToMedia} className="menu-item">Media</p>
-            </div>
+            </div> 
         </div>
         <div className="column col-2" >
           <p className="interests-title">Movies:</p>
@@ -21,9 +21,9 @@ export default function Interests({userInfo, goToBasic, goToMedia, gotToEditInte
           <p className="interests-title">Music:</p>
           <p className="interests-title">Books:</p>
           <p className="interests-title">Hobbies:</p>
-          <button className = "login-btn" onClick = {gotToEditInterests}>
-            Edit
-        </button>
+          <button className = "login-btn" onClick = {() => saveInterests()}>
+            Save
+          </button>
         </div>
         </div>
     </div> 

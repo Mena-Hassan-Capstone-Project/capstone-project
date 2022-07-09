@@ -11,6 +11,8 @@ import BasicInfo from "../User/BasicInfo/BasicInfo";
 import BasicInfoEdit from "../User/BasicInfo/BasicInfoEdit/BasicInfoEdit";
 import Interests from "../User/Interests/Interests";
 import Media from "../User/Media/Media";
+import InterestsEdit from "../User/Interests/InterestsEdit/InterestsEdit";
+import MediaEdit from "../User/Media/MediaEdit/MediaEdit";
 
 export default function App() {
   const navigate = useNavigate();
@@ -24,6 +26,14 @@ export default function App() {
 
   const goToEditInfo = () => {
     navigate('/user/basic/edit')
+  }
+
+  const goToEditMedia = () => {
+    navigate('/user/media/edit')
+  }
+
+  const goToEditInterests = () => {
+    navigate('/user/interests/edit')
   }
 
   const goToInterests = () => {
@@ -45,6 +55,10 @@ export default function App() {
     .catch(function(err){
       console.log(err)
     })
+  }
+
+  const saveInterests = () => {
+    navigate('/user/interests')
   }
 
   const saveBasicInfo = () => {
@@ -148,11 +162,19 @@ export default function App() {
         />
         <Route 
         path = "/user/interests"
-        element = {<Interests userInfo = {userInfo} goToBasic={goToBasic} goToMedia={goToMedia}></Interests>}
+        element = {<Interests userInfo = {userInfo} goToBasic={goToBasic} goToMedia={goToMedia} gotToEditInterests={goToEditInterests}></Interests>}
+        />
+        <Route 
+        path = "/user/interests/edit"
+        element = {<InterestsEdit userInfo = {userInfo} goToBasic={goToBasic} goToMedia={goToMedia} saveInterests={saveInterests}></InterestsEdit>}
         />
         <Route 
         path = "/user/media"
-        element = {<Media userInfo = {userInfo} goToBasic={goToBasic} goToInterests={goToInterests}></Media>}
+        element = {<Media userInfo = {userInfo} goToBasic={goToBasic} goToInterests={goToInterests} goToEditMedia ={goToEditMedia}></Media>}
+        />
+        <Route 
+        path = "/user/media/edit"
+        element = {<MediaEdit userInfo = {userInfo} goToBasic={goToBasic} goToInterests={goToInterests} imageList={userInfo.media} maxImages = {10} setUserInfo={setUserInfo}></MediaEdit>}
         />
       </Routes>
       </main>

@@ -1,0 +1,18 @@
+.media-btn{
+    color: white;
+    background-color: #BE6A6A;
+    max-width: 185px;
+    height: 45px; 
+    border-radius: 50px;
+    font-size: 17px;
+    font-family: 'Poppins', sans-serif;
+    border: none;
+    cursor: pointer;
+    margin: 5px;
+    margin-bottom: 30px;
+}
+
+.media-img{
+    width: 150px;
+    border-radius: 10px;
+}
