@@ -22,6 +22,8 @@ export default function App() {
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState("")
 
+  const [movie, setMovie] = useState("")
+
   const PORT = '3001'
 
   async function getResults(PAGE_URL){
@@ -34,12 +36,14 @@ export default function App() {
 const getSearch = () => {
   var query = document.getElementById('enter-movie').value
   if(query == ""){
-    setUserInfo({...userInfo, interests : {}});
+    setMovie("")
+    //setUserInfo({...userInfo, interests : {}});
   }
   getResults(SEARCH_URL + query)
   .then(function(response){
     console.log(response)
-    setUserInfo({...userInfo, interests : {movies : response}})
+    setMovie(response[0])
+    //setUserInfo({...userInfo, interests : {movies : movies}})
     console.log("userInfo", userInfo)
   })
 }
@@ -68,6 +72,14 @@ const getSearch = () => {
     navigate('/user/media')
   }
 
+  function getMoviesFromUser() {
+    axios.get(`http://localhost:${PORT}/user/interests`)
+    .then(resp => {
+      console.log(resp.data);
+      setUserInfo({...userInfo, interests : {movies : resp.data}})
+    });
+  }
+
   const logOut = () => {
     axios.post(`http://localhost:${PORT}/logout`, {
     })
@@ -82,18 +94,20 @@ const getSearch = () => {
   }
 
   const saveInterests = () => {
-    var movies = []
+    /*var moviesArr = [movie]
     if(userInfo.interests.movies){
-      movies = userInfo.interests.movies
-    }
+      moviesArr = userInfo.interests.movies
+      moviesArr.push(movie)
+    }*/
     axios.post(`http://localhost:${PORT}/user/interests`, {
       interests : {
-        movies : movies
+        movie : movie
       }
     })
     .then(function(response){
       console.log("Edited data:", response)
       //setUserInfo(response.data.userInfo)
+      getMoviesFromUser()
       navigate('/user/interests')
     })
     .catch(function(err){
@@ -207,7 +221,7 @@ const getSearch = () => {
         />
         <Route 
         path = "/user/interests/edit"
-        element = {<InterestsEdit userInfo = {userInfo} goToBasic={goToBasic} goToMedia={goToMedia} saveInterests={saveInterests} getSearch={getSearch}></InterestsEdit>}
+        element = {<InterestsEdit userInfo = {userInfo} goToBasic={goToBasic} goToMedia={goToMedia} saveInterests={saveInterests} getSearch={getSearch} movie= {movie}></InterestsEdit>}
         />
         <Route 
         path = "/user/media"

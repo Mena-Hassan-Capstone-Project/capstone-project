@@ -8,6 +8,11 @@
     margin-right: 110px;
 }
 
+.movie-input{
+    margin-left: 110px;
+    margin-right: 110px;
+}
+
 .hidden{
     visibility: hidden;
 }

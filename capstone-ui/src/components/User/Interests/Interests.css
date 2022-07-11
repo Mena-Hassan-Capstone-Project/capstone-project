@@ -1,3 +1,21 @@
 .interests-title{
     font-size: 20px;
 }
+
+.movie-item{
+    background-color: #A74B4B;
+    color: white;
+    align-items: center;
+    border-radius: 10px;
+    display: inline-block;
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-bottom: 20px;
+    padding: 5px;
+    max-height: 50px;
+  }
+  
+  .movie-text{
+    font-size: 18px;
+    display: inline;
+  }

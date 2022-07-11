@@ -76,6 +76,22 @@ app.post('/verify', async(req, res) => {
       }
 })
 
+app.get('/user/interests', async(req, res) => {
+    Parse.User.enableUnsafeCurrentUser()
+    let currentUser = Parse.User.current();
+    if(currentUser){
+        const Movie = Parse.Object.extend("Movie");
+        const query = new Parse.Query(Movie);
+        query.equalTo("User", currentUser);
+        // comments now contains the comments for myPost
+        const users = await query.find();
+        res.send(users);
+    }
+    else{
+        res.send({loginMessage: "Can't get current user", RegisterMessage: '', typeStatus: "danger"});
+    }
+  });
+
 app.post('/user/interests', async(req, res) => {
     Parse.User.enableUnsafeCurrentUser()
     let infoInterests = req.body
@@ -86,10 +102,11 @@ app.post('/user/interests', async(req, res) => {
 
         let currentUser = Parse.User.current();
         if (currentUser) {
-            if(infoInterests.interests.movies){
-                movie.set("title", infoInterests.interests.movies[0].title)
-                movie.set("api_id", infoInterests.interests.movies[0].id)
-                movie.set("genres", infoInterests.interests.movies[0].genre_ids)
+            if(infoInterests.interests.movie){
+                console.log("movie interests", infoInterests.interests.movie)
+                movie.set("title", infoInterests.interests.movie.title)
+                movie.set("api_id", infoInterests.interests.movie.id)
+                movie.set("genres", infoInterests.interests.movie.genre_ids)
                 movie.set("user", currentUser.objectId)
                 let usersRelation = movie.relation('User');
                 usersRelation.add(currentUser)
