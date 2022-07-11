@@ -17,11 +17,15 @@ export default function Media({userInfo, goToBasic, goToInterests, goToEditMedia
             </div>
         </div>
         <div className="column col-2" >
-            {userInfo.media.map((pic, index) => (
+            {
+              userInfo.media ?
+            userInfo.media.map((pic, index) => (
               <div key={index} className="media-item">
                <img src={pic.data_url} alt="" className="media-img"/>
               </div>
-            ))}     
+            ))
+            : null
+            }     
       <button className = "login-btn" onClick = {goToEditMedia}>
             Edit
         </button>

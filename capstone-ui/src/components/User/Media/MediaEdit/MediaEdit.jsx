@@ -21,6 +21,7 @@ export default function MediaEdit({userInfo, goToBasic, goToInterests, imageList
 
     const saveMedia = () => {
       console.log("images len:", images.length)
+      console.log("images", images)
       axios.post(`http://localhost:${PORT}/user/basic`, {
         media: images,
       })

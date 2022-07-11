@@ -1,0 +1,13 @@
+.col-2{
+    justify-content: center;
+    align-items: center;
+}
+
+.search-select{
+    margin-left: 110px;
+    margin-right: 110px;
+}
+
+.hidden{
+    visibility: hidden;
+}

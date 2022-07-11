@@ -6,7 +6,6 @@
 /* Create two equal columns that sits next to each other */
 .column {
   flex: 75%;
-  height: 300px; /* Should be removed. Only for demonstration */
 }
 
 .basic-input{

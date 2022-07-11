@@ -15,10 +15,34 @@ import InterestsEdit from "../User/Interests/InterestsEdit/InterestsEdit";
 import MediaEdit from "../User/Media/MediaEdit/MediaEdit";
 
 export default function App() {
+  const API_KEY = "658568773162c3aaffcb3981d4f5587b"
+  const BASE_URL = "https://api.themoviedb.org/3"
+  const SEARCH_URL = BASE_URL + `/search/movie?api_key=${API_KEY}&query=`
+
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState("")
 
   const PORT = '3001'
+
+  async function getResults(PAGE_URL){
+    //fetch results for movies on page
+    const response = await fetch(PAGE_URL)
+    const result = await response.json()
+    return result.results
+}
+
+const getSearch = () => {
+  var query = document.getElementById('enter-movie').value
+  if(query == ""){
+    setUserInfo({...userInfo, interests : {}});
+  }
+  getResults(SEARCH_URL + query)
+  .then(function(response){
+    console.log(response)
+    setUserInfo({...userInfo, interests : {movies : response}})
+    console.log("userInfo", userInfo)
+  })
+}
 
   const goToBasic = () => {
     navigate('/user/basic')
@@ -58,7 +82,23 @@ export default function App() {
   }
 
   const saveInterests = () => {
-    navigate('/user/interests')
+    var movies = []
+    if(userInfo.interests.movies){
+      movies = userInfo.interests.movies
+    }
+    axios.post(`http://localhost:${PORT}/user/interests`, {
+      interests : {
+        movies : movies
+      }
+    })
+    .then(function(response){
+      console.log("Edited data:", response)
+      //setUserInfo(response.data.userInfo)
+      navigate('/user/interests')
+    })
+    .catch(function(err){
+      console.log(err)
+    })
   }
 
   const saveBasicInfo = () => {
@@ -70,6 +110,7 @@ export default function App() {
     if(tags.indexOf(document.getElementById('tags').value) == -1){
       tags.push(document.getElementById('tags').value)
     }
+
     axios.post(`http://localhost:${PORT}/user/basic`, {
       year: document.getElementById('year').value,
       major: document.getElementById('major').value,
@@ -166,7 +207,7 @@ export default function App() {
         />
         <Route 
         path = "/user/interests/edit"
-        element = {<InterestsEdit userInfo = {userInfo} goToBasic={goToBasic} goToMedia={goToMedia} saveInterests={saveInterests}></InterestsEdit>}
+        element = {<InterestsEdit userInfo = {userInfo} goToBasic={goToBasic} goToMedia={goToMedia} saveInterests={saveInterests} getSearch={getSearch}></InterestsEdit>}
         />
         <Route 
         path = "/user/media"

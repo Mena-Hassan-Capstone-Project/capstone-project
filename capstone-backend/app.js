@@ -76,6 +76,34 @@ app.post('/verify', async(req, res) => {
       }
 })
 
+app.post('/user/interests', async(req, res) => {
+    Parse.User.enableUnsafeCurrentUser()
+    let infoInterests = req.body
+
+    try{
+        const Movie = Parse.Object.extend("Movie");
+        const movie = new Movie();
+
+        let currentUser = Parse.User.current();
+        if (currentUser) {
+            if(infoInterests.interests.movies){
+                movie.set("title", infoInterests.interests.movies[0].title)
+                movie.set("api_id", infoInterests.interests.movies[0].id)
+                movie.set("genres", infoInterests.interests.movies[0].genre_ids)
+                movie.set("user", currentUser.objectId)
+                let usersRelation = movie.relation('User');
+                usersRelation.add(currentUser)
+                await movie.save()
+            }
+            res.send({movie : movie, userInfo: currentUser, loginMessage: "User interests info saved!", RegisterMessage: '', typeStatus: "success",  infoInterests : infoInterests});
+        } else {
+            res.send({movie : movie, userInfo: "", loginMessage: "Can't get current user", RegisterMessage: '', typeStatus: "danger",  infoInterests: infoInterests});
+        }
+      } catch (error){
+        res.send({loginMessage: error.message, RegisterMessage: '', typeStatus: "danger",  infoInterests : infoInterests});
+      }
+})
+
 app.post('/user/basic', async(req, res) => {
     Parse.User.enableUnsafeCurrentUser()
     let infoUser = req.body
@@ -99,7 +127,7 @@ app.post('/user/basic', async(req, res) => {
                 currentUser.set("tags", infoUser.tags)
             }
             if(infoUser.media){
-                let img_data = infoUser.media.map(image => image.data_url);
+                let img_data = infoUser.media;
                 currentUser.set("media", img_data)
             }
             await currentUser.save()
