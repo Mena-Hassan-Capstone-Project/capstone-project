@@ -21,11 +21,15 @@ export default function BasicInfo({userInfo, goToInterests, goToMedia, goToEditI
             <p><b>Major: </b>{userInfo.major}</p>
             <p><b>Hometown: </b>{userInfo.hometown}</p>
             <p><b>Tags: </b></p>
-            {userInfo.tags.map((tag, index) => (
+            {
+              userInfo.tags ?
+            userInfo.tags.map((tag, index) => (
               <div key={index} className="tag-item">
                <p className="tag-text">{tag}</p>
               </div>
-            ))}
+            ))
+            : null
+            }
           </div>
           <button className = "login-btn" onClick = {goToEditInfo}>
             Edit

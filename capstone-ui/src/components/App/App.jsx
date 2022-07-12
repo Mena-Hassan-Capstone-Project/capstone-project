@@ -21,6 +21,7 @@ export default function App() {
 
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState("")
+  const [isFetching, setIsFetching] = useState(false)
 
   const [movie, setMovie] = useState("")
 
@@ -39,12 +40,14 @@ const getSearch = () => {
     setMovie("")
     //setUserInfo({...userInfo, interests : {}});
   }
+  setIsFetching(true)
   getResults(SEARCH_URL + query)
   .then(function(response){
     console.log(response)
     setMovie(response[0])
     //setUserInfo({...userInfo, interests : {movies : movies}})
     console.log("userInfo", userInfo)
+    setIsFetching(false)
   })
 }
 
@@ -61,10 +64,12 @@ const getSearch = () => {
   }
 
   const goToEditInterests = () => {
+    setMovie("")
     navigate('/user/interests/edit')
   }
 
   const goToInterests = () => {
+    getMoviesFromUser()
     navigate('/user/interests')
   }
 
@@ -73,10 +78,12 @@ const getSearch = () => {
   }
 
   function getMoviesFromUser() {
+    setIsFetching(true)
     axios.get(`http://localhost:${PORT}/user/interests`)
     .then(resp => {
       console.log(resp.data);
       setUserInfo({...userInfo, interests : {movies : resp.data}})
+      setIsFetching(false)
     });
   }
 
@@ -93,12 +100,23 @@ const getSearch = () => {
     })
   }
 
+  function removeMovie (movie){
+    setIsFetching(true)
+    axios.post(`http://localhost:${PORT}/user/interests/remove`, {
+      movie : movie
+    })
+    .then(function(response){
+      console.log("response:", response)
+      getMoviesFromUser()
+      setIsFetching(false)
+    })
+    .catch(function(err){
+      console.log(err)
+    })
+  }
+
   const saveInterests = () => {
-    /*var moviesArr = [movie]
-    if(userInfo.interests.movies){
-      moviesArr = userInfo.interests.movies
-      moviesArr.push(movie)
-    }*/
+    setIsFetching(true)
     axios.post(`http://localhost:${PORT}/user/interests`, {
       interests : {
         movie : movie
@@ -106,9 +124,9 @@ const getSearch = () => {
     })
     .then(function(response){
       console.log("Edited data:", response)
-      //setUserInfo(response.data.userInfo)
       getMoviesFromUser()
       navigate('/user/interests')
+      setIsFetching(false)
     })
     .catch(function(err){
       console.log(err)
@@ -116,6 +134,7 @@ const getSearch = () => {
   }
 
   const saveBasicInfo = () => {
+    setIsFetching(true)
     var tags = []
     if(userInfo.tags){
       tags = userInfo.tags
@@ -135,6 +154,7 @@ const getSearch = () => {
       console.log("Edited data:", response)
       setUserInfo(response.data.userInfo)
       navigate('/user/basic')
+      setIsFetching(false)
     })
     .catch(function(err){
       console.log(err)
@@ -142,6 +162,7 @@ const getSearch = () => {
   }
 
   const createLoginParser = () => {
+    setIsFetching(true)
     axios.post(`http://localhost:${PORT}/login`, {
       email: document.getElementById('email').value,
       password: document.getElementById('password').value
@@ -150,6 +171,7 @@ const getSearch = () => {
       console.log(response)
       setUserInfo(response.data.userInfo)
       navigate('/user/basic')
+      setIsFetching(false)
     })
     .catch(function(err){
       console.log(err)
@@ -157,6 +179,7 @@ const getSearch = () => {
   }
 
   const createSignUpParser = () => {
+    setIsFetching(true)
     axios.post(`http://localhost:${PORT}/signup`, {
       email: document.getElementById('email').value,
       password: document.getElementById('password').value,
@@ -167,6 +190,7 @@ const getSearch = () => {
       if(response.data.typeStatus === "success"){
         navigate('/verify')
       }
+      setIsFetching(false)
     })
     .catch(function(err){
       console.log(err)
@@ -174,6 +198,7 @@ const getSearch = () => {
   }
 
   const createVerifyParser = () => {
+    setIsFetching(true)
     axios.post(`http://localhost:${PORT}/verify`, {
       firstName: document.getElementById('firstName').value,
       lastName: document.getElementById('lastName').value,
@@ -184,6 +209,7 @@ const getSearch = () => {
       console.log(response.data.userInfo)
       setUserInfo(response.data.userInfo)
       navigate('/user/basic/edit')
+      setIsFetching(false)
     })
     .catch(function(err){
       console.log(err)
@@ -221,7 +247,7 @@ const getSearch = () => {
         />
         <Route 
         path = "/user/interests/edit"
-        element = {<InterestsEdit userInfo = {userInfo} goToBasic={goToBasic} goToMedia={goToMedia} saveInterests={saveInterests} getSearch={getSearch} movie= {movie}></InterestsEdit>}
+        element = {<InterestsEdit userInfo = {userInfo} goToBasic={goToBasic} goToMedia={goToMedia} saveInterests={saveInterests} getSearch={getSearch} movie= {movie} setUserInfo={setUserInfo} removeMovie={removeMovie}></InterestsEdit>}
         />
         <Route 
         path = "/user/media"

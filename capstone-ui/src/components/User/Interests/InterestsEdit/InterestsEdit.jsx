@@ -3,15 +3,15 @@ import "./InterestsEdit.css"
 import { useState } from "react"
 
 
-export default function InterestsEdit({userInfo, goToBasic, goToMedia, saveInterests, getSearch, movie}) {
+export default function InterestsEdit({userInfo, goToBasic, goToMedia, saveInterests, getSearch, movie, setUserInfo, removeMovie}) {
   const [movieClass, setMovieClass] = useState("hidden")
 
   function toggleMovieClass(){
-    if(movieClass == ""){
+    if(movieClass == "movie-input"){
       setMovieClass("hidden")
     }
     else{
-      setMovieClass("")
+      setMovieClass("movie-input")
     }
   }
 
@@ -29,20 +29,32 @@ export default function InterestsEdit({userInfo, goToBasic, goToMedia, saveInter
         </div>
         <div className="column col-2" >
           <p className="interests-title">Movies:</p>
-          {/*<div className="select-container">
-          {movies && <Select id = "movie-select" className = "search-select" options={movie_options} />}
-  </div>*/}
-        <button onClick={toggleMovieClass}>Add a movie</button>
+          {
+            userInfo.interests && userInfo.interests.movies ?
+            userInfo.interests.movies.map((movie, index) => (
+              <div key={index} className="movie-item">
+               <p className="movie-text">{movie.title}</p>
+               <p className="movie-text remove-movie"
+               onClick={
+                () => {removeMovie(movie)}
+                }
+               > x</p>
+              </div>
+            ))
+            : null
+          }
         <br />
-        <input id = "enter-movie" className = {movieClass} type="text" onChange={getSearch}/>
-        {/*
-          userInfo.interests && userInfo.interests.movies
-          ? <p>{userInfo.interests.movies.title}</p>
-          : null
-        */}
+        {
+          movieClass == "hidden"
+          ? <div><button className = "add-interest-button" onClick={toggleMovieClass}>Add a movie</button></div>
+          : <input id = "enter-movie" className = {movieClass} type="text" onChange={getSearch}/>
+        }
         {
           movie && movie != ""
-          ? <p>{movie.title}</p>
+          ? 
+          <div className="movie-item">
+            <p className="movie-text">{movie.title}</p>
+          </div>
           : null
         }
           <p className="interests-title">TV Shows:</p>

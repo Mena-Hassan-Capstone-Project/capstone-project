@@ -76,6 +76,30 @@ app.post('/verify', async(req, res) => {
       }
 })
 
+app.post('/user/interests/remove', async(req, res) => {
+    let removeInfo = req.body
+    Parse.User.enableUnsafeCurrentUser()
+    let currentUser = Parse.User.current();
+    try{
+        if(currentUser){
+            const Movie = Parse.Object.extend("Movie");
+            const query = new Parse.Query(Movie);
+            query.equalTo("title", removeInfo.movie.title);
+            query.equalTo("User", currentUser);
+            const entry = await query.find();
+            entry[0].set("active", false)
+            await entry[0].save()
+            res.send({removeMessage: "success", removeInfo : removeInfo, entry: entry[0]});
+        }
+        else{
+            res.send({removeMessage: "Can't get current user", RegisterMessage: '', typeStatus: "danger"});
+        }
+    }
+    catch (error){
+        res.send({loginMessage: error.message, RegisterMessage: '', typeStatus: "danger"});
+      }
+  });
+
 app.get('/user/interests', async(req, res) => {
     Parse.User.enableUnsafeCurrentUser()
     let currentUser = Parse.User.current();
@@ -83,7 +107,8 @@ app.get('/user/interests', async(req, res) => {
         const Movie = Parse.Object.extend("Movie");
         const query = new Parse.Query(Movie);
         query.equalTo("User", currentUser);
-        // comments now contains the comments for myPost
+        query.equalTo("active", true);
+        // comments now contains the movies for this user
         const users = await query.find();
         res.send(users);
     }
@@ -103,14 +128,27 @@ app.post('/user/interests', async(req, res) => {
         let currentUser = Parse.User.current();
         if (currentUser) {
             if(infoInterests.interests.movie){
-                console.log("movie interests", infoInterests.interests.movie)
-                movie.set("title", infoInterests.interests.movie.title)
-                movie.set("api_id", infoInterests.interests.movie.id)
-                movie.set("genres", infoInterests.interests.movie.genre_ids)
-                movie.set("user", currentUser.objectId)
-                let usersRelation = movie.relation('User');
-                usersRelation.add(currentUser)
-                await movie.save()
+                const query = new Parse.Query(Movie);
+                query.equalTo("User", currentUser);
+                query.equalTo("title", infoInterests.interests.movie.title);
+                const entries = await query.find();
+                if(entries && entries[0]){
+                    console.log("entries", entries)
+                    console.log('duplicate')
+                    if(!entries[0].active){
+                        entries[0].set("active", true)
+                    }
+                }
+                else{
+                    movie.set("title", infoInterests.interests.movie.title)
+                    movie.set("api_id", infoInterests.interests.movie.id)
+                    movie.set("genres", infoInterests.interests.movie.genre_ids)
+                    movie.set("user", currentUser.objectId)
+                    movie.set("active", true)
+                    let usersRelation = movie.relation('User');
+                    usersRelation.add(currentUser)
+                    await movie.save()
+                }
             }
             res.send({movie : movie, userInfo: currentUser, loginMessage: "User interests info saved!", RegisterMessage: '', typeStatus: "success",  infoInterests : infoInterests});
         } else {

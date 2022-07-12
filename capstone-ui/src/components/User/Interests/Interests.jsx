@@ -18,7 +18,7 @@ export default function Interests({userInfo, goToBasic, goToMedia, gotToEditInte
         <div className="column col-2" >
           <p className="interests-title">Movies:</p>
           {
-            userInfo.interests && userInfo.interests.movies ?
+            userInfo.interests && userInfo.interests.movies && userInfo.interests.movies != [] ?
             userInfo.interests.movies.map((movie, index) => (
               <div key={index} className="movie-item">
                <p className="movie-text">{movie.title}</p>
