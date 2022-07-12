@@ -3,9 +3,9 @@ import "./MediaEdit.css"
 import ImageUploading from 'react-images-uploading';
 import axios from "axios"
 import {useNavigate} from 'react-router-dom'
+import Loading from "../../../Loading/Loading";
 
-
-export default function MediaEdit({userInfo, goToBasic, goToInterests, imageList, maxImages, setUserInfo}) {
+export default function MediaEdit({userInfo, goToBasic, goToInterests, imageList, maxImages, setUserInfo, isFetching, setIsFetching}) {
 
     const navigate = useNavigate();
 
@@ -20,6 +20,7 @@ export default function MediaEdit({userInfo, goToBasic, goToInterests, imageList
   const PORT = '3001'
 
     const saveMedia = () => {
+      setIsFetching(true)
       console.log("images len:", images.length)
       console.log("images", images)
       axios.post(`http://localhost:${PORT}/user/basic`, {
@@ -29,6 +30,7 @@ export default function MediaEdit({userInfo, goToBasic, goToInterests, imageList
         console.log("Media Response:", response)
         setUserInfo({...userInfo, media : images})
         navigate('/user/media')
+        setIsFetching(false)
       })
       .catch(function(err){
         console.log(err)
@@ -36,6 +38,9 @@ export default function MediaEdit({userInfo, goToBasic, goToInterests, imageList
     }
 
   return (
+    isFetching
+    ? <Loading></Loading>
+    :
     <div className="media" id="media">
         <div className="row">
         <div className="column">

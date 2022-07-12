@@ -34,11 +34,10 @@ export default function App() {
     return result.results
 }
 
-const getSearch = () => {
+const getMovieSearch = () => {
   var query = document.getElementById('enter-movie').value
   if(query == ""){
     setMovie("")
-    //setUserInfo({...userInfo, interests : {}});
   }
   setIsFetching(true)
   getResults(SEARCH_URL + query)
@@ -235,27 +234,27 @@ const getSearch = () => {
         />
         <Route 
         path = "/user/basic"
-        element = {<BasicInfo userInfo = {userInfo} goToInterests={goToInterests} goToMedia={goToMedia} goToEditInfo={goToEditInfo}></BasicInfo>}
+        element = {<BasicInfo userInfo = {userInfo} goToInterests={goToInterests} goToMedia={goToMedia} goToEditInfo={goToEditInfo} isFetching={isFetching}></BasicInfo>}
         />
         <Route 
         path = "/user/basic/edit"
-        element = {<BasicInfoEdit userInfo = {userInfo} saveBasicInfo={saveBasicInfo} setUserInfo = {setUserInfo}></BasicInfoEdit>}
+        element = {<BasicInfoEdit userInfo = {userInfo} saveBasicInfo={saveBasicInfo} setUserInfo = {setUserInfo} isFetching={isFetching}></BasicInfoEdit>}
         />
         <Route 
         path = "/user/interests"
-        element = {<Interests userInfo = {userInfo} goToBasic={goToBasic} goToMedia={goToMedia} gotToEditInterests={goToEditInterests}></Interests>}
+        element = {<Interests userInfo = {userInfo} goToBasic={goToBasic} goToMedia={goToMedia} gotToEditInterests={goToEditInterests} isFetching={isFetching}></Interests>}
         />
         <Route 
         path = "/user/interests/edit"
-        element = {<InterestsEdit userInfo = {userInfo} goToBasic={goToBasic} goToMedia={goToMedia} saveInterests={saveInterests} getSearch={getSearch} movie= {movie} setUserInfo={setUserInfo} removeMovie={removeMovie}></InterestsEdit>}
+        element = {<InterestsEdit userInfo = {userInfo} goToBasic={goToBasic} goToMedia={goToMedia} saveInterests={saveInterests} getMovieSearch={getMovieSearch} movie= {movie} setUserInfo={setUserInfo} removeMovie={removeMovie} isFetching={isFetching}></InterestsEdit>}
         />
         <Route 
         path = "/user/media"
-        element = {<Media userInfo = {userInfo} goToBasic={goToBasic} goToInterests={goToInterests} goToEditMedia ={goToEditMedia}></Media>}
+        element = {<Media userInfo = {userInfo} goToBasic={goToBasic} goToInterests={goToInterests} goToEditMedia ={goToEditMedia} isFetching={isFetching}></Media>}
         />
         <Route 
         path = "/user/media/edit"
-        element = {<MediaEdit userInfo = {userInfo} goToBasic={goToBasic} goToInterests={goToInterests} imageList={userInfo.media} maxImages = {10} setUserInfo={setUserInfo}></MediaEdit>}
+        element = {<MediaEdit userInfo = {userInfo} goToBasic={goToBasic} goToInterests={goToInterests} imageList={userInfo.media} maxImages = {10} setUserInfo={setUserInfo} isFetching={isFetching} setIsFetching={setIsFetching}></MediaEdit>}
         />
       </Routes>
       </main>

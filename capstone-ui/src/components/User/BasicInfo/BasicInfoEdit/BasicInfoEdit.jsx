@@ -1,12 +1,16 @@
 import * as React from "react"
 import "./BasicInfoEdit.css"
 import ProfilePhoto from "../../ProfilePhoto/ProfilePhoto"
+import Loading from "../../../Loading/Loading"
 
 
-export default function BasicInfoEdit({userInfo, saveBasicInfo, setUserInfo}) {
+export default function BasicInfoEdit({userInfo, saveBasicInfo, setUserInfo, isFetching}) {
   console.log(userInfo.tags)
 
   return (
+    isFetching
+    ? <Loading></Loading>
+    :
     <div className="basicInfoEdit" id="basicInfoEdit">
         <div className="row">
         <div className="column">

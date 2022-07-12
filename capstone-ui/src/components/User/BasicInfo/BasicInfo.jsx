@@ -1,9 +1,13 @@
 import * as React from "react"
 import "./BasicInfo.css"
+import Loading from "../../Loading/Loading"
 
-export default function BasicInfo({userInfo, goToInterests, goToMedia, goToEditInfo}) {
+export default function BasicInfo({userInfo, goToInterests, goToMedia, goToEditInfo, isFetching}) {
 
   return (
+    isFetching
+    ? <Loading></Loading>
+    :
     <div className="basicInfo" id="basicInfo">
         <div className="row">
         <div className="column">

@@ -1,10 +1,14 @@
 import * as React from "react"
 import "./Media.css"
+import Loading from "../../Loading/Loading"
 
 
-export default function Media({userInfo, goToBasic, goToInterests, goToEditMedia}) {
+export default function Media({userInfo, goToBasic, goToInterests, goToEditMedia, isFetching}) {
   console.log("userInfo media: ", userInfo.media)
   return (
+    isFetching
+    ? <Loading></Loading>
+    :
     <div className="media" id="media">
         <div className="row">
         <div className="column">

@@ -1,9 +1,10 @@
 import * as React from "react"
 import "./InterestsEdit.css"
 import { useState } from "react"
+import Loading from "../../../Loading/Loading"
 
 
-export default function InterestsEdit({userInfo, goToBasic, goToMedia, saveInterests, getSearch, movie, setUserInfo, removeMovie}) {
+export default function InterestsEdit({userInfo, goToBasic, goToMedia, saveInterests, getMovieSearch, movie, setUserInfo, removeMovie, isFetching}) {
   const [movieClass, setMovieClass] = useState("hidden")
 
   function toggleMovieClass(){
@@ -16,6 +17,9 @@ export default function InterestsEdit({userInfo, goToBasic, goToMedia, saveInter
   }
 
   return (
+    isFetching
+    ? <Loading></Loading>
+    :
     <div className="interests" id="interests">
         <div className="row">
         <div className="column">
@@ -47,7 +51,7 @@ export default function InterestsEdit({userInfo, goToBasic, goToMedia, saveInter
         {
           movieClass == "hidden"
           ? <div><button className = "add-interest-button" onClick={toggleMovieClass}>Add a movie</button></div>
-          : <input id = "enter-movie" className = {movieClass} type="text" onChange={getSearch}/>
+          : <input id = "enter-movie" className = {movieClass} type="text" onChange={getMovieSearch}/>
         }
         {
           movie && movie != ""
