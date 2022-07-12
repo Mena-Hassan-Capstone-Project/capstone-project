@@ -1,8 +1,12 @@
 import * as React from "react"
 import "./Login.css"
+import Loading from "../Loading/Loading"
 
-export default function Login({createLoginParser}) {
+export default function Login({createLoginParser, isFetching, goToSignUp}) {
   return (
+    isFetching
+    ? <Loading></Loading>
+    :
     <div className="login" id="login">
         <h1>Login</h1>
         <h2>Log in and start connecting!</h2>
@@ -13,6 +17,7 @@ export default function Login({createLoginParser}) {
         <button className = "login-btn" onClick = {() => createLoginParser()}>
             Log In
         </button>
+        <p>Don't Have an Account Yet? <b onClick={goToSignUp} className="signup-link">Sign Up</b></p>
     </div> 
   )
 }

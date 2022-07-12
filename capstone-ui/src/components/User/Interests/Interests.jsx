@@ -31,9 +31,28 @@ export default function Interests({userInfo, goToBasic, goToMedia, gotToEditInte
             : null
           }
           <p className="interests-title">TV Shows:</p>
+          {
+            userInfo.interests && userInfo.interests.shows && userInfo.interests.shows != [] ?
+            userInfo.interests.shows.map((show, index) => (
+              <div key={index} className="movie-item">
+               <p className="movie-text">{show.title}</p>
+              </div>
+            ))
+            : null
+          }
           <p className="interests-title">Music:</p>
           <p className="interests-title">Books:</p>
           <p className="interests-title">Hobbies:</p>
+          {
+            userInfo.interests && userInfo.interests.hobbies && userInfo.interests.hobbies != [] ?
+            userInfo.interests.hobbies.map((hobby, index) => (
+              <div key={index} className="movie-item">
+               <p className="movie-text">{hobby.name}</p>
+              </div>
+            ))
+            : null
+          }
+          <br />
           <button className = "login-btn" onClick = {gotToEditInterests}>
             Edit
         </button>

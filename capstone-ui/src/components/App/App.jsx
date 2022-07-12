@@ -16,14 +16,17 @@ import MediaEdit from "../User/Media/MediaEdit/MediaEdit";
 
 export default function App() {
   const API_KEY = "658568773162c3aaffcb3981d4f5587b"
-  const BASE_URL = "https://api.themoviedb.org/3"
-  const SEARCH_URL = BASE_URL + `/search/movie?api_key=${API_KEY}&query=`
+  const MOVIE_SEARCH_URL = `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=`
+  const TV_SEARCH_URL = `https://api.themoviedb.org/3/search/tv?api_key=${API_KEY}&query=`
 
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState("")
   const [isFetching, setIsFetching] = useState(false)
 
   const [movie, setMovie] = useState("")
+  const [TV, setTV] = useState("")
+  const [hobbiesList, setHobbiesList] = useState([])
+  const [selectedHobbyOption, setSelectedHobbyOption] = useState(null);
 
   const PORT = '3001'
 
@@ -39,8 +42,7 @@ const getMovieSearch = () => {
   if(query == ""){
     setMovie("")
   }
-  setIsFetching(true)
-  getResults(SEARCH_URL + query)
+  getResults(MOVIE_SEARCH_URL + query)
   .then(function(response){
     console.log(response)
     setMovie(response[0])
@@ -48,6 +50,28 @@ const getMovieSearch = () => {
     console.log("userInfo", userInfo)
     setIsFetching(false)
   })
+}
+
+const getTVSearch = () => {
+  var query = document.getElementById('enter-tv').value
+  if(query == ""){
+    setTV("")
+  }
+  getResults(TV_SEARCH_URL + query)
+  .then(function(response){
+    console.log(response)
+    setTV(response[0])
+    console.log("userInfo", userInfo)
+    setIsFetching(false)
+  })
+}
+
+const goToSignUp = () => {
+  navigate('/signup')
+}
+
+const goToLogin = () => {
+  navigate('/login')
 }
 
   const goToBasic = () => {
@@ -68,7 +92,7 @@ const getMovieSearch = () => {
   }
 
   const goToInterests = () => {
-    getMoviesFromUser()
+    getInterestsFromUser()
     navigate('/user/interests')
   }
 
@@ -76,19 +100,21 @@ const getMovieSearch = () => {
     navigate('/user/media')
   }
 
-  function getMoviesFromUser() {
+  function getInterestsFromUser() {
     setIsFetching(true)
     axios.get(`http://localhost:${PORT}/user/interests`)
     .then(resp => {
       console.log(resp.data);
-      setUserInfo({...userInfo, interests : {movies : resp.data}})
+      setHobbiesList(resp.data.hobbiesList)
+      setUserInfo({...userInfo, interests : {movies : resp.data.movies, shows : resp.data.shows, hobbies : resp.data.hobbies}})
+      console.log("userInfo", userInfo)
       setIsFetching(false)
     });
   }
 
   const logOut = () => {
     axios.post(`http://localhost:${PORT}/logout`, {
-    })
+    })  
     .then(function(response){
       console.log(response)
       setUserInfo("")
@@ -106,25 +132,62 @@ const getMovieSearch = () => {
     })
     .then(function(response){
       console.log("response:", response)
-      getMoviesFromUser()
+      getInterestsFromUser()
       setIsFetching(false)
     })
     .catch(function(err){
       console.log(err)
     })
   }
+
+  function removeShow (show){
+    setIsFetching(true)
+    axios.post(`http://localhost:${PORT}/user/interests/remove`, {
+      show : show
+    })
+    .then(function(response){
+      console.log("response:", response)
+      getInterestsFromUser()
+      setIsFetching(false)
+    })
+    .catch(function(err){
+      console.log(err)
+    })
+  }
+
+  function removeHobby (hobby){
+    setIsFetching(true)
+    axios.post(`http://localhost:${PORT}/user/interests/remove`, {
+      hobby : hobby
+    })
+    .then(function(response){
+      console.log("response:", response)
+      getInterestsFromUser()
+      setIsFetching(false)
+    })
+    .catch(function(err){
+      console.log(err)
+    })
+  }
+
 
   const saveInterests = () => {
     setIsFetching(true)
     axios.post(`http://localhost:${PORT}/user/interests`, {
       interests : {
-        movie : movie
+        movie : movie,
+        TV : TV,
+        hobby : selectedHobbyOption 
+        ? selectedHobbyOption.value
+        : null
       }
     })
     .then(function(response){
       console.log("Edited data:", response)
-      getMoviesFromUser()
+      getInterestsFromUser()
       navigate('/user/interests')
+      setMovie("")
+      setTV("")
       setIsFetching(false)
     })
     .catch(function(err){
@@ -132,7 +195,7 @@ const getMovieSearch = () => {
     })
   }
 
-  const saveBasicInfo = () => {
+  const saveBasicInfo = async () => {
     setIsFetching(true)
     var tags = []
     if(userInfo.tags){
@@ -143,7 +206,11 @@ const getMovieSearch = () => {
       tags.push(document.getElementById('tags').value)
     }
 
-    axios.post(`http://localhost:${PORT}/user/basic`, {
+    if(document.getElementById('tags').value == 'None'){
+      tags = []
+    }
+
+    await axios.post(`http://localhost:${PORT}/user/basic`, {
       year: document.getElementById('year').value,
       major: document.getElementById('major').value,
       hometown: document.getElementById('hometown').value,
@@ -222,11 +289,11 @@ const getMovieSearch = () => {
       <Routes>
         <Route 
         path = "/login"
-        element = {<Login createLoginParser = {createLoginParser}></Login>}
+        element = {<Login createLoginParser = {createLoginParser} isFetching={isFetching} goToSignUp={goToSignUp}></Login>}
         />
         <Route 
         path = "/signup"
-        element = {<SignUp createSignUpParser = {createSignUpParser}></SignUp>}
+        element = {<SignUp createSignUpParser = {createSignUpParser} goToLogin={goToLogin}></SignUp>}
         />
         <Route 
         path = "/verify"
@@ -246,7 +313,9 @@ const getMovieSearch = () => {
         />
         <Route 
         path = "/user/interests/edit"
-        element = {<InterestsEdit userInfo = {userInfo} goToBasic={goToBasic} goToMedia={goToMedia} saveInterests={saveInterests} getMovieSearch={getMovieSearch} movie= {movie} setUserInfo={setUserInfo} removeMovie={removeMovie} isFetching={isFetching}></InterestsEdit>}
+        element = {<InterestsEdit userInfo = {userInfo} goToBasic={goToBasic} goToMedia={goToMedia} saveInterests={saveInterests} getMovieSearch={getMovieSearch} movie= {movie} 
+        removeMovie={removeMovie} isFetching={isFetching} getTVSearch={getTVSearch} TV={TV} removeShow={removeShow} selectedHobbyOption={selectedHobbyOption} 
+        setSelectedHobbyOption={setSelectedHobbyOption} hobbiesList={hobbiesList} removeHobby={removeHobby}></InterestsEdit>}
         />
         <Route 
         path = "/user/media"

@@ -5,7 +5,6 @@ import Loading from "../../../Loading/Loading"
 
 
 export default function BasicInfoEdit({userInfo, saveBasicInfo, setUserInfo, isFetching}) {
-  console.log(userInfo.tags)
 
   return (
     isFetching
@@ -14,7 +13,7 @@ export default function BasicInfoEdit({userInfo, saveBasicInfo, setUserInfo, isF
     <div className="basicInfoEdit" id="basicInfoEdit">
         <div className="row">
         <div className="column">
-        <ProfilePhoto imageList={[{"data_url" : userInfo.profile_photo}]} maxImages={1}></ProfilePhoto>
+        <ProfilePhoto imageList={userInfo.profile_photo ? [{"data_url" : userInfo.profile_photo}] : []} maxImages={1}></ProfilePhoto>
             <h2>{userInfo.preferredName}</h2>
             <div className="user-info">
               <p className="menu-item active">Basic Info</p>
@@ -32,6 +31,7 @@ export default function BasicInfoEdit({userInfo, saveBasicInfo, setUserInfo, isF
             <div>
               <label className = "add-tag">Add Tag: </label>
               <select name="tags" id="tags" className="tags-dropdown">
+                <option value="None">None</option>
                 <option value="Gapper">Gapper</option>
                 <option value="FGLI">FGLI</option>
                 <option value="Athlete">Athlete</option>
@@ -45,10 +45,8 @@ export default function BasicInfoEdit({userInfo, saveBasicInfo, setUserInfo, isF
                <p className="tag-text">{tag}</p>
                <p className="remove-tag" onClick={
                 () => {
-                  console.log("tags", userInfo.tags)
                   var newTags = userInfo.tags
                   newTags.splice(index, 1)
-                  console.log(newTags)
                   setUserInfo({...userInfo, tags:newTags})
                 }
                 }> x</p>

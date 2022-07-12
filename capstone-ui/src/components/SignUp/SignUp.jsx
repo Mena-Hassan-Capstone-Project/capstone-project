@@ -1,7 +1,7 @@
 import * as React from "react"
 import "./SignUp.css"
 
-export default function SignUp({createSignUpParser}) {
+export default function SignUp({createSignUpParser, goToLogin}) {
   return (
     <div className="signup" id="signup">
         <h1>Create Account</h1>
@@ -16,6 +16,7 @@ export default function SignUp({createSignUpParser}) {
         <button className = "login-btn" onClick = {() => createSignUpParser()}>
             Next
         </button>
+        <p>Already Have an Account? <b onClick={goToLogin} className="signup-link">Log In</b></p>
     </div> 
   )
 }

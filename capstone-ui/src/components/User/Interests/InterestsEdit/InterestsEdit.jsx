@@ -2,10 +2,15 @@ import * as React from "react"
 import "./InterestsEdit.css"
 import { useState } from "react"
 import Loading from "../../../Loading/Loading"
+import Select from 'react-select'
 
 
-export default function InterestsEdit({userInfo, goToBasic, goToMedia, saveInterests, getMovieSearch, movie, setUserInfo, removeMovie, isFetching}) {
+export default function InterestsEdit({userInfo, goToBasic, goToMedia, saveInterests, getMovieSearch, movie, removeMovie, 
+  isFetching, getTVSearch, TV, removeShow, setSelectedHobbyOption, selectedHobbyOption, hobbiesList, removeHobby}) {
   const [movieClass, setMovieClass] = useState("hidden")
+  const [tvClass, setTvClass] = useState("hidden")
+  const [hobbyClass, setHobbyClass] = useState("hidden")
+  const [selectedOption, setSelectedOption] = useState(null);
 
   function toggleMovieClass(){
     if(movieClass == "movie-input"){
@@ -13,6 +18,24 @@ export default function InterestsEdit({userInfo, goToBasic, goToMedia, saveInter
     }
     else{
       setMovieClass("movie-input")
+    }
+  }
+
+  function toggleTVClass(){
+    if(tvClass == "movie-input"){
+      setTvClass("hidden")
+    }
+    else{
+      setTvClass("movie-input")
+    }
+  }
+
+  function toggleHobbyClass(){
+    if(hobbyClass == "movie-input"){
+      setHobbyClass("hidden")
+    }
+    else{
+      setHobbyClass("movie-input")
     }
   }
 
@@ -32,6 +55,8 @@ export default function InterestsEdit({userInfo, goToBasic, goToMedia, saveInter
             </div> 
         </div>
         <div className="column col-2" >
+
+          {/* Movies */}
           <p className="interests-title">Movies:</p>
           {
             userInfo.interests && userInfo.interests.movies ?
@@ -61,10 +86,88 @@ export default function InterestsEdit({userInfo, goToBasic, goToMedia, saveInter
           </div>
           : null
         }
+
+        {/* TV Shows */}
           <p className="interests-title">TV Shows:</p>
+          {
+            userInfo.interests && userInfo.interests.shows ?
+            userInfo.interests.shows.map((show, index) => (
+              <div key={index} className="movie-item">
+               <p className="movie-text">{show.title}</p>
+               <p className="movie-text remove-movie"
+               onClick={
+                () => {removeShow(show)}
+                }
+               > x</p>
+              </div>
+            ))
+            : null
+          }
+          <br />
+        {
+          tvClass == "hidden"
+          ? <div><button className = "add-interest-button" onClick={toggleTVClass}>Add a TV Show</button></div>
+          : <input id = "enter-tv" className = {tvClass} type="text" onChange={getTVSearch}/>
+        }
+        {
+           TV && TV != ""
+          ? 
+          <div className="movie-item">
+            <p className="movie-text">{TV.name}</p>
+          </div>
+          : null
+        }
           <p className="interests-title">Music:</p>
           <p className="interests-title">Books:</p>
+
+          {/* Hobbies */}
           <p className="interests-title">Hobbies:</p>
+          {
+            userInfo.interests && userInfo.interests.hobbies ?
+            userInfo.interests.hobbies.map((hobby, index) => (
+              <div key={index} className="movie-item">
+               <p className="movie-text">{hobby.name}</p>
+               <p className="movie-text remove-movie"
+               onClick={
+                () => {removeHobby(hobby)}
+                }
+               > x</p>
+              </div>
+            ))
+            : null
+          }
+          {
+            hobbiesList && hobbiesList != [] && hobbyClass != "hidden"
+            ?
+            <div>
+              <p>Select a category:</p>
+              <Select id = "hobby-category-select" 
+              className = "search-select" 
+              defaultValue={selectedOption}
+              onChange={setSelectedOption} 
+              options={hobbiesList.map
+                ((hobby, index) =>{
+                return {label : hobby.category, value : index};
+              })} />
+            </div>
+          : <div><button className = "add-interest-button" onClick={toggleHobbyClass}>Add a Hobby</button></div>
+          }
+          {
+            selectedOption && hobbyClass != "hidden"
+            ? 
+            <div>
+              <p>Select a hobby:</p>
+              <Select id = "hobby-select" 
+              className = "search-select" 
+              defaultValue={selectedHobbyOption}
+              onChange={setSelectedHobbyOption} 
+              options={hobbiesList[selectedOption.value].options.map
+                ((hobby) =>{
+                return {label : hobby, value : {name : hobby, category : selectedOption.label}};
+              })} />
+            </div>
+            : null
+          }
           <button className = "login-btn" onClick = {() => saveInterests()}>
             Save
           </button>

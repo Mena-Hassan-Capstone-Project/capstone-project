@@ -1,3 +1,4 @@
+'use strict';
 const Parse = require('parse/node')
 const express = require('express')
 const morgan = require('morgan')
@@ -7,6 +8,7 @@ app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
 app.use(express.json());
 app.use(morgan('tiny'))
+const fs = require('fs');
 var cors = require('cors')
 
 app.use(cors())
@@ -82,13 +84,33 @@ app.post('/user/interests/remove', async(req, res) => {
     let currentUser = Parse.User.current();
     try{
         if(currentUser){
-            const Movie = Parse.Object.extend("Movie");
-            const query = new Parse.Query(Movie);
-            query.equalTo("title", removeInfo.movie.title);
-            query.equalTo("User", currentUser);
-            const entry = await query.find();
-            entry[0].set("active", false)
-            await entry[0].save()
+            if(removeInfo.movie){
+                const Movie = Parse.Object.extend("Movie");
+                const query = new Parse.Query(Movie);
+                query.equalTo("api_id", removeInfo.movie.api_id);
+                query.equalTo("User", currentUser);
+                const entry = await query.find();
+                entry[0].set("active", false)
+                await entry[0].save()
+            }
+            if(removeInfo.show){
+                const Show = Parse.Object.extend("Show");
+                const query = new Parse.Query(Show);
+                query.equalTo("api_id", removeInfo.show.api_id);
+                query.equalTo("User", currentUser);
+                const entry = await query.find();
+                entry[0].set("active", false)
+                await entry[0].save()
+            }
+            if(removeInfo.hobby){
+                const Hobby = Parse.Object.extend("Hobby");
+                const query = new Parse.Query(Hobby);
+                query.equalTo("name", removeInfo.hobby.name);
+                query.equalTo("User", currentUser);
+                const entry = await query.find();
+                entry[0].set("active", false)
+                await entry[0].save()
+            }
             res.send({removeMessage: "success", removeInfo : removeInfo, entry: entry[0]});
         }
         else{
@@ -105,12 +127,31 @@ app.get('/user/interests', async(req, res) => {
     let currentUser = Parse.User.current();
     if(currentUser){
         const Movie = Parse.Object.extend("Movie");
-        const query = new Parse.Query(Movie);
-        query.equalTo("User", currentUser);
-        query.equalTo("active", true);
+        const movieQuery = new Parse.Query(Movie);
+
+        movieQuery.equalTo("User", currentUser);
+        movieQuery.equalTo("active", true);
         // comments now contains the movies for this user
-        const users = await query.find();
-        res.send(users);
+        const userMovies = await movieQuery.find();
+
+        const Show = Parse.Object.extend("Show");
+        const showQuery = new Parse.Query(Show);
+        showQuery.equalTo("User", currentUser);
+        showQuery.equalTo("active", true);
+        // comments now contains the movies for this user
+        const userShows = await showQuery.find();
+
+        const Hobby = Parse.Object.extend("Hobby");
+        const hobbyQuery = new Parse.Query(Hobby);
+        hobbyQuery.equalTo("User", currentUser);
+        hobbyQuery.equalTo("active", true);
+        // comments now contains the movies for this user
+        const userHobbies = await hobbyQuery.find();
+
+        let rawdata = fs.readFileSync('data/hobbies.json');
+        let hobbies = JSON.parse(rawdata);
+
+        res.send({movies : userMovies, shows : userShows, hobbies : userHobbies, hobbiesList : hobbies.hobbies});
     }
     else{
         res.send({loginMessage: "Can't get current user", RegisterMessage: '', typeStatus: "danger"});
@@ -125,12 +166,18 @@ app.post('/user/interests', async(req, res) => {
         const Movie = Parse.Object.extend("Movie");
         const movie = new Movie();
 
+        const Show = Parse.Object.extend("Show");
+        const show = new Show();
+
+        const Hobby = Parse.Object.extend("Hobby");
+        const hobby = new Hobby();
+
         let currentUser = Parse.User.current();
         if (currentUser) {
-            if(infoInterests.interests.movie){
+            if(infoInterests.interests.movie && infoInterests.interests.movie !=""){
                 const query = new Parse.Query(Movie);
                 query.equalTo("User", currentUser);
-                query.equalTo("title", infoInterests.interests.movie.title);
+                query.equalTo("api_id", infoInterests.interests.movie.id);
                 const entries = await query.find();
                 if(entries && entries[0]){
                     console.log("entries", entries)
@@ -138,6 +185,7 @@ app.post('/user/interests', async(req, res) => {
                     if(!entries[0].active){
                         entries[0].set("active", true)
                     }
+                    await entries[0].save()
                 }
                 else{
                     movie.set("title", infoInterests.interests.movie.title)
@@ -150,9 +198,55 @@ app.post('/user/interests', async(req, res) => {
                     await movie.save()
                 }
             }
-            res.send({movie : movie, userInfo: currentUser, loginMessage: "User interests info saved!", RegisterMessage: '', typeStatus: "success",  infoInterests : infoInterests});
+            if(infoInterests.interests.TV && infoInterests.interests.TV != ""){
+                const query = new Parse.Query(Show);
+                query.equalTo("User", currentUser);
+                query.equalTo("api_id", infoInterests.interests.TV.id);
+                const entries = await query.find();
+                if(entries && entries[0]){
+                    console.log("entries", entries)
+                    console.log('duplicate')
+                    if(!entries[0].active){
+                        entries[0].set("active", true)
+                    }
+                    await entries[0].save()
+                }
+                else{
+                    show.set("title", infoInterests.interests.TV.name)
+                    show.set("api_id", infoInterests.interests.TV.id)
+                    show.set("genres", infoInterests.interests.TV.genre_ids)
+                    show.set("user", currentUser.objectId)
+                    show.set("active", true)
+                    let usersRelation = show.relation('User');
+                    usersRelation.add(currentUser)
+                    await show.save()
+                }
+            }
+            if(infoInterests.interests.hobby){
+                const query = new Parse.Query(Hobby);
+                query.equalTo("User", currentUser);
+                query.equalTo("name", infoInterests.interests.hobby.name);
+                const entries = await query.find();
+                if(entries && entries[0]){
+                    console.log("entries", entries)
+                    console.log('duplicate')
+                    if(!entries[0].active){
+                        entries[0].set("active", true)
+                    }
+                    await entries[0].save()
+                }
+                else{
+                    hobby.set("name", infoInterests.interests.hobby.name)
+                    hobby.set("category", infoInterests.interests.hobby.category)
+                    hobby.set("active", true)
+                    let usersRelation = hobby.relation('User');
+                    usersRelation.add(currentUser)
+                    await hobby.save()
+                }
+            }
+            res.send({hobby : hobby, show : show, movie : movie, userInfo: currentUser, loginMessage: "User interests info saved!", RegisterMessage: '', typeStatus: "success",  infoInterests : infoInterests});
         } else {
-            res.send({movie : movie, userInfo: "", loginMessage: "Can't get current user", RegisterMessage: '', typeStatus: "danger",  infoInterests: infoInterests});
+            res.send({hobby : hobby, show : show, movie : movie, userInfo: "", loginMessage: "Can't get current user", RegisterMessage: '', typeStatus: "danger",  infoInterests: infoInterests});
         }
       } catch (error){
         res.send({loginMessage: error.message, RegisterMessage: '', typeStatus: "danger",  infoInterests : infoInterests});
@@ -178,7 +272,8 @@ app.post('/user/basic', async(req, res) => {
             if(infoUser.profile_photo && infoUser.profile_photo != ""){
                 currentUser.set("profile_photo", infoUser.profile_photo)
             }
-            if(infoUser.tags && infoUser.tags != ""){
+            if(infoUser.tags){
+                console.log("tags",infoUser.tags)
                 currentUser.set("tags", infoUser.tags)
             }
             if(infoUser.media){
