@@ -16,6 +16,90 @@ app.use(cors())
 Parse.initialize('78hKdRq48OxfwlPbCkgFfgfquxCqwLiK86y3bjLU', '76IvY9V2pEqghFHqV3mZf8xhcUaPL6WndGCJbGhc')
 Parse.serverURL = 'http://parseapi.back4app.com/'
 
+async function getUserInfo(user){
+    const Movie = Parse.Object.extend("Movie");
+    const movieQuery = new Parse.Query(Movie);
+
+    movieQuery.equalTo("User", user);
+    movieQuery.equalTo("active", true);
+    const userMovies = await movieQuery.find();
+
+    const Show = Parse.Object.extend("Show");
+    const showQuery = new Parse.Query(Show);
+    showQuery.equalTo("User", user);
+    showQuery.equalTo("active", true);
+    const userShows = await showQuery.find();
+
+    const Hobby = Parse.Object.extend("Hobby");
+    const hobbyQuery = new Parse.Query(Hobby);
+    hobbyQuery.equalTo("User", user);
+    hobbyQuery.equalTo("active", true);
+    const userHobbies = await hobbyQuery.find();
+    return({movies : userMovies, shows : userShows, hobbies : userHobbies, tags : user.get("tags")});
+}
+
+function compareArrs(arr_1, arr_2, weight){
+    var matches = 0
+    for (var i = 0; i < arr_1.length; i++) {
+        if (arr_2.indexOf(arr_1[i]) != -1)
+            matches++;
+    }
+    return (matches / (arr_1.length + arr_2.length)) * weight
+}
+
+function getScore(movies, shows, hobbies, tags){
+    //get movie genre matches
+    var user1_genres = []
+    var user1_movies = []
+    for (var i = 0; i < movies.user_1.length; i++) {
+        user1_genres = user1_genres.concat(movies.user_1[i].genres)
+        user1_movies.push(movies.user_1[i].title)
+    }
+    var user2_genres = []
+    var user2_movies = []
+    for (var i = 0; i < movies.user_2.length; i++) {
+        user2_genres = user2_genres.concat(movies.user_2[i].genres)
+        user2_movies.push(movies.user_2[i].title)
+    }
+    var movieGenreScore = compareArrs(user1_genres, user2_genres, 0.2)
+    var movieTitleScore = compareArrs(user1_movies, user2_movies, 0.05)
+
+    //get tv genre matches
+    var user1_show_genres = []
+    var user1_shows = []
+    for (var i = 0; i < shows.user_1.length; i++) {
+        user1_show_genres = user1_show_genres.concat(shows.user_1[i].genres)
+        user1_shows.push(shows.user_1[i].title)
+    }
+    var user2_show_genres = []
+    var user2_shows = []
+    for (var i = 0; i < shows.user_2.length; i++) {
+        user2_show_genres = user2_show_genres.concat(shows.user_2[i].genres)
+        user2_shows.push(shows.user_2[i].title)
+    }
+    var showGenreScore = compareArrs(user1_show_genres, user2_show_genres, 0.2)
+    var showTitleScore = compareArrs(user1_shows, user2_shows, 0.05)
+
+    //get hobby matches
+    var user1_hobby_categories = []
+    var user1_hobbies = []
+    for (var i = 0; i < hobbies.user_1.length; i++) {
+        user1_hobby_categories.push(hobbies.user_1[i].category)
+        user1_hobbies.push(hobbies.user_1[i].name)
+    }
+    var user2_hobby_categories = []
+    var user2_hobbies = []
+    for (var i = 0; i < hobbies.user_2.length; i++) {
+        user2_hobby_categories.push(hobbies.user_2[i].category)
+        user2_hobbies.push(hobbies.user_2[i].name)
+    }
+    var hobbyCategoryScore = compareArrs(user1_hobby_categories, user2_hobby_categories, 0.25)
+    var hobbyScore = compareArrs(user1_hobbies, user2_hobbies, 0.1)
+
+    var tagsScore = compareArrs(tags.user_1, tags.user_2, 0.15)
+    return (movieGenreScore + movieTitleScore + showGenreScore + showTitleScore + hobbyCategoryScore + hobbyScore + tagsScore)
+}
+
 app.post('/login', async(req, res) => {
     let infoUser = req.body
 
@@ -51,6 +135,75 @@ app.post('/signup', async(req, res) => {
         await user.signUp()
         res.send({loginMessage : "User signed up!", RegisterMessage: '', typeStatus : 'success', infoUser : infoUser})
         let userLogin = await Parse.User.logIn(infoUser.email, infoUser.password)
+    }
+    catch(error){
+        res.send({loginMessage : error.message, RegisterMessage: '', typeStatus : 'danger', infoUser : infoUser})
+    }
+})
+
+app.post('/getMatch', async(req, res) => {
+    Parse.User.enableUnsafeCurrentUser()
+    let infoUser = req.body
+    let currentUser = Parse.User.current();
+    try{
+        if(currentUser){
+            const query = new Parse.Query(Parse.User);
+            query.notEqualTo("objectId", currentUser.id);
+            const entries = await query.find()
+            const Match = Parse.Object.extend("match");
+            var count = 0
+
+            console.log("entries", entries.length)
+            for (var i = 0; i < entries.length; i++){
+                var matches = []
+                var entry = entries[i]
+                console.log("entry", entry.objectId)
+                console.log("count", count)
+                var matchInfo = await getUserInfo(entry)
+                //console.log("matchInfo", matchInfo)
+                var currentUserInfo = await getUserInfo(currentUser)
+                //console.log("currentUserInfo", currentUserInfo)
+                var movieInfo = {"user_1" : matchInfo.movies, "user_2" : currentUserInfo.movies}
+                var showInfo = {"user_1" : matchInfo.shows, "user_2" : currentUserInfo.shows}
+                var hobbiesInfo = {"user_1" : matchInfo.hobbies, "user_2" : currentUserInfo.hobbies}
+                var tagsInfo = {"user_1" : matchInfo.tags, "user_2" : currentUserInfo.tags}
+                var matchScore = getScore(movieInfo, showInfo, hobbiesInfo, tagsInfo)                
+
+                //check if match is already in database and has not been liked
+                const matchQuery = new Parse.Query(Match);
+                matchQuery.equalTo("User", entry);
+                matchQuery.equalTo("User", currentUser);
+                var result = await matchQuery.find();
+                console.log("results length", result.length)
+                var results = result[0]
+                if(results){
+                    //update score
+                    results.set("score", matchScore)
+                    console.log("matchScore - already matched", matchScore)
+                    await results.save()
+                    console.log('matchScore Saved')
+                    matches.push(results)
+                }
+                else{
+                    const match = new Match();
+                    match.set("score", matchScore)
+                    console.log("matchScore - new match", matchScore)
+                    match.set("liked", false)
+                    match.set("user1_id",entry.objectId)
+                    let userRelation = match.relation('User');
+                    userRelation.add([entry, currentUser])
+                    await match.save()
+                    console.log('match Saved')
+                    matches.push(match)
+                }
+                count++;
+                console.log("end of loop")
+            }
+            res.send({matches : matches, matchScore : matchScore, entries: entries, loginMessage : "Matches retrieved", typeStatus : 'success', infoUser : infoUser})
+        }
+        else{
+            res.send({loginMessage : "Can't get current user", RegisterMessage: '', typeStatus : 'danger', infoUser : infoUser})
+        }
     }
     catch(error){
         res.send({loginMessage : error.message, RegisterMessage: '', typeStatus : 'danger', infoUser : infoUser})

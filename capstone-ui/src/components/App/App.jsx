@@ -13,6 +13,7 @@ import Interests from "../User/Interests/Interests";
 import Media from "../User/Media/Media";
 import InterestsEdit from "../User/Interests/InterestsEdit/InterestsEdit";
 import MediaEdit from "../User/Media/MediaEdit/MediaEdit";
+import Matching from "../Matching/Matching";
 
 export default function App() {
   const API_KEY = "658568773162c3aaffcb3981d4f5587b"
@@ -30,14 +31,16 @@ export default function App() {
 
   const PORT = '3001'
 
+  //fetch results for movies on page using TMDB API
   async function getResults(PAGE_URL){
-    //fetch results for movies on page
     const response = await fetch(PAGE_URL)
     const result = await response.json()
     return result.results
-}
+  }
 
-const getMovieSearch = () => {
+
+  //gets search result from api for interests movie search bar
+  const getMovieSearch = () => {
   var query = document.getElementById('enter-movie').value
   if(query == ""){
     setMovie("")
@@ -52,27 +55,44 @@ const getMovieSearch = () => {
   })
 }
 
-const getTVSearch = () => {
-  var query = document.getElementById('enter-tv').value
-  if(query == ""){
-    setTV("")
+  //gets tv result from api for interests movie search bar
+  const getTVSearch = () => {
+    var query = document.getElementById('enter-tv').value
+    if(query == ""){
+      setTV("")
+    }
+    getResults(TV_SEARCH_URL + query)
+    .then(function(response){
+      console.log(response)
+      setTV(response[0])
+      console.log("userInfo", userInfo)
+      setIsFetching(false)
+    })
   }
-  getResults(TV_SEARCH_URL + query)
-  .then(function(response){
-    console.log(response)
-    setTV(response[0])
-    console.log("userInfo", userInfo)
-    setIsFetching(false)
-  })
-}
 
-const goToSignUp = () => {
-  navigate('/signup')
-}
+  //gets matches for current user
+  function getMatches (){
+    setIsFetching(true)
+    axios.post(`http://localhost:${PORT}/getMatch`, {
+      userInfo : userInfo
+    })
+    .then(function(response){
+      console.log("response:", response)
+      setIsFetching(false)
+    })
+    .catch(function(err){
+      console.log(err)
+    })
+  }
 
-const goToLogin = () => {
-  navigate('/login')
-}
+  //navigate to pages
+  const goToSignUp = () => {
+    navigate('/signup')
+  }
+
+  const goToLogin = () => {
+    navigate('/login')
+  }
 
   const goToBasic = () => {
     navigate('/user/basic')
@@ -100,6 +120,13 @@ const goToLogin = () => {
     navigate('/user/media')
   }
 
+  const goToMatching = () => {
+    navigate('/user/matching')
+    getMatches()
+  }
+
+  //retrieves movies, tv shows, and hobbies for user
+  //sets user info
   function getInterestsFromUser() {
     setIsFetching(true)
     axios.get(`http://localhost:${PORT}/user/interests`)
@@ -112,6 +139,7 @@ const goToLogin = () => {
     });
   }
 
+  //log user out
   const logOut = () => {
     axios.post(`http://localhost:${PORT}/logout`, {
     })  
@@ -125,6 +153,8 @@ const goToLogin = () => {
     })
   }
 
+  //remove movie from user movies
+  //reloads interests
   function removeMovie (movie){
     setIsFetching(true)
     axios.post(`http://localhost:${PORT}/user/interests/remove`, {
@@ -140,6 +170,8 @@ const goToLogin = () => {
     })
   }
 
+  //remove show from user shows
+  //reloads interests
   function removeShow (show){
     setIsFetching(true)
     axios.post(`http://localhost:${PORT}/user/interests/remove`, {
@@ -155,6 +187,8 @@ const goToLogin = () => {
     })
   }
 
+  //remove hobby from user hobbies
+  //reloads interests
   function removeHobby (hobby){
     setIsFetching(true)
     axios.post(`http://localhost:${PORT}/user/interests/remove`, {
@@ -171,6 +205,8 @@ const goToLogin = () => {
   }
 
 
+  //sends user interests to backend
+  //reloads interests
   const saveInterests = () => {
     setIsFetching(true)
     axios.post(`http://localhost:${PORT}/user/interests`, {
@@ -195,6 +231,7 @@ const goToLogin = () => {
     })
   }
 
+  //sends basic info to backend
   const saveBasicInfo = async () => {
     setIsFetching(true)
     var tags = []
@@ -246,21 +283,29 @@ const goToLogin = () => {
 
   const createSignUpParser = () => {
     setIsFetching(true)
-    axios.post(`http://localhost:${PORT}/signup`, {
+    if(!document.getElementById('email').value.endsWith('.edu')){
+      alert('Please enter a valid .edu email')
+    }
+    else if(document.getElementById('password').value != document.getElementById('confirm-password').value){
+      alert('Passwords do not match')
+    }
+    else{
+      axios.post(`http://localhost:${PORT}/signup`, {
       email: document.getElementById('email').value,
       password: document.getElementById('password').value,
       preferredName: document.getElementById('preferredName').value
-    })
-    .then(function(response){
-      console.log(response.data)
-      if(response.data.typeStatus === "success"){
-        navigate('/verify')
-      }
-      setIsFetching(false)
-    })
-    .catch(function(err){
-      console.log(err)
-    })
+      })
+      .then(function(response){
+        console.log(response.data)
+        if(response.data.typeStatus === "success"){
+          navigate('/verify')
+        }
+        setIsFetching(false)
+      })
+      .catch(function(err){
+        console.log(err)
+      })
+    }
   }
 
   const createVerifyParser = () => {
@@ -285,7 +330,7 @@ const goToLogin = () => {
   return (
     <div className="App">
       <main>
-      <Navbar userInfo = {userInfo} logOut = {logOut}/>
+      <Navbar userInfo = {userInfo} logOut = {logOut} goToMatching={goToMatching}/>
       <Routes>
         <Route 
         path = "/login"
@@ -324,6 +369,10 @@ const goToLogin = () => {
         <Route 
         path = "/user/media/edit"
         element = {<MediaEdit userInfo = {userInfo} goToBasic={goToBasic} goToInterests={goToInterests} imageList={userInfo.media} maxImages = {10} setUserInfo={setUserInfo} isFetching={isFetching} setIsFetching={setIsFetching}></MediaEdit>}
+        />
+        <Route 
+        path = "/user/matching"
+        element = {<Matching></Matching>}
         />
       </Routes>
       </main>

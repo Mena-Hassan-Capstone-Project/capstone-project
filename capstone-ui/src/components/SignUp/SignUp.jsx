@@ -7,9 +7,9 @@ export default function SignUp({createSignUpParser, goToLogin}) {
         <h1>Create Account</h1>
         <input id = "email" className = "input signup-input" type="email" placeholder="Enter your school email" />
         <br />
-        <input id = "password" className = "input signup-input" type="text" placeholder="Create a Password" />
+        <input id = "password" className = "input signup-input" type="password" placeholder="Create a Password" />
         <br />
-        <input className = "input signup-input" type="text" placeholder="Confirm Password" />
+        <input id = "confirm-password" className = "input signup-input" type="password" placeholder="Confirm Password" />
         <br />
         <input id = "preferredName" className = "input signup-input" type="text" placeholder="Preferred Name" />
         <br />

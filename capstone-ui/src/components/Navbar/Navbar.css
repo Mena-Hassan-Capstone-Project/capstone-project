@@ -28,3 +28,14 @@
     display: block;
     margin-left: 350px;
 }
+
+.navbar-content{
+    font-size: 20px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding-left: 40px;
+    cursor: pointer;
+}
