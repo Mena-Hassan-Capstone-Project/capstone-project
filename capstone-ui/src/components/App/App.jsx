@@ -35,6 +35,11 @@ export default function App() {
 
   const PORT = '3001'
 
+  React.useEffect(() => {
+    createMatches({})
+    getMatchesForUser(10, 0)
+  }, [userInfo]);
+
   //fetch results for movies on page using TMDB API
   async function getResults(PAGE_URL){
     const response = await fetch(PAGE_URL)
@@ -45,42 +50,37 @@ export default function App() {
 
   //gets search result from api for interests movie search bar
   const getMovieSearch = () => {
-    var query = document.getElementById('enter-movie').value
+    const query = document.getElementById('enter-movie').value
     if(query === ""){
       setMovie("")
     }
     getResults(MOVIE_SEARCH_URL + query)
     .then(function(response){
-      console.log(response)
       setMovie(response[0])
-      console.log("userInfo", userInfo)
       setIsFetching(false)
     })
 }
 
   //gets tv result from api for interests movie search bar
   const getTVSearch = () => {
-    var query = document.getElementById('enter-tv').value
+    const query = document.getElementById('enter-tv').value
     if(query === ""){
       setTV("")
     }
     getResults(TV_SEARCH_URL + query)
     .then(function(response){
-      console.log(response)
       setTV(response[0])
-      console.log("userInfo", userInfo)
       setIsFetching(false)
     })
   }
 
   //creates matches for current user
-  function createMatches (){
+  async function createMatches (params){
     setIsFetching(true)
-    axios.post(`http://localhost:${PORT}/getMatch`, {
+    await axios.post(`http://localhost:${PORT}/matches`, {
+      params : params
     })
     .then(function(response){
-      console.log("response:", response)
-      getMatchesForUser(10, 0)
       setIsFetching(false)
     })
     .catch(function(err){
@@ -133,30 +133,34 @@ export default function App() {
     setIsFetching(true)
     axios.get(`http://localhost:${PORT}/user/interests`)
     .then(resp => {
-      console.log(resp.data);
       setHobbiesList(resp.data.hobbiesList)
       setUserInfo({...userInfo, interests : {movies : resp.data.movies, shows : resp.data.shows, hobbies : resp.data.hobbies}})
-      console.log("userInfo", userInfo)
       setIsFetching(false)
     });
   }
 
   //retrieves matches for user
   //sets user info
-  function getMatchesForUser(limit, offset) {
-    setIsFetching(true)
-    axios.get(`http://localhost:${PORT}/getMatch`, {
-      params: {
-        limit: limit,
-        offset: offset
+  async function getMatchesForUser(limit, offset) {
+    if(!isFetching){
+      setIsFetching(true)
+      await axios.get(`http://localhost:${PORT}/matches`, {
+        params: {
+          limit: limit,
+          offset: offset
+        }
+      })
+      .then(resp => {
+        if(offset == 0){
+          setUserMatches(resp.data.matchesInfo)
+        }
+        else if(userMatches.length >= 10 && resp.data.matchesInfo[0] && !userMatches.includes(resp.data.matchesInfo[0])){
+          let newMatches = userMatches.concat(resp.data.matchesInfo)
+          setUserMatches(newMatches)
+        }
+        setIsFetching(false)
+      });
       }
-    })
-    .then(resp => {
-      console.log(resp.data);
-      let newMatches = userMatches.concat(resp.data.matchesInfo)
-      setUserMatches(newMatches)
-      setIsFetching(false)
-    });
   }
 
   //log user out
@@ -164,8 +168,8 @@ export default function App() {
     axios.post(`http://localhost:${PORT}/logout`, {
     })  
     .then(function(response){
-      console.log(response)
       setUserInfo("")
+      setUserMatches([])
       navigate('/login')
     })
     .catch(function(err){
@@ -181,7 +185,6 @@ export default function App() {
       movie : movie
     })
     .then(function(response){
-      console.log("response:", response)
       getInterestsFromUser()
       setIsFetching(false)
     })
@@ -198,7 +201,6 @@ export default function App() {
       show : show
     })
     .then(function(response){
-      console.log("response:", response)
       getInterestsFromUser()
       setIsFetching(false)
     })
@@ -215,7 +217,6 @@ export default function App() {
       hobby : hobby
     })
     .then(function(response){
-      console.log("response:", response)
       getInterestsFromUser()
       setIsFetching(false)
     })
@@ -239,7 +240,6 @@ export default function App() {
       }
     })
     .then(function(response){
-      console.log("Edited data:", response)
       getInterestsFromUser()
       navigate('/user/interests')
       setMovie("")
@@ -258,7 +258,6 @@ export default function App() {
     if(userInfo.tags){
       tags = userInfo.tags
     }
-    console.log("tags", tags)
     if(tags.indexOf(document.getElementById('tags').value) === -1){
       tags.push(document.getElementById('tags').value)
     }
@@ -274,7 +273,6 @@ export default function App() {
       tags: tags,
     })
     .then(function(response){
-      console.log("Edited data:", response)
       setUserInfo(response.data.userInfo)
       navigate('/user/basic')
       setIsFetching(false)
@@ -284,17 +282,15 @@ export default function App() {
     })
   }
 
-  const createLoginParser = () => {
+  const createLoginParser = async () => {
     setIsFetching(true)
-    axios.post(`http://localhost:${PORT}/login`, {
+    await axios.post(`http://localhost:${PORT}/login`, {
       email: document.getElementById('email').value,
       password: document.getElementById('password').value
     })
     .then(function(response){
-      console.log(response)
+      setUserMatches([])
       setUserInfo(response.data.userInfo)
-      createMatches()
-      getMatchesForUser(10, 0)
       navigate('/user/basic')
       setIsFetching(false)
     })
@@ -318,7 +314,6 @@ export default function App() {
       preferredName: document.getElementById('preferredName').value
       })
       .then(function(response){
-        console.log(response.data)
         if(response.data.typeStatus === "success"){
           navigate('/verify')
         }
@@ -339,7 +334,6 @@ export default function App() {
       dob: document.getElementById('DOB').value
     })
     .then(function(response){
-      console.log(response.data.userInfo)
       setUserInfo(response.data.userInfo)
       navigate('/user/basic/edit')
       setIsFetching(false)

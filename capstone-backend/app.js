@@ -9,7 +9,7 @@ app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
 app.use(express.json());
 app.use(morgan('tiny'))
 const fs = require('fs');
-let cors = require('cors')
+const cors = require('cors')
 
 app.use(cors())
 
@@ -21,30 +21,27 @@ async function getUserInfo(user){
     const movieQuery = new Parse.Query(Movie);
 
     movieQuery.equalTo("User", user);
-    movieQuery.equalTo("active", true);
     const userMovies = await movieQuery.find();
 
     const Show = Parse.Object.extend("Show");
     const showQuery = new Parse.Query(Show);
     showQuery.equalTo("User", user);
-    showQuery.equalTo("active", true);
     const userShows = await showQuery.find();
 
     const Hobby = Parse.Object.extend("Hobby");
     const hobbyQuery = new Parse.Query(Hobby);
     hobbyQuery.equalTo("User", user);
-    hobbyQuery.equalTo("active", true);
     const userHobbies = await hobbyQuery.find();
     return({movies : userMovies, shows : userShows, hobbies : userHobbies, tags : user.get("tags")});
 }
 
-function compareArrs(arr_1, arr_2, weight){
-    var matches = 0;
-    for (var i = 0; i < arr_1.length; i++) {
+function compareArrs(arr1, arr2, weight){
+    let matches = 0;
+    for (let i = 0; i < arr1.length; i++) {
         // we want to know if a[i] is found in b
-        var match = false; // we haven't found it yet
-        for (var j = 0; j < arr_2.length; j++) {
-            if (arr_1[i] == arr_2[j]) {
+        let match = false; // we haven't found it yet
+        for (let j = 0; j < arr2.length; j++) {
+            if (arr1[i] == arr2[j]) {
                 // we have found a[i] in b, so we can stop searching
                 match = true;
                 break;
@@ -58,67 +55,117 @@ function compareArrs(arr_1, arr_2, weight){
         }
     }
 
-    return (matches / (arr_1.length + arr_2.length)) * weight
+    return (matches / (arr1.length + arr2.length)) * weight
+}
+
+function calculateCategoryScore(category, prop1, prop2, weight1, weight2){
+    let user1Prop1 = []
+    let user1Prop2 = []
+    for (let i = 0; i < category.user_1.length; i++) {
+        user1Prop1 = user1Prop1.concat(category.user_1[i].get(prop1))
+        user1Prop2.push(category.user_1[i].get(prop2))
+    }
+
+    let user2Prop1 = []
+    let user2Prop2 = []
+    for (let i = 0; i < category.user_2.length; i++) {
+        user2Prop1 = user2Prop1.concat(category.user_2[i].get(prop1))
+        user2Prop2.push(category.user_2[i].get(prop2))
+    }
+
+    let prop1Score = compareArrs(user1Prop1, user2Prop1, weight1)
+    let prop2Score = compareArrs(user1Prop2, user2Prop2, weight2)
+    return prop1Score + prop2Score
 }
 
 function getScore(movies, shows, hobbies, tags){
     //get movie genre matches
-    let user1MovieGenres = []
-    let user1Movies = []
-    for (let i = 0; i < movies.user_1.length; i++) {
-        user1MovieGenres = user1MovieGenres.concat(movies.user_1[i].get('genres'))
-        user1Movies.push(movies.user_1[i].get('title'))
-    }
-    let user2MovieGenres = []
-    let user2Movies = []
-    for (let i = 0; i < movies.user_2.length; i++) {
-        user2MovieGenres = user2MovieGenres.concat(movies.user_2[i].get('genres'))
-        user2Movies.push(movies.user_2[i].get('title'))
-    }
-    let movieGenreScore = compareArrs(user1MovieGenres, user2MovieGenres, 0.2)
-    let movieTitleScore = compareArrs(user1Movies, user2Movies, 0.05)
+    const movieScore = calculateCategoryScore(movies, "genres", "title", 0.2, 0.05)
+    const showScore = calculateCategoryScore(shows, "genres", "title", 0.2, 0.05)
+    const hobbiesScore = calculateCategoryScore(hobbies, "category", "name", 0.25, 0.1)
+    const tagsScore = compareArrs(tags.user_1, tags.user_2, 0.15)
 
-    //get tv genre matches
-    let user1ShowGenres = []
-    let user1Shows = []
-    for (let i = 0; i < shows.user_1.length; i++) {
-        user1ShowGenres = user1ShowGenres.concat(shows.user_1[i].get('genres'))
-        user1Shows.push(shows.user_1[i].get('title'))
-    }
-    let user2ShowGenres = []
-    let user2Shows = []
-    for (let i = 0; i < shows.user_2.length; i++) {
-        user2ShowGenres = user2ShowGenres.concat(shows.user_2[i].get('genres'))
-        user2Shows.push(shows.user_2[i].get('title'))
-    }
-    let showGenreScore = compareArrs(user1ShowGenres, user2ShowGenres, 0.2)
-    let showTitleScore = compareArrs(user1Shows, user2Shows, 0.05)
+    return (movieScore + showScore + hobbiesScore + tagsScore)
+}
 
-    //get hobby matches
-    let user1HobbyCategories = []
-    let user1Hobbies = []
-    for (let i = 0; i < hobbies.user_1.length; i++) {
-        user1HobbyCategories.push(hobbies.user_1[i].get('category'))
-        user1Hobbies.push(hobbies.user_1[i].get('name'))
-    }
-    let user2HobbyCategories = []
-    let user2Hobbies = []
-    for (let i = 0; i < hobbies.user_2.length; i++) {
-        user2HobbyCategories.push(hobbies.user_2[i].get('category'))
-        user2Hobbies.push(hobbies.user_2[i].get('name'))
-    }
-    let hobbyCategoryScore = compareArrs(user1HobbyCategories, user2HobbyCategories, 0.25)
-    let hobbyScore = compareArrs(user1Hobbies, user2Hobbies, 0.1)
+function getMatches(params){
+    const query = new Parse.Query(Parse.User);
+    query.notEqualTo("objectId",  currentUser.id);
+    const entries = await query.find()
+    const Match = Parse.Object.extend("Match");
 
-    let tagsScore = compareArrs(tags.user_1, tags.user_2, 0.15)
-    return (movieGenreScore + movieTitleScore + showGenreScore + showTitleScore + hobbyCategoryScore + hobbyScore + tagsScore)
+    entries.forEach(entry => {
+        const matchInfo = await getUserInfo(entry)
+        const currentUserInfo = await getUserInfo(currentUser)
+
+        const movieInfo = {user_1 : currentUserInfo.movies, user_2 : matchInfo.movies}
+        const showInfo = {user_1 : currentUserInfo.shows, user_2 : matchInfo.shows}
+        const hobbiesInfo = {user_1 : currentUserInfo.hobbies, user_2 : matchInfo.hobbies}
+        const tagsInfo = {user_1 : currentUserInfo.tags, user_2 : matchInfo.tags}
+        const matchScore = getScore(movieInfo, showInfo, hobbiesInfo, tagsInfo) 
+
+        //check if match is already in database
+        const matchQuery = new Parse.Query(Match);
+        matchQuery.equalTo("user_1", currentUser.id);
+        matchQuery.equalTo("user_2", entry.id);
+        let matchResults = await matchQuery.find();
+
+        if(matchResults.length > 0){
+            for(let i = 0; i < matchResults.length; i++){
+                //update match score if needed
+                matchResults[i].set("score", matchScore)
+                if(params.match == matchResults[i].id && params.liked){
+                    matchResults[i].set("liked", params.liked)
+                }
+                await matchResults[i].save()
+            }
+        }
+        else{
+            const match = new Match();
+            match.set("score", matchScore)
+            match.set("liked", false)
+            match.set("seen", false)
+            match.set("user_1", currentUser.id)
+            match.set("user_2", entry.id)
+            await match.save()
+        }
+    })
+}
+
+function retrieveMatchData(limit, offset){
+    const Match = Parse.Object.extend("Match");
+    const matchQuery = new Parse.Query(Match);
+    matchQuery.equalTo("user_1", currentUser.id);
+    matchQuery.descending("score")
+    matchQuery.limit(parseInt(limit))
+    matchQuery.skip(parseInt(offset))
+
+    const matchResults = await matchQuery.find();
+    let usersInfo = []
+    let scoreInfo = []
+    
+    for(let i = 0; i < matchResults.length; i++){
+        let userId = matchResults[i].get('user_2')
+        const query = new Parse.Query(Parse.User);
+        query.equalTo("objectId", userId);
+        const userInfo = await query.first()
+        usersInfo.push(userInfo)
+        scoreInfo.push({score: matchResults[i].get('score'), liked: matchResults[i].get('liked'), seen: matchResults[i].get('seen')})
+    }
+    let matchesInfo = usersInfo.map(function(_, i) {
+        return {
+            userInfo: usersInfo[i],
+            scoreInfo: scoreInfo[i]
+        };
+    });
+    return({matchesInfo : matchesInfo, matchResults : matchResults, matchMessage: "Matches Retrieved!", typeStatus: "success"})
 }
 
 app.post('/login', async(req, res) => {
-    let infoUser = req.body
+    const infoUser = req.body
 
     try{
-        let user = await Parse.User.logIn(infoUser.email, infoUser.password)
+        const user = await Parse.User.logIn(infoUser.email, infoUser.password)
         res.send({userInfo : user, loginMessage: "User logged in!", typeStatus: "success",  infoUser: infoUser});
       } catch (error){
         res.send({loginMessage: error.message, typeStatus: "danger",  infoUser: infoUser});
@@ -137,7 +184,7 @@ app.post('/logout', async(req, res) => {
 
 app.post('/signup', async(req, res) => {
     Parse.User.enableUnsafeCurrentUser()
-    let infoUser = req.body
+    const infoUser = req.body
     let user = new Parse.User()
 
     user.set("username", infoUser.email)
@@ -155,63 +202,15 @@ app.post('/signup', async(req, res) => {
     }
 })
 
-app.post('/getMatch', async(req, res) => {
+app.post('/matches', async(req, res) => {
     Parse.User.enableUnsafeCurrentUser()
 
-    let params = req.body.params
-    console.log("create match")
-    console.log("params", req.body.params)
-    let  currentUser = Parse.User.current();
+    const params = req.body.params
+    const currentUser = Parse.User.current();
     try{
         if(currentUser){
-            const query = new Parse.Query(Parse.User);
-            query.notEqualTo("objectId",  currentUser.id);
-            const entries = await query.find()
-            const Match = Parse.Object.extend("Match");
-
-            console.log("entries", entries.length)
-            for (let i = 0; i < entries.length; i++){
-                let entry = entries[i]
-                let matchInfo = await getUserInfo(entry)
-                let currentUserInfo = await getUserInfo(currentUser)
-
-                console.log(currentUser.id)
-                console.log(entry.id)
-
-                let movieInfo = {"user_1" : currentUserInfo.movies, "user_2" : matchInfo.movies}
-                let showInfo = {"user_1" : currentUserInfo.shows, "user_2" : matchInfo.shows}
-                let hobbiesInfo = {"user_1" : currentUserInfo.hobbies, "user_2" : matchInfo.hobbies}
-                let tagsInfo = {"user_1" : currentUserInfo.tags, "user_2" : matchInfo.tags}
-                let matchScore = getScore(movieInfo, showInfo, hobbiesInfo, tagsInfo) 
-
-                //check if match is already in database
-                const matchQuery = new Parse.Query(Match);
-                matchQuery.equalTo("user_1", currentUser.id);
-                matchQuery.equalTo("user_2", entry.id);
-                let matchResults = await matchQuery.find();
-
-                if(matchResults.length > 0){
-                    for(let i = 0; i < matchResults.length; i++){
-                        //update match score if needed
-                        matchResults[i].set("score", matchScore)
-                        if(params.match == matchResults[i].id && params.liked){
-                            console.log("match liked")
-                            matchResults[i].set("liked", params.liked)
-                        }
-                        await matchResults[i].save()
-                    }
-                }
-                else{
-                    const match = new Match();
-                    match.set("score", matchScore)
-                    match.set("liked", false)
-                    match.set("seen", false)
-                    match.set("user_1", currentUser.id)
-                    match.set("user_2", entry.id)
-                    await match.save()
-                }
-            }
-            res.send({entries: entries, matchMessage : "Matches created", typeStatus : 'success'})
+            getMatches(params)
+            res.send({matchMessage : "Matches created", typeStatus : 'success'})
         }
         else{
             res.send({matchMessage : "Can't get current user", typeStatus : 'danger'})
@@ -222,38 +221,14 @@ app.post('/getMatch', async(req, res) => {
     }
 })
 
-app.get('/getMatch', async(req, res) => {
+app.get('/matches', async(req, res) => {
     Parse.User.enableUnsafeCurrentUser()
-    let currentUser = Parse.User.current();
+    const currentUser = Parse.User.current();
     const limit = req.query["limit"]
     const offset = req.query["offset"]
     if(currentUser){
-        const Match = Parse.Object.extend("Match");
-        const matchQuery = new Parse.Query(Match);
-        matchQuery.equalTo("user_1", currentUser.id);
-        matchQuery.descending("score")
-        matchQuery.limit(parseInt(limit))
-        matchQuery.skip(parseInt(offset))
-
-        let match_results = await matchQuery.find();
-        let users_info = []
-        let score_info = []
-        
-        for(let i = 0; i < match_results.length; i++){
-            let user_id = match_results[i].get('user_2')
-            const query = new Parse.Query(Parse.User);
-            query.equalTo("objectId", user_id);
-            const userInfo = await query.first()
-            users_info.push(userInfo)
-            score_info.push({score: match_results[i].get('score'), liked: match_results[i].get('liked'), seen: match_results[i].get('seen')})
-        }
-        var matchesInfo = users_info.map(function(_, i) {
-            return {
-              userInfo: users_info[i],
-              scoreInfo: score_info[i]
-            };
-          });
-        res.send({limit : limit, offset : offset, matchesInfo : matchesInfo, matchResults : match_results, matchMessage: "Matches Retrieved!", typeStatus: "success"});
+        let matchData = retrieveMatchData(limit, offset)
+        res.send(matchData);
     }
     else{
         res.send({matchMessage: "Can't get current user", typeStatus: "danger"});
@@ -262,10 +237,10 @@ app.get('/getMatch', async(req, res) => {
 
 app.post('/verify', async(req, res) => {
     Parse.User.enableUnsafeCurrentUser()
-    let infoUser = req.body
+    const infoUser = req.body
 
     try{
-        let currentUser = Parse.User.current();
+        const currentUser = Parse.User.current();
         if (currentUser) {
             currentUser.set("firstName", infoUser.firstName)
             currentUser.set("lastName", infoUser.lastName)
@@ -281,38 +256,29 @@ app.post('/verify', async(req, res) => {
       }
 })
 
+function removeInterest(objectName, itemKey, itemValue, currentUser){
+    const Object = Parse.Object.extend(objectName);
+    const query = new Parse.Query(Object);
+    query.equalTo(itemKey, itemValue);
+    query.equalTo("User", currentUser);
+    const entry = await query.find();
+    entry[0].destroy()
+}
+
 app.post('/user/interests/remove', async(req, res) => {
-    let removeInfo = req.body
+    const removeInfo = req.body
     Parse.User.enableUnsafeCurrentUser()
-    let currentUser = Parse.User.current();
+    const currentUser = Parse.User.current();
     try{
         if(currentUser){
             if(removeInfo.movie){
-                const Movie = Parse.Object.extend("Movie");
-                const query = new Parse.Query(Movie);
-                query.equalTo("api_id", removeInfo.movie.api_id);
-                query.equalTo("User", currentUser);
-                const entry = await query.find();
-                entry[0].set("active", false)
-                await entry[0].save()
+                removeInterest("Movie", "api_key" , removeInfo.movie.api_id, currentUser)
             }
             if(removeInfo.show){
-                const Show = Parse.Object.extend("Show");
-                const query = new Parse.Query(Show);
-                query.equalTo("api_id", removeInfo.show.api_id);
-                query.equalTo("User", currentUser);
-                const entry = await query.find();
-                entry[0].set("active", false)
-                await entry[0].save()
+                removeInterest("Show", "api_key", removeInfo.show.api_id, currentUser)
             }
             if(removeInfo.hobby){
-                const Hobby = Parse.Object.extend("Hobby");
-                const query = new Parse.Query(Hobby);
-                query.equalTo("name", removeInfo.hobby.name);
-                query.equalTo("User", currentUser);
-                const entry = await query.find();
-                entry[0].set("active", false)
-                await entry[0].save()
+                removeInterest("Hobby", "name", removeInfo.hobby.name, currentUser)
             }
             res.send({removeMessage: "success", removeInfo : removeInfo, entry: entry[0]});
         }
@@ -325,36 +291,30 @@ app.post('/user/interests/remove', async(req, res) => {
       }
   });
 
+  function getInterestQuery(currentUser, objectName){
+    const Object = Parse.Object.extend(objectName);
+    const query = new Parse.Query(Object);
+    query.equalTo("User", currentUser);
+    // now contains the movies for this user
+    return await query.find();
+  }
+
 app.get('/user/interests', async(req, res) => {
     Parse.User.enableUnsafeCurrentUser()
-    let currentUser = Parse.User.current();
+    const currentUser = Parse.User.current();
     if(currentUser){
-        const Movie = Parse.Object.extend("Movie");
-        const movieQuery = new Parse.Query(Movie);
+        //get movies for this user
+        const userMovies = getInterestQuery(currentUser, "Movie");
+        // get the shows for this user
+        const userShows = getInterestQuery(currentUser, "Show");
+        // get the hobbies for this user
+        const userHobbies = getInterestQuery(currentUser, "Hobby");
 
-        movieQuery.equalTo("User", currentUser);
-        movieQuery.equalTo("active", true);
-        // now contains the movies for this user
-        const userMovies = await movieQuery.find();
+        //get full list of hobbies for users to choose from
+        const rawdata = fs.readFileSync('data/hobbies.json');
+        const hobbiesList = JSON.parse(rawdata);
 
-        const Show = Parse.Object.extend("Show");
-        const showQuery = new Parse.Query(Show);
-        showQuery.equalTo("User", currentUser);
-        showQuery.equalTo("active", true);
-        // now contains the shows for this user
-        const userShows = await showQuery.find();
-
-        const Hobby = Parse.Object.extend("Hobby");
-        const hobbyQuery = new Parse.Query(Hobby);
-        hobbyQuery.equalTo("User", currentUser);
-        hobbyQuery.equalTo("active", true);
-        // now contains the hobbies for this user
-        const userHobbies = await hobbyQuery.find();
-
-        let rawdata = fs.readFileSync('data/hobbies.json');
-        let hobbies = JSON.parse(rawdata);
-
-        res.send({movies : userMovies, shows : userShows, hobbies : userHobbies, hobbiesList : hobbies.hobbies, getInterestsMessage: "Interests Retreived", typeStatus: "success"});
+        res.send({movies : userMovies, shows : userShows, hobbies : userHobbies, hobbiesList : hobbiesList.hobbies, getInterestsMessage: "Interests Retreived", typeStatus: "success"});
     }
     else{
         res.send({getInterestsMessage: "Can't get current user", typeStatus: "danger"});
@@ -363,7 +323,7 @@ app.get('/user/interests', async(req, res) => {
 
 app.post('/user/interests', async(req, res) => {
     Parse.User.enableUnsafeCurrentUser()
-    let infoInterests = req.body
+    const infoInterests = req.body
 
     try{
         const Movie = Parse.Object.extend("Movie");
@@ -375,27 +335,18 @@ app.post('/user/interests', async(req, res) => {
         const Hobby = Parse.Object.extend("Hobby");
         const hobby = new Hobby();
 
-        let currentUser = Parse.User.current();
+        const currentUser = Parse.User.current();
         if (currentUser) {
             if(infoInterests.interests.movie && infoInterests.interests.movie !=""){
                 const query = new Parse.Query(Movie);
                 query.equalTo("User", currentUser);
                 query.equalTo("api_id", infoInterests.interests.movie.id);
                 const entries = await query.find();
-                if(entries && entries[0]){
-                    console.log("entries", entries)
-                    console.log('duplicate')
-                    if(!entries[0].active){
-                        entries[0].set("active", true)
-                    }
-                    await entries[0].save()
-                }
-                else{
+                if(!entries[0]){
                     movie.set("title", infoInterests.interests.movie.title)
                     movie.set("api_id", infoInterests.interests.movie.id)
                     movie.set("genres", infoInterests.interests.movie.genre_ids)
                     movie.set("user", currentUser.id)
-                    movie.set("active", true)
                     let usersRelation = movie.relation('User');
                     usersRelation.add(currentUser)
                     await movie.save()
@@ -406,20 +357,11 @@ app.post('/user/interests', async(req, res) => {
                 query.equalTo("User", currentUser);
                 query.equalTo("api_id", infoInterests.interests.TV.id);
                 const entries = await query.find();
-                if(entries && entries[0]){
-                    console.log("entries", entries)
-                    console.log('duplicate')
-                    if(!entries[0].active){
-                        entries[0].set("active", true)
-                    }
-                    await entries[0].save()
-                }
-                else{
+                if(!entries[0]){
                     show.set("title", infoInterests.interests.TV.name)
                     show.set("api_id", infoInterests.interests.TV.id)
                     show.set("genres", infoInterests.interests.TV.genre_ids)
                     show.set("user", currentUser.objectId)
-                    show.set("active", true)
                     let usersRelation = show.relation('User');
                     usersRelation.add(currentUser)
                     await show.save()
@@ -430,18 +372,9 @@ app.post('/user/interests', async(req, res) => {
                 query.equalTo("User", currentUser);
                 query.equalTo("name", infoInterests.interests.hobby.name);
                 const entries = await query.find();
-                if(entries && entries[0]){
-                    console.log("entries", entries)
-                    console.log('duplicate')
-                    if(!entries[0].active){
-                        entries[0].set("active", true)
-                    }
-                    await entries[0].save()
-                }
-                else{
+                if(!entries[0]){
                     hobby.set("name", infoInterests.interests.hobby.name)
                     hobby.set("category", infoInterests.interests.hobby.category)
-                    hobby.set("active", true)
                     let usersRelation = hobby.relation('User');
                     usersRelation.add(currentUser)
                     await hobby.save()
@@ -458,10 +391,10 @@ app.post('/user/interests', async(req, res) => {
 
 app.post('/user/basic', async(req, res) => {
     Parse.User.enableUnsafeCurrentUser()
-    let infoUser = req.body
+    const infoUser = req.body
 
     try{
-        let currentUser = Parse.User.current();
+        const currentUser = Parse.User.current();
         if (currentUser) {
             if(infoUser.year && infoUser.year != ""){
                 currentUser.set("grad_year", infoUser.year)
@@ -476,7 +409,6 @@ app.post('/user/basic', async(req, res) => {
                 currentUser.set("profile_photo", infoUser.profile_photo)
             }
             if(infoUser.tags){
-                console.log("tags",infoUser.tags)
                 currentUser.set("tags", infoUser.tags)
             }
             if(infoUser.media){

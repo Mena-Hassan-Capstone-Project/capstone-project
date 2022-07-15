@@ -6,12 +6,11 @@ import { FaRegHeart } from "react-icons/fa";
 
 export default function Matching({isFetching, userMatches, getMatchesForUser, matchOffset, setOffset, matchLimit}) {
 
+    console.log("in matching", userMatches)
   return (
     (isFetching || userMatches == [] || !userMatches)
     ? <Loading></Loading>
     :
-    userMatches[0]
-    ?
     <div className="matching" id="matching">
         {
             userMatches.map((match, index) => (
@@ -46,8 +45,6 @@ export default function Matching({isFetching, userMatches, getMatchesForUser, ma
                 See More
                 </button>
         }
-    </div> 
-    :
-    console.log(userMatches)
+    </div>
   )
 }
