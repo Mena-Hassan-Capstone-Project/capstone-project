@@ -45,17 +45,17 @@ export default function App() {
 
   //gets search result from api for interests movie search bar
   const getMovieSearch = () => {
-  var query = document.getElementById('enter-movie').value
-  if(query === ""){
-    setMovie("")
-  }
-  getResults(MOVIE_SEARCH_URL + query)
-  .then(function(response){
-    console.log(response)
-    setMovie(response[0])
-    console.log("userInfo", userInfo)
-    setIsFetching(false)
-  })
+    var query = document.getElementById('enter-movie').value
+    if(query === ""){
+      setMovie("")
+    }
+    getResults(MOVIE_SEARCH_URL + query)
+    .then(function(response){
+      console.log(response)
+      setMovie(response[0])
+      console.log("userInfo", userInfo)
+      setIsFetching(false)
+    })
 }
 
   //gets tv result from api for interests movie search bar
@@ -80,6 +80,7 @@ export default function App() {
     })
     .then(function(response){
       console.log("response:", response)
+      getMatchesForUser(10, 0)
       setIsFetching(false)
     })
     .catch(function(err){
@@ -142,9 +143,9 @@ export default function App() {
 
   //retrieves matches for user
   //sets user info
-  async function getMatchesForUser(limit, offset) {
+  function getMatchesForUser(limit, offset) {
     setIsFetching(true)
-    await axios.get(`http://localhost:${PORT}/getMatch`, {
+    axios.get(`http://localhost:${PORT}/getMatch`, {
       params: {
         limit: limit,
         offset: offset

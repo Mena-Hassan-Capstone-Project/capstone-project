@@ -1,12 +1,13 @@
 import * as React from "react"
 import "./Matching.css"
 import Loading from "../Loading/Loading"
-import { useState, useEffect } from "react";
+import { FaHeart } from "react-icons/fa";
+import { FaRegHeart } from "react-icons/fa";
 
 export default function Matching({isFetching, userMatches, getMatchesForUser, matchOffset, setOffset, matchLimit}) {
 
   return (
-    isFetching
+    (isFetching || userMatches == [] || !userMatches)
     ? <Loading></Loading>
     :
     userMatches[0]
@@ -15,14 +16,22 @@ export default function Matching({isFetching, userMatches, getMatchesForUser, ma
         {
             userMatches.map((match, index) => (
                 <div key={index} className="card">
-                        <p className="card-text">{match.userInfo.preferredName}</p>
-                        <img src={match.userInfo.profile_photo} alt="" className="profile-img"/>
-                        <p className="card-text">Match Score: {match.scoreInfo.score.toFixed(2) * 100}%</p>
-                        <p className="card-text">University: {match.userInfo.university}</p>
-                        <p className="card-text">Graduation Year: {match.userInfo.grad_year}</p>
-                        <p className="card-text">Major: {match.userInfo.major}</p>
-                        <p className="card-text">Hometown: {match.userInfo.hometown}</p>
-                        <p className="card-text">Tags: {match.userInfo.tags}</p>
+                    <p className="card-text">{match.userInfo.preferredName}</p>
+                    <img src={match.userInfo.profile_photo} alt="" className="profile-img"/>
+                    <p className="card-text">Match Score: {match.scoreInfo.score.toFixed(2) * 100}%</p>
+                    <p className="card-text">University: {match.userInfo.university}</p>
+                    <p className="card-text">Graduation Year: {match.userInfo.grad_year}</p>
+                    <p className="card-text">Major: {match.userInfo.major}</p>
+                    <p className="card-text">Hometown: {match.userInfo.hometown}</p>
+                    <p className="card-text">Tags: {match.userInfo.tags}</p>
+                    <button className = "login-btn" onClick = {() =>{}}>
+                        {
+                            match.scoreInfo.liked
+                            ?
+                            <FaHeart />
+                            : <FaRegHeart />
+                        }
+                    </button>
                 </div>
             ))
         }
@@ -39,6 +48,6 @@ export default function Matching({isFetching, userMatches, getMatchesForUser, ma
         }
     </div> 
     :
-    <p>No matches yet!</p>
+    console.log(userMatches)
   )
 }
