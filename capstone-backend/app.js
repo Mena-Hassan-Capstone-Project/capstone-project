@@ -88,13 +88,13 @@ function getScore(movies, shows, hobbies, tags){
     return (movieScore + showScore + hobbiesScore + tagsScore)
 }
 
-function getMatches(params){
+async function getMatches(params, currentUser){
     const query = new Parse.Query(Parse.User);
     query.notEqualTo("objectId",  currentUser.id);
     const entries = await query.find()
     const Match = Parse.Object.extend("Match");
 
-    entries.forEach(entry => {
+    entries.forEach(async entry => {
         const matchInfo = await getUserInfo(entry)
         const currentUserInfo = await getUserInfo(currentUser)
 
@@ -132,7 +132,7 @@ function getMatches(params){
     })
 }
 
-function retrieveMatchData(limit, offset){
+async function retrieveMatchData(limit, offset, currentUser){
     const Match = Parse.Object.extend("Match");
     const matchQuery = new Parse.Query(Match);
     matchQuery.equalTo("user_1", currentUser.id);
@@ -209,7 +209,7 @@ app.post('/matches', async(req, res) => {
     const currentUser = Parse.User.current();
     try{
         if(currentUser){
-            getMatches(params)
+            getMatches(params, currentUser)
             res.send({matchMessage : "Matches created", typeStatus : 'success'})
         }
         else{
@@ -227,7 +227,7 @@ app.get('/matches', async(req, res) => {
     const limit = req.query["limit"]
     const offset = req.query["offset"]
     if(currentUser){
-        let matchData = retrieveMatchData(limit, offset)
+        let matchData = await retrieveMatchData(limit, offset, currentUser)
         res.send(matchData);
     }
     else{
@@ -256,7 +256,7 @@ app.post('/verify', async(req, res) => {
       }
 })
 
-function removeInterest(objectName, itemKey, itemValue, currentUser){
+async function removeInterest(objectName, itemKey, itemValue, currentUser){
     const Object = Parse.Object.extend(objectName);
     const query = new Parse.Query(Object);
     query.equalTo(itemKey, itemValue);
@@ -291,7 +291,7 @@ app.post('/user/interests/remove', async(req, res) => {
       }
   });
 
-  function getInterestQuery(currentUser, objectName){
+  async function getInterestQuery(currentUser, objectName){
     const Object = Parse.Object.extend(objectName);
     const query = new Parse.Query(Object);
     query.equalTo("User", currentUser);
