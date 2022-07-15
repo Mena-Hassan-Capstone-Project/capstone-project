@@ -29,6 +29,10 @@ export default function App() {
   const [hobbiesList, setHobbiesList] = useState([])
   const [selectedHobbyOption, setSelectedHobbyOption] = useState(null);
 
+  const [userMatches, setUserMatches] = useState([]);
+  const [matchOffset, setOffset] = useState(0);
+  const matchLimit = 10
+
   const PORT = '3001'
 
   //fetch results for movies on page using TMDB API
@@ -42,14 +46,13 @@ export default function App() {
   //gets search result from api for interests movie search bar
   const getMovieSearch = () => {
   var query = document.getElementById('enter-movie').value
-  if(query == ""){
+  if(query === ""){
     setMovie("")
   }
   getResults(MOVIE_SEARCH_URL + query)
   .then(function(response){
     console.log(response)
     setMovie(response[0])
-    //setUserInfo({...userInfo, interests : {movies : movies}})
     console.log("userInfo", userInfo)
     setIsFetching(false)
   })
@@ -58,7 +61,7 @@ export default function App() {
   //gets tv result from api for interests movie search bar
   const getTVSearch = () => {
     var query = document.getElementById('enter-tv').value
-    if(query == ""){
+    if(query === ""){
       setTV("")
     }
     getResults(TV_SEARCH_URL + query)
@@ -70,11 +73,10 @@ export default function App() {
     })
   }
 
-  //gets matches for current user
-  function getMatches (){
+  //creates matches for current user
+  function createMatches (){
     setIsFetching(true)
     axios.post(`http://localhost:${PORT}/getMatch`, {
-      userInfo : userInfo
     })
     .then(function(response){
       console.log("response:", response)
@@ -122,7 +124,6 @@ export default function App() {
 
   const goToMatching = () => {
     navigate('/user/matching')
-    getMatches()
   }
 
   //retrieves movies, tv shows, and hobbies for user
@@ -135,6 +136,24 @@ export default function App() {
       setHobbiesList(resp.data.hobbiesList)
       setUserInfo({...userInfo, interests : {movies : resp.data.movies, shows : resp.data.shows, hobbies : resp.data.hobbies}})
       console.log("userInfo", userInfo)
+      setIsFetching(false)
+    });
+  }
+
+  //retrieves matches for user
+  //sets user info
+  async function getMatchesForUser(limit, offset) {
+    setIsFetching(true)
+    await axios.get(`http://localhost:${PORT}/getMatch`, {
+      params: {
+        limit: limit,
+        offset: offset
+      }
+    })
+    .then(resp => {
+      console.log(resp.data);
+      let newMatches = userMatches.concat(resp.data.matchesInfo)
+      setUserMatches(newMatches)
       setIsFetching(false)
     });
   }
@@ -239,11 +258,11 @@ export default function App() {
       tags = userInfo.tags
     }
     console.log("tags", tags)
-    if(tags.indexOf(document.getElementById('tags').value) == -1){
+    if(tags.indexOf(document.getElementById('tags').value) === -1){
       tags.push(document.getElementById('tags').value)
     }
 
-    if(document.getElementById('tags').value == 'None'){
+    if(document.getElementById('tags').value === 'None'){
       tags = []
     }
 
@@ -273,6 +292,8 @@ export default function App() {
     .then(function(response){
       console.log(response)
       setUserInfo(response.data.userInfo)
+      createMatches()
+      getMatchesForUser(10, 0)
       navigate('/user/basic')
       setIsFetching(false)
     })
@@ -286,7 +307,7 @@ export default function App() {
     if(!document.getElementById('email').value.endsWith('.edu')){
       alert('Please enter a valid .edu email')
     }
-    else if(document.getElementById('password').value != document.getElementById('confirm-password').value){
+    else if(document.getElementById('password').value !== document.getElementById('confirm-password').value){
       alert('Passwords do not match')
     }
     else{
@@ -330,7 +351,7 @@ export default function App() {
   return (
     <div className="App">
       <main>
-      <Navbar userInfo = {userInfo} logOut = {logOut} goToMatching={goToMatching}/>
+      <Navbar userInfo = {userInfo} logOut = {logOut} goToMatching={goToMatching} goToBasic={goToBasic}/>
       <Routes>
         <Route 
         path = "/login"
@@ -372,7 +393,7 @@ export default function App() {
         />
         <Route 
         path = "/user/matching"
-        element = {<Matching></Matching>}
+        element = {<Matching isFetching = {isFetching} userMatches={userMatches} getMatchesForUser = {getMatchesForUser} matchOffset={matchOffset} setOffset={setOffset} matchLimit={matchLimit}></Matching>}
         />
       </Routes>
       </main>
