@@ -14,6 +14,7 @@ import Media from "../User/Media/Media";
 import InterestsEdit from "../User/Interests/InterestsEdit/InterestsEdit";
 import MediaEdit from "../User/Media/MediaEdit/MediaEdit";
 import Matching from "../Matching/Matching";
+import NotFound from "../NotFound/NotFound";
 
 export default function App() {
   const API_KEY = "658568773162c3aaffcb3981d4f5587b"
@@ -390,6 +391,9 @@ export default function App() {
         path = "/user/matching"
         element = {<Matching isFetching = {isFetching} userMatches={userMatches} getMatchesForUser = {getMatchesForUser} matchOffset={matchOffset} setOffset={setOffset} matchLimit={matchLimit}></Matching>}
         />
+        <Route path="*" element=
+            {<NotFound />}
+            />
       </Routes>
       </main>
     </div>
