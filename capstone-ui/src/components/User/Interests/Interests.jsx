@@ -22,7 +22,7 @@ export default function Interests({userInfo, goToBasic, goToMedia, gotToEditInte
         <div className="column col-2" >
           <p className="interests-title">Movies:</p>
           {
-            userInfo.interests && userInfo.interests.movies && userInfo.interests.movies != [] ?
+            userInfo.interests && userInfo.interests.movies && userInfo.interests.movies != []  && Array.isArray(userInfo.interests.movies)?
             userInfo.interests.movies.map((movie, index) => (
               <div key={index} className="movie-item">
                <p className="movie-text">{movie.title}</p>
@@ -32,7 +32,7 @@ export default function Interests({userInfo, goToBasic, goToMedia, gotToEditInte
           }
           <p className="interests-title">TV Shows:</p>
           {
-            userInfo.interests && userInfo.interests.shows && userInfo.interests.shows != [] ?
+            userInfo.interests && userInfo.interests.shows && userInfo.interests.shows != [] && Array.isArray(userInfo.interests.shows)?
             userInfo.interests.shows.map((show, index) => (
               <div key={index} className="movie-item">
                <p className="movie-text">{show.title}</p>
@@ -44,7 +44,7 @@ export default function Interests({userInfo, goToBasic, goToMedia, gotToEditInte
           <p className="interests-title">Books:</p>
           <p className="interests-title">Hobbies:</p>
           {
-            userInfo.interests && userInfo.interests.hobbies && userInfo.interests.hobbies != [] ?
+            userInfo.interests && userInfo.interests.hobbies && userInfo.interests.hobbies != [] && Array.isArray(userInfo.interests.hobbies)?
             userInfo.interests.hobbies.map((hobby, index) => (
               <div key={index} className="movie-item">
                <p className="movie-text">{hobby.name}</p>

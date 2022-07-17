@@ -290,8 +290,8 @@ export default function App() {
       password: document.getElementById('password').value
     })
     .then(function(response){
-      setUserMatches([])
       setUserInfo(response.data.userInfo)
+      setUserMatches([])
       navigate('/user/basic')
       setIsFetching(false)
     })
@@ -389,7 +389,8 @@ export default function App() {
         />
         <Route 
         path = "/user/matching"
-        element = {<Matching isFetching = {isFetching} userMatches={userMatches} getMatchesForUser = {getMatchesForUser} matchOffset={matchOffset} setOffset={setOffset} matchLimit={matchLimit}></Matching>}
+        element = {<Matching isFetching = {isFetching} userMatches={userMatches} getMatchesForUser = {getMatchesForUser} matchOffset={matchOffset} setOffset={setOffset} matchLimit={matchLimit} 
+        goToMatching={goToMatching}></Matching>}
         />
         <Route path="*" element=
             {<NotFound />}

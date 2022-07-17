@@ -63,7 +63,7 @@ function compareArrs(arr1, arr2, weight) {
         }
     }
 
-    return (matches / (arr1.length + arr2.length)) * weight;
+    return (matches / (arr1.length + arr2.length)).toFixed(3) * weight;
 }
 
 function calculateCategoryScore(category, prop1, prop2, weight1, weight2) {
@@ -96,6 +96,14 @@ function getScore(movies, shows, hobbies, tags) {
     return (movieScore + showScore + hobbiesScore + tagsScore);
 }
 
+async function getInterestQuery(currentUser, objectName) {
+    const Object = Parse.Object.extend(objectName);
+    const query = new Parse.Query(Object);
+    query.equalTo("User", currentUser);
+    // now contains the movies for this user
+    return await query.find();
+}
+
 async function getMatches(params, currentUser) {
     const query = new Parse.Query(Parse.User);
     query.notEqualTo("objectId", currentUser.id);
@@ -122,7 +130,7 @@ async function getMatches(params, currentUser) {
             for (let i = 0; i < matchResults.length; i++) {
                 //update match score if needed
                 matchResults[i].set("score", matchScore);
-                if (params.match == matchResults[i].id && params.liked) {
+                if (params.matchId == matchResults[i].id) {
                     matchResults[i].set("liked", params.liked);
                 }
                 await matchResults[i].save();
@@ -151,19 +159,24 @@ async function retrieveMatchData(limit, offset, currentUser) {
     const matchResults = await matchQuery.find();
     let usersInfo = [];
     let scoreInfo = [];
+    let interestsInfo = []
 
     for (let i = 0; i < matchResults.length; i++) {
         let userId = matchResults[i].get('user_2');
         const query = new Parse.Query(Parse.User);
         query.equalTo("objectId", userId);
         const userInfo = await query.first();
+        const interests = await getUserInfo(userInfo)
+
         usersInfo.push(userInfo);
         scoreInfo.push({ score: matchResults[i].get('score'), liked: matchResults[i].get('liked'), seen: matchResults[i].get('seen') });
+        interestsInfo.push(interests)
     }
     let matchesInfo = usersInfo.map(function (_, i) {
         return {
             userInfo: usersInfo[i],
-            scoreInfo: scoreInfo[i]
+            scoreInfo: scoreInfo[i],
+            interestsInfo : interestsInfo[i]
         };
     });
     return ({ matchesInfo: matchesInfo, matchResults: matchResults, matchMessage: "Matches Retrieved!", typeStatus: "success" });
@@ -299,24 +312,16 @@ app.post('/user/interests/remove', async (req, res) => {
     }
 });
 
-async function getInterestQuery(currentUser, objectName) {
-    const Object = Parse.Object.extend(objectName);
-    const query = new Parse.Query(Object);
-    query.equalTo("User", currentUser);
-    // now contains the movies for this user
-    return await query.find();
-}
-
 app.get('/user/interests', async (req, res) => {
     Parse.User.enableUnsafeCurrentUser();
     const currentUser = Parse.User.current();
     if (currentUser) {
         //get movies for this user
-        const userMovies = getInterestQuery(currentUser, "Movie");
+        const userMovies = await getInterestQuery(currentUser, "Movie");
         // get the shows for this user
-        const userShows = getInterestQuery(currentUser, "Show");
+        const userShows = await getInterestQuery(currentUser, "Show");
         // get the hobbies for this user
-        const userHobbies = getInterestQuery(currentUser, "Hobby");
+        const userHobbies = await getInterestQuery(currentUser, "Hobby");
 
         //get full list of hobbies for users to choose from
         const rawdata = fs.readFileSync('data/hobbies.json');

@@ -4,11 +4,15 @@ import Loading from "../Loading/Loading"
 import { FaHeart } from "react-icons/fa";
 import { FaRegHeart } from "react-icons/fa";
 
-export default function Matching({isFetching, userMatches, getMatchesForUser, matchOffset, setOffset, matchLimit}) {
+export default function Matching({isFetching, userMatches, getMatchesForUser, matchOffset, setOffset, matchLimit, goToMatching}) {
+
+    React.useEffect(() => {
+        goToMatching()
+      }, [userMatches]);
 
     console.log("in matching", userMatches)
   return (
-    (isFetching || userMatches == [] || !userMatches)
+    (isFetching || userMatches.length === 0 || !userMatches)
     ? <Loading></Loading>
     :
     <div className="matching" id="matching">
@@ -17,7 +21,7 @@ export default function Matching({isFetching, userMatches, getMatchesForUser, ma
                 <div key={index} className="card">
                     <p className="card-text">{match.userInfo.preferredName}</p>
                     <img src={match.userInfo.profile_photo} alt="" className="profile-img"/>
-                    <p className="card-text">Match Score: {match.scoreInfo.score.toFixed(2) * 100}%</p>
+                    <p className="card-text">Match Score: {(match.scoreInfo.score * 100).toFixed(0)}%</p>
                     <p className="card-text">University: {match.userInfo.university}</p>
                     <p className="card-text">Graduation Year: {match.userInfo.grad_year}</p>
                     <p className="card-text">Major: {match.userInfo.major}</p>
