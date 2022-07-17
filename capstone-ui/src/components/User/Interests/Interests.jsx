@@ -40,8 +40,6 @@ export default function Interests({userInfo, goToBasic, goToMedia, gotToEditInte
             ))
             : null
           }
-          <p className="interests-title">Music:</p>
-          <p className="interests-title">Books:</p>
           <p className="interests-title">Hobbies:</p>
           {
             userInfo.interests && userInfo.interests.hobbies && userInfo.interests.hobbies != [] && Array.isArray(userInfo.interests.hobbies)?

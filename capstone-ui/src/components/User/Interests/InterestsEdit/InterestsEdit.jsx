@@ -117,8 +117,6 @@ export default function InterestsEdit({userInfo, goToBasic, goToMedia, saveInter
           </div>
           : null
         }
-          <p className="interests-title">Music:</p>
-          <p className="interests-title">Books:</p>
 
           {/* Hobbies */}
           <p className="interests-title">Hobbies:</p>

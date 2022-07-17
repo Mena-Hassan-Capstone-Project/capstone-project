@@ -130,7 +130,7 @@ async function getMatches(params, currentUser) {
             for (let i = 0; i < matchResults.length; i++) {
                 //update match score if needed
                 matchResults[i].set("score", matchScore);
-                if (params.matchId == matchResults[i].id) {
+                if (params.matchId == matchResults[i].get("user_2")) {
                     matchResults[i].set("liked", params.liked);
                 }
                 await matchResults[i].save();

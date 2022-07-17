@@ -390,7 +390,7 @@ export default function App() {
         <Route 
         path = "/user/matching"
         element = {<Matching isFetching = {isFetching} userMatches={userMatches} getMatchesForUser = {getMatchesForUser} matchOffset={matchOffset} setOffset={setOffset} matchLimit={matchLimit} 
-        goToMatching={goToMatching}></Matching>}
+        goToMatching={goToMatching} createMatches = {createMatches} setIsFetching={setIsFetching}></Matching>}
         />
         <Route path="*" element=
             {<NotFound />}

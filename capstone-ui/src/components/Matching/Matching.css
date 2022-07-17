@@ -1,5 +1,5 @@
 .card{
-    max-height: 700px;
+    max-height: 800px;
     background-color: white;
     margin-left: 100px;
     margin-right: 100px;
@@ -8,4 +8,25 @@
     margin-right: 10px;
     border-radius: 20px;
     padding: 5px;
+}
+
+.match-interests{
+    display: inline;
+}
+
+.match-movies ~ .match-movies::before {
+    content: ', '; 
+}
+
+.match-shows ~ .match-shows::before {
+content: ', '; 
+}
+
+.match-hobbies ~ .match-hobbies::before {
+content: ', '; 
+}
+
+.media-carousel{
+    max-width: 200px;
+    border-radius: 10px;
 }
