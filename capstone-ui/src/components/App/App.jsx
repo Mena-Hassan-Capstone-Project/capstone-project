@@ -14,6 +14,7 @@ import Media from "../User/Media/Media";
 import InterestsEdit from "../User/Interests/InterestsEdit/InterestsEdit";
 import MediaEdit from "../User/Media/MediaEdit/MediaEdit";
 import Matching from "../Matching/Matching";
+import NotFound from "../NotFound/NotFound";
 
 export default function App() {
   const API_KEY = "658568773162c3aaffcb3981d4f5587b"
@@ -29,7 +30,16 @@ export default function App() {
   const [hobbiesList, setHobbiesList] = useState([])
   const [selectedHobbyOption, setSelectedHobbyOption] = useState(null);
 
+  const [userMatches, setUserMatches] = useState([]);
+  const [matchOffset, setOffset] = useState(0);
+  const matchLimit = 10
+
   const PORT = '3001'
+
+  React.useEffect(() => {
+    createMatches({})
+    getMatchesForUser(10, 0)
+  }, [userInfo]);
 
   //fetch results for movies on page using TMDB API
   async function getResults(PAGE_URL){
@@ -41,43 +51,37 @@ export default function App() {
 
   //gets search result from api for interests movie search bar
   const getMovieSearch = () => {
-  var query = document.getElementById('enter-movie').value
-  if(query == ""){
-    setMovie("")
-  }
-  getResults(MOVIE_SEARCH_URL + query)
-  .then(function(response){
-    console.log(response)
-    setMovie(response[0])
-    //setUserInfo({...userInfo, interests : {movies : movies}})
-    console.log("userInfo", userInfo)
-    setIsFetching(false)
-  })
+    const query = document.getElementById('enter-movie').value
+    if(query === ""){
+      setMovie("")
+    }
+    getResults(MOVIE_SEARCH_URL + query)
+    .then(function(response){
+      setMovie(response[0])
+      setIsFetching(false)
+    })
 }
 
   //gets tv result from api for interests movie search bar
   const getTVSearch = () => {
-    var query = document.getElementById('enter-tv').value
-    if(query == ""){
+    const query = document.getElementById('enter-tv').value
+    if(query === ""){
       setTV("")
     }
     getResults(TV_SEARCH_URL + query)
     .then(function(response){
-      console.log(response)
       setTV(response[0])
-      console.log("userInfo", userInfo)
       setIsFetching(false)
     })
   }
 
-  //gets matches for current user
-  function getMatches (){
+  //creates matches for current user
+  async function createMatches (params){
     setIsFetching(true)
-    axios.post(`http://localhost:${PORT}/getMatch`, {
-      userInfo : userInfo
+    await axios.post(`http://localhost:${PORT}/matches`, {
+      params : params
     })
     .then(function(response){
-      console.log("response:", response)
       setIsFetching(false)
     })
     .catch(function(err){
@@ -122,7 +126,6 @@ export default function App() {
 
   const goToMatching = () => {
     navigate('/user/matching')
-    getMatches()
   }
 
   //retrieves movies, tv shows, and hobbies for user
@@ -131,12 +134,34 @@ export default function App() {
     setIsFetching(true)
     axios.get(`http://localhost:${PORT}/user/interests`)
     .then(resp => {
-      console.log(resp.data);
       setHobbiesList(resp.data.hobbiesList)
       setUserInfo({...userInfo, interests : {movies : resp.data.movies, shows : resp.data.shows, hobbies : resp.data.hobbies}})
-      console.log("userInfo", userInfo)
       setIsFetching(false)
     });
+  }
+
+  //retrieves matches for user
+  //sets user info
+  async function getMatchesForUser(limit, offset) {
+    if(!isFetching){
+      setIsFetching(true)
+      await axios.get(`http://localhost:${PORT}/matches`, {
+        params: {
+          limit: limit,
+          offset: offset
+        }
+      })
+      .then(resp => {
+        if(offset == 0){
+          setUserMatches(resp.data.matchesInfo)
+        }
+        else if(userMatches.length >= 10 && resp.data.matchesInfo[0] && !userMatches.includes(resp.data.matchesInfo[0])){
+          let newMatches = userMatches.concat(resp.data.matchesInfo)
+          setUserMatches(newMatches)
+        }
+        setIsFetching(false)
+      });
+      }
   }
 
   //log user out
@@ -144,8 +169,8 @@ export default function App() {
     axios.post(`http://localhost:${PORT}/logout`, {
     })  
     .then(function(response){
-      console.log(response)
       setUserInfo("")
+      setUserMatches([])
       navigate('/login')
     })
     .catch(function(err){
@@ -161,7 +186,6 @@ export default function App() {
       movie : movie
     })
     .then(function(response){
-      console.log("response:", response)
       getInterestsFromUser()
       setIsFetching(false)
     })
@@ -178,7 +202,6 @@ export default function App() {
       show : show
     })
     .then(function(response){
-      console.log("response:", response)
       getInterestsFromUser()
       setIsFetching(false)
     })
@@ -195,7 +218,6 @@ export default function App() {
       hobby : hobby
     })
     .then(function(response){
-      console.log("response:", response)
       getInterestsFromUser()
       setIsFetching(false)
     })
@@ -219,7 +241,6 @@ export default function App() {
       }
     })
     .then(function(response){
-      console.log("Edited data:", response)
       getInterestsFromUser()
       navigate('/user/interests')
       setMovie("")
@@ -238,12 +259,11 @@ export default function App() {
     if(userInfo.tags){
       tags = userInfo.tags
     }
-    console.log("tags", tags)
-    if(tags.indexOf(document.getElementById('tags').value) == -1){
+    if(tags.indexOf(document.getElementById('tags').value) === -1){
       tags.push(document.getElementById('tags').value)
     }
 
-    if(document.getElementById('tags').value == 'None'){
+    if(document.getElementById('tags').value === 'None'){
       tags = []
     }
 
@@ -254,7 +274,6 @@ export default function App() {
       tags: tags,
     })
     .then(function(response){
-      console.log("Edited data:", response)
       setUserInfo(response.data.userInfo)
       navigate('/user/basic')
       setIsFetching(false)
@@ -264,14 +283,14 @@ export default function App() {
     })
   }
 
-  const createLoginParser = () => {
+  const createLoginParser = async () => {
     setIsFetching(true)
-    axios.post(`http://localhost:${PORT}/login`, {
+    await axios.post(`http://localhost:${PORT}/login`, {
       email: document.getElementById('email').value,
       password: document.getElementById('password').value
     })
     .then(function(response){
-      console.log(response)
+      setUserMatches([])
       setUserInfo(response.data.userInfo)
       navigate('/user/basic')
       setIsFetching(false)
@@ -286,7 +305,7 @@ export default function App() {
     if(!document.getElementById('email').value.endsWith('.edu')){
       alert('Please enter a valid .edu email')
     }
-    else if(document.getElementById('password').value != document.getElementById('confirm-password').value){
+    else if(document.getElementById('password').value !== document.getElementById('confirm-password').value){
       alert('Passwords do not match')
     }
     else{
@@ -296,7 +315,6 @@ export default function App() {
       preferredName: document.getElementById('preferredName').value
       })
       .then(function(response){
-        console.log(response.data)
         if(response.data.typeStatus === "success"){
           navigate('/verify')
         }
@@ -317,7 +335,6 @@ export default function App() {
       dob: document.getElementById('DOB').value
     })
     .then(function(response){
-      console.log(response.data.userInfo)
       setUserInfo(response.data.userInfo)
       navigate('/user/basic/edit')
       setIsFetching(false)
@@ -330,7 +347,7 @@ export default function App() {
   return (
     <div className="App">
       <main>
-      <Navbar userInfo = {userInfo} logOut = {logOut} goToMatching={goToMatching}/>
+      <Navbar userInfo = {userInfo} logOut = {logOut} goToMatching={goToMatching} goToBasic={goToBasic}/>
       <Routes>
         <Route 
         path = "/login"
@@ -372,8 +389,11 @@ export default function App() {
         />
         <Route 
         path = "/user/matching"
-        element = {<Matching></Matching>}
+        element = {<Matching isFetching = {isFetching} userMatches={userMatches} getMatchesForUser = {getMatchesForUser} matchOffset={matchOffset} setOffset={setOffset} matchLimit={matchLimit}></Matching>}
         />
+        <Route path="*" element=
+            {<NotFound />}
+            />
       </Routes>
       </main>
     </div>
