@@ -3,7 +3,7 @@ import "./Matching.css"
 import Loading from "../Loading/Loading"
 import { FaHeart } from "react-icons/fa";
 import { FaRegHeart } from "react-icons/fa";
-import "react-responsive-carousel/lib/styles/carousel.min.css"; // requires a loader
+import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { Carousel } from 'react-responsive-carousel'
 
 export default function Matching({isFetching, userMatches, getMatchesForUser, matchOffset, setOffset, matchLimit, createMatches, goToMatching, setIsFetching={setIsFetching}}) {
@@ -17,6 +17,8 @@ export default function Matching({isFetching, userMatches, getMatchesForUser, ma
                 <div key={index} className="card">
                     <p className="card-text">{match.userInfo.preferredName}</p>
                     <Carousel 
+                    statusFormatter = {function(){}}
+                    dynamicHeight = {true}
                     showArrows= {false}
                     showThumbs={false}>
                         <div>
@@ -40,27 +42,27 @@ export default function Matching({isFetching, userMatches, getMatchesForUser, ma
                     <p className="card-text match-interests">Movies: </p>
                     {
                         match.interestsInfo.movies.map((movie, index) => (
-                        <p className="card-text match-interests match-movies">{movie.title}</p>
+                        <p key = {index} className="card-text match-interests match-movies">{movie.title}</p>
                         ))
                     }
                     <p></p>
                     <p className="card-text match-interests">Shows: </p>
                     {
                         match.interestsInfo.shows.map((show, index) => (
-                        <p className="card-text match-interests match-shows">{show.title}</p>
+                        <p key = {index} className="card-text match-interests match-shows">{show.title}</p>
                         ))
                     }
                     <p></p>
                     <p className="card-text match-interests">Hobbies: </p>
                     {
                         match.interestsInfo.hobbies.map((hobby, index) => (
-                        <p className="card-text match-interests match-hobbies">{hobby.name}</p>
+                        <p key = {index} className="card-text match-interests match-hobbies">{hobby.name}</p>
                         ))
                     }
                     <br />
                     <button className = "login-btn" onClick = {async () => {
                         setIsFetching(true)
-                        let liked = match.scoreInfo.liked
+                        const liked = match.scoreInfo.liked
                         await createMatches({matchId: match.userInfo.objectId, liked: !liked})
                         await getMatchesForUser(10, 0)
                         await goToMatching()

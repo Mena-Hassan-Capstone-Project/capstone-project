@@ -27,7 +27,7 @@ export default function App() {
 
   const [movie, setMovie] = useState("")
   const [TV, setTV] = useState("")
-  const [hobbiesList, setHobbiesList] = useState([])
+  const [hobbiesList, setHobbiesList] = useState("")
   const [selectedHobbyOption, setSelectedHobbyOption] = useState(null);
 
   const [userMatches, setUserMatches] = useState([]);
