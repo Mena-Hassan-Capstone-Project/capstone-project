@@ -59,7 +59,7 @@ export default function InterestsEdit({userInfo, goToBasic, goToMedia, saveInter
           {/* Movies */}
           <p className="interests-title">Movies:</p>
           {
-            userInfo.interests && userInfo.interests.movies ?
+            userInfo?.interests?.movies  && Array.isArray(userInfo.interests.movies)?
             userInfo.interests.movies.map((movie, index) => (
               <div key={index} className="movie-item">
                <p className="movie-text">{movie.title}</p>
@@ -90,7 +90,7 @@ export default function InterestsEdit({userInfo, goToBasic, goToMedia, saveInter
         {/* TV Shows */}
           <p className="interests-title">TV Shows:</p>
           {
-            userInfo.interests && userInfo.interests.shows ?
+            userInfo?.interests?.shows && Array.isArray(userInfo.interests.shows)?
             userInfo.interests.shows.map((show, index) => (
               <div key={index} className="movie-item">
                <p className="movie-text">{show.title}</p>
@@ -117,13 +117,11 @@ export default function InterestsEdit({userInfo, goToBasic, goToMedia, saveInter
           </div>
           : null
         }
-          <p className="interests-title">Music:</p>
-          <p className="interests-title">Books:</p>
 
           {/* Hobbies */}
           <p className="interests-title">Hobbies:</p>
           {
-            userInfo.interests && userInfo.interests.hobbies ?
+            userInfo?.interests?.hobbies && Array.isArray(userInfo.interests.hobbies)?
             userInfo.interests.hobbies.map((hobby, index) => (
               <div key={index} className="movie-item">
                <p className="movie-text">{hobby.name}</p>
