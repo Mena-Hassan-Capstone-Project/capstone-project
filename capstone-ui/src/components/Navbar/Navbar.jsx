@@ -4,7 +4,7 @@ export default function Navbar({userInfo, logOut, goToMatching, goToBasic}) {
   return (
     <nav className="navbar">
       <div className="content">
-        <p className="welcome-navbar" onClick = {goToBasic}>Welcome {userInfo.preferredName
+        <p className="welcome-navbar" onClick = {goToBasic}>Welcome {userInfo?.preferredName
         ? userInfo.preferredName
         : ""}
         </p>

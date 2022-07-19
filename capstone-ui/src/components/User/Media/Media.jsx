@@ -3,8 +3,7 @@ import "./Media.css"
 import Loading from "../../Loading/Loading"
 
 
-export default function Media({userInfo, goToBasic, goToInterests, goToEditMedia, isFetching, setupInsta}) {
-  console.log("userInfo media: ", userInfo.media)
+export default function Media({userInfo, goToBasic, goToInterests, goToEditMedia, isFetching, setupInsta, getInstaData}) {
   return (
     isFetching
     ? <Loading></Loading>
@@ -34,9 +33,20 @@ export default function Media({userInfo, goToBasic, goToInterests, goToEditMedia
             Edit
         </button>
         <br />
-        <button onClick = {() => {setupInsta()}}>
+        {
+          userInfo.ig_access_token
+          ?
+          <div className = "access-token">
+          <p>{`Instagram Connected! Access Token: ${userInfo.ig_access_token}`}</p>
+          <button onClick = {() => {getInstaData(userInfo.ig_access_token)}}>
+            Get Instagram Data
+          </button>
+          </div>
+          :
+          <button onClick = {() => {setupInsta()}}>
             Connect to Instagram
           </button>
+          }
         </div>
         </div>  
     </div> 

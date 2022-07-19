@@ -208,10 +208,12 @@ app.post('/logout', async (req, res) => {
 })
 
 app.post('/signup', async (req, res) => {
+    console.log("in sign up backend")
     Parse.User.enableUnsafeCurrentUser();
     const infoUser = req.body;
     let user = new Parse.User();
 
+    console.log("set user info")
     user.set("username", infoUser.email);
     user.set("email", infoUser.email);
     user.set("password", infoUser.password);
@@ -219,8 +221,11 @@ app.post('/signup', async (req, res) => {
 
     try {
         await user.signUp();
+        console.log("sign up user")
+        await Parse.User.logIn(infoUser.email, infoUser.password);
+        console.log("user logged in")
+        console.log({ signupMessage: "User signed up!", typeStatus: 'success', infoUser: infoUser })
         res.send({ signupMessage: "User signed up!", typeStatus: 'success', infoUser: infoUser });
-        let userLogin = await Parse.User.logIn(infoUser.email, infoUser.password);
     }
     catch (error) {
         res.send({ signupMessage: error.message, typeStatus: 'danger', infoUser: infoUser });
@@ -411,6 +416,26 @@ app.post('/user/interests', async (req, res) => {
     }
 })
 
+app.post('/user/update', async (req, res) => {
+    Parse.User.enableUnsafeCurrentUser()
+    const infoUser = req.body
+
+    try {
+        const currentUser = Parse.User.current();
+        if (currentUser) {
+            if(infoUser.accessToken){
+                currentUser.set("ig_access_token", infoUser.accessToken)
+            }
+            await currentUser.save()
+            res.send({ userInfo: currentUser, updateInfoMessage: "User basic info saved!", typeStatus: "success", infoUser: infoUser });
+        } else {
+            res.send({ userInfo: "", updateInfoMessage: "Can't get current user", typeStatus: "danger", infoUser: infoUser });
+        }
+    } catch (error) {
+        res.send({ updateInfoMessage: error.message, typeStatus: "danger", infoUser: infoUser });
+    }
+})
+
 app.post('/user/basic', async (req, res) => {
     Parse.User.enableUnsafeCurrentUser()
     const infoUser = req.body
@@ -446,31 +471,43 @@ app.post('/user/basic', async (req, res) => {
     }
 })
 
+function requestToken(res, redirect_uri, code, userInfo, params){
+    // send form based request to Instagram API
+    request.post({
+        url: 'https://api.instagram.com/oauth/access_token',
+        form: {
+            client_id: INSTA_APP_ID,
+            client_secret: INSTA_APP_SECRET,
+            grant_type: 'authorization_code',
+            redirect_uri,
+            code
+        }
+    }, 
+    function (err, httpResponse, body) {
+        let result = JSON.parse(body)
+        console.log("result", result)
+        if(result.access_token){
+            // Got access token. Parse string response to JSON
+            let accessToken = result.access_token;
+            res.send({params: params, userInfo : userInfo, result: result, accessToken : accessToken, typeStatus : "success"})
+        }
+    });
+}
+
 app.post('/init-insta', async (req, res) => {
     // data from frontend
     let code = req.body.code;
-    let redirectUri = req.body.redirectUri;
-    let userInfo = req.body.userInfo;
+    let redirect_uri = req.body.redirectUri;
+    let objectId = req.body.objectId;
 
-    let accessToken = null;
+    const query = new Parse.Query(Parse.User);
+    query.equalTo("objectId", objectId);
+    const userInfo = await query.first();
     try {
-
-        // send form based request to Instagram API
-        let result = await request.post({
-            url: 'https://api.instagram.com/oauth/access_token',
-            form: {
-                client_id: INSTA_APP_ID,
-                client_secret: INSTA_APP_SECRET,
-                grant_type: 'authorization_code',
-                redirect_uri: redirectUri,
-                code: code
-            }
-        });
-        // Got access token. Parse string response to JSON
-        accessToken = result.access_token;
-        res.send({userInfo: userInfo, accessToken : accessToken, typeStatus : "success"})
+       requestToken(res, redirect_uri, code, userInfo, req.body)
     } catch (e) {
-        res.send({request: req.body, instaMessage: "short term access token failed",typeStatus : "danger", error : e.data})
+        console.log("error", e)
+        res.send({request: req.body, instaMessage: "short term access token failed",typeStatus : "danger", error : e, userInfo : userInfo})
     }
 })
 module.exports = app;

@@ -26,7 +26,7 @@ export default function BasicInfo({userInfo, goToInterests, goToMedia, goToEditI
             <p><b>Hometown: </b>{userInfo.hometown}</p>
             <p><b>Tags: </b></p>
             {
-              userInfo.tags ?
+              userInfo?.tags ?
             userInfo.tags.map((tag, index) => (
               <div key={index} className="tag-item">
                <p className="tag-text">{tag}</p>
