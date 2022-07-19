@@ -1,5 +1,6 @@
 'use strict';
 const Parse = require('parse/node')
+var request = require('request');
 const express = require('express')
 const morgan = require('morgan')
 const bodyParser = require('body-parser')
@@ -23,6 +24,9 @@ const WEIGHT_SHOW_TITLE = 0.05;
 const WEIGHT_HOBBY_CATEGORY = 0.25
 const WEIGHT_HOBBY_NAMES = 0.1
 const WEIGHT_TAGS = 0.15
+
+const INSTA_APP_ID = "390997746348889"
+const INSTA_APP_SECRET = "facb6a96ac24a92b82f0a6b254c0ec69"
 
 async function getUserInfo(user) {
     const Movie = Parse.Object.extend("Movie");
@@ -247,12 +251,17 @@ app.get('/matches', async (req, res) => {
     const currentUser = Parse.User.current();
     const limit = req.query["limit"];
     const offset = req.query["offset"];
-    if (currentUser) {
-        let matchData = await retrieveMatchData(limit, offset, currentUser);
-        res.send(matchData);
+    try{
+        if (currentUser) {
+            let matchData = await retrieveMatchData(limit, offset, currentUser);
+            res.send(matchData);
+        }
+        else {
+            res.send({ matchMessage: "Can't get current user", typeStatus: "danger" });
+        }
     }
-    else {
-        res.send({ matchMessage: "Can't get current user", typeStatus: "danger" });
+    catch(err){
+        res.send({ matchMessage: "Error retrieving match", typeStatus: "danger" });
     }
 });
 
@@ -434,6 +443,34 @@ app.post('/user/basic', async (req, res) => {
         }
     } catch (error) {
         res.send({ saveInfoMessage: error.message, typeStatus: "danger", infoUser: infoUser });
+    }
+})
+
+app.post('/init-insta', async (req, res) => {
+    // data from frontend
+    let code = req.body.code;
+    let redirectUri = req.body.redirectUri;
+    let userInfo = req.body.userInfo;
+
+    let accessToken = null;
+    try {
+
+        // send form based request to Instagram API
+        let result = await request.post({
+            url: 'https://api.instagram.com/oauth/access_token',
+            form: {
+                client_id: INSTA_APP_ID,
+                client_secret: INSTA_APP_SECRET,
+                grant_type: 'authorization_code',
+                redirect_uri: redirectUri,
+                code: code
+            }
+        });
+        // Got access token. Parse string response to JSON
+        accessToken = result.access_token;
+        res.send({userInfo: userInfo, accessToken : accessToken, typeStatus : "success"})
+    } catch (e) {
+        res.send({request: req.body, instaMessage: "short term access token failed",typeStatus : "danger", error : e.data})
     }
 })
 module.exports = app;

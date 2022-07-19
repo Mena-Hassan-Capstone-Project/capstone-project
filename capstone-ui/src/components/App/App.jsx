@@ -18,6 +18,8 @@ import NotFound from "../NotFound/NotFound";
 
 export default function App() {
   const API_KEY = "658568773162c3aaffcb3981d4f5587b"
+  const INSTA_APP_ID = "390997746348889"
+  const INSTA_APP_SECRET = "facb6a96ac24a92b82f0a6b254c0ec69"
   const MOVIE_SEARCH_URL = `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=`
   const TV_SEARCH_URL = `https://api.themoviedb.org/3/search/tv?api_key=${API_KEY}&query=`
 
@@ -34,12 +36,104 @@ export default function App() {
   const [matchOffset, setOffset] = useState(0);
   const matchLimit = 10
 
+  const [accessToken, setAccessToken] = useState();
+  const [currentUrl, setCurrentUrl] = useState()
+
   const PORT = '3001'
 
   React.useEffect(() => {
     createMatches({})
     getMatchesForUser(10, 0)
   }, [userInfo]);
+
+  React.useEffect(() => {
+    setIsFetching(true)
+    if (window.performance) {
+      if (String(window.performance.getEntriesByType("navigation")[0].type) === "reload") {
+        const loggedInUser = window.localStorage.getItem('userInfo');
+        if (loggedInUser) {
+          const foundUser = JSON.parse(loggedInUser)
+          setIsFetching(true)
+          axios.post(`https://localhost:${PORT}/login`, {
+            email: foundUser.email,
+            password: foundUser.password
+          })
+          .then(function(response){
+            setUserInfo(response.data.userInfo)
+            setUserMatches([])
+          })
+          .catch(function(err){
+            console.log(err)
+            setIsFetching(false)
+          })
+    }
+    setIsFetching(false)
+      }
+    }
+  }, [accessToken]);
+
+  React.useEffect(() => {
+    if(userInfo && userInfo != "" && currentUrl){
+      postInsta(currentUrl)
+    }
+  }, [currentUrl]);
+
+// Invoke this function on button click or whatever other use case
+async function setupInsta(){
+	let appId = INSTA_APP_ID;
+	let redUri = window.location.origin + "/user/basic";
+	let url = `https://api.instagram.com/oauth/authorize?client_id=${appId}&redirect_uri=${redUri}&scope=user_profile,user_media&response_type=code`;
+	window.open(url, "_blank").focus();
+  setCurrentUrl(redUri)
+}
+
+function postInsta(redUri){
+  const queryString = window.location.href;
+  const urlParams = new URLSearchParams(queryString);
+  setIsFetching(true)
+  axios.post(`https://localhost:${PORT}/init-insta`, {
+    code: urlParams.get('code'),
+    redirectUrl: redUri, // needs to be registered at fb developer console
+    userInfo : userInfo
+  })
+  .then(({ data }) => {
+    if(data.accessToken){
+      getAccessToken(data.accessToken)
+    }
+    setUserInfo(data.userInfo)
+    setIsFetching(false)
+  })
+  .catch(({ error }) => {
+    console.log("error", error)
+    setIsFetching(false)
+  })
+}
+
+
+//get long term access token from short term access token
+function getAccessToken(accessToken){
+  try {
+    axios.get(`https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${INSTA_APP_SECRET}&access_token=${accessToken}`)
+    .then(function(response){
+      accessToken = response.data.access_token;
+    })
+    // save accessToken  to Database
+} catch (e) {
+    console.log("Error getting long term access token", e);
+}
+}
+
+
+  async function getInstaData(){
+    try {
+      let instaAccessToken = accessToken;
+      let resp = await axios.get(`https://graph.instagram.com/me/media?fields=media_type,permalink,media_url&access_token=${instaAccessToken}`);
+      resp = resp.data;
+      let instaPhotos = resp.data.filter(d => d.media_type === "IMAGE").map(d => d.media_url);
+    } catch (e) {
+       console.log(e.response.data.error);
+    }
+  }
 
   //fetch results for movies on page using TMDB API
   async function getResults(PAGE_URL){
@@ -77,16 +171,18 @@ export default function App() {
 
   //creates matches for current user
   async function createMatches (params){
-    setIsFetching(true)
-    await axios.post(`http://localhost:${PORT}/matches`, {
-      params : params
-    })
-    .then(function(response){
-      setIsFetching(false)
-    })
-    .catch(function(err){
-      console.log(err)
-    })
+    if(userInfo != "" && userInfo && !String(window.performance.getEntriesByType("navigation")[0].type) === "reload"){
+      setIsFetching(true)
+      await axios.post(`https://localhost:${PORT}/matches`, {
+        params : params
+      })
+      .then(function(response){
+        setIsFetching(false)
+      })
+      .catch(function(err){
+        console.log(err)
+      })
+    }
   }
 
   //navigate to pages
@@ -132,7 +228,7 @@ export default function App() {
   //sets user info
   function getInterestsFromUser() {
     setIsFetching(true)
-    axios.get(`http://localhost:${PORT}/user/interests`)
+    axios.get(`https://localhost:${PORT}/user/interests`)
     .then(resp => {
       setHobbiesList(resp.data.hobbiesList)
       setUserInfo({...userInfo, interests : {movies : resp.data.movies, shows : resp.data.shows, hobbies : resp.data.hobbies}})
@@ -143,9 +239,9 @@ export default function App() {
   //retrieves matches for user
   //sets user info
   async function getMatchesForUser(limit, offset) {
-    if(!isFetching){
+    if(!isFetching && userInfo && userInfo != ""){
       setIsFetching(true)
-      await axios.get(`http://localhost:${PORT}/matches`, {
+      await axios.get(`https://localhost:${PORT}/matches`, {
         params: {
           limit: limit,
           offset: offset
@@ -166,15 +262,17 @@ export default function App() {
 
   //log user out
   const logOut = () => {
-    axios.post(`http://localhost:${PORT}/logout`, {
+    axios.post(`https://localhost:${PORT}/logout`, {
     })  
     .then(function(response){
       setUserInfo("")
       setUserMatches([])
       navigate('/login')
+      window.localStorage.clear();
     })
     .catch(function(err){
       console.log(err)
+      window.localStorage.clear();
     })
   }
 
@@ -182,7 +280,7 @@ export default function App() {
   //reloads interests
   function removeMovie (movie){
     setIsFetching(true)
-    axios.post(`http://localhost:${PORT}/user/interests/remove`, {
+    axios.post(`https://localhost:${PORT}/user/interests/remove`, {
       movie : movie
     })
     .then(function(response){
@@ -198,7 +296,7 @@ export default function App() {
   //reloads interests
   function removeShow (show){
     setIsFetching(true)
-    axios.post(`http://localhost:${PORT}/user/interests/remove`, {
+    axios.post(`https://localhost:${PORT}/user/interests/remove`, {
       show : show
     })
     .then(function(response){
@@ -214,7 +312,7 @@ export default function App() {
   //reloads interests
   function removeHobby (hobby){
     setIsFetching(true)
-    axios.post(`http://localhost:${PORT}/user/interests/remove`, {
+    axios.post(`https://localhost:${PORT}/user/interests/remove`, {
       hobby : hobby
     })
     .then(function(response){
@@ -231,7 +329,7 @@ export default function App() {
   //reloads interests
   const saveInterests = () => {
     setIsFetching(true)
-    axios.post(`http://localhost:${PORT}/user/interests`, {
+    axios.post(`https://localhost:${PORT}/user/interests`, {
       interests : {
         movie : movie,
         TV : TV,
@@ -267,7 +365,7 @@ export default function App() {
       tags = []
     }
 
-    await axios.post(`http://localhost:${PORT}/user/basic`, {
+    await axios.post(`https://localhost:${PORT}/user/basic`, {
       year: document.getElementById('year').value,
       major: document.getElementById('major').value,
       hometown: document.getElementById('hometown').value,
@@ -285,18 +383,30 @@ export default function App() {
 
   const createLoginParser = async () => {
     setIsFetching(true)
-    await axios.post(`http://localhost:${PORT}/login`, {
-      email: document.getElementById('email').value,
-      password: document.getElementById('password').value
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    await axios.post(`https://localhost:${PORT}/login`, {
+      email: email,
+      password: password
     })
     .then(function(response){
-      setUserInfo(response.data.userInfo)
-      setUserMatches([])
-      navigate('/user/basic')
-      setIsFetching(false)
+      if(response.data.typeStatus == "danger"){
+        alert("Login error")
+        navigate('/user/login')
+        setIsFetching(false)
+      }
+      else{
+        window.localStorage.clear();
+        setUserInfo(response.data.userInfo)
+        window.localStorage.setItem('userInfo', JSON.stringify({email: email, password: password}))
+        setUserMatches([])
+        navigate('/user/basic')
+        setIsFetching(false)
+      }
     })
     .catch(function(err){
       console.log(err)
+      window.localStorage.clear();
     })
   }
 
@@ -309,7 +419,7 @@ export default function App() {
       alert('Passwords do not match')
     }
     else{
-      axios.post(`http://localhost:${PORT}/signup`, {
+      axios.post(`https://localhost:${PORT}/signup`, {
       email: document.getElementById('email').value,
       password: document.getElementById('password').value,
       preferredName: document.getElementById('preferredName').value
@@ -328,7 +438,7 @@ export default function App() {
 
   const createVerifyParser = () => {
     setIsFetching(true)
-    axios.post(`http://localhost:${PORT}/verify`, {
+    axios.post(`https://localhost:${PORT}/verify`, {
       firstName: document.getElementById('firstName').value,
       lastName: document.getElementById('lastName').value,
       university: document.getElementById('university').value,
@@ -347,7 +457,7 @@ export default function App() {
   return (
     <div className="App">
       <main>
-      <Navbar userInfo = {userInfo} logOut = {logOut} goToMatching={goToMatching} goToBasic={goToBasic}/>
+      <Navbar userInfo = {userInfo} logOut = {logOut} goToMatching={goToMatching} goToBasic={goToBasic} goToSignUp={goToSignUp}/>
       <Routes>
         <Route 
         path = "/login"
@@ -381,7 +491,7 @@ export default function App() {
         />
         <Route 
         path = "/user/media"
-        element = {<Media userInfo = {userInfo} goToBasic={goToBasic} goToInterests={goToInterests} goToEditMedia ={goToEditMedia} isFetching={isFetching}></Media>}
+        element = {<Media userInfo = {userInfo} goToBasic={goToBasic} goToInterests={goToInterests} goToEditMedia ={goToEditMedia} isFetching={isFetching} setupInsta = {setupInsta}></Media>}
         />
         <Route 
         path = "/user/media/edit"

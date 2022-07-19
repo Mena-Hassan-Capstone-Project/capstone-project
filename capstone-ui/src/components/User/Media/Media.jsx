@@ -3,7 +3,7 @@ import "./Media.css"
 import Loading from "../../Loading/Loading"
 
 
-export default function Media({userInfo, goToBasic, goToInterests, goToEditMedia, isFetching}) {
+export default function Media({userInfo, goToBasic, goToInterests, goToEditMedia, isFetching, setupInsta}) {
   console.log("userInfo media: ", userInfo.media)
   return (
     isFetching
@@ -33,6 +33,10 @@ export default function Media({userInfo, goToBasic, goToInterests, goToEditMedia
       <button className = "login-btn" onClick = {goToEditMedia}>
             Edit
         </button>
+        <br />
+        <button onClick = {() => {setupInsta()}}>
+            Connect to Instagram
+          </button>
         </div>
         </div>  
     </div> 
