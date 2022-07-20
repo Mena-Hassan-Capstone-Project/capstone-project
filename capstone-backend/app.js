@@ -66,11 +66,16 @@ function compareArrs(arr1, arr2, weight) {
             matches++;
         }
     }
+    let total = arr1.length + arr2.length
+    if(total == 0){
+        return 0
+    }
 
     return (matches / (arr1.length + arr2.length)).toFixed(3) * weight;
 }
 
 function calculateCategoryScore(category, prop1, prop2, weight1, weight2) {
+
     let user1Prop1 = [];
     let user1Prop2 = [];
     for (let i = 0; i < category.user_1.length; i++) {
@@ -85,9 +90,13 @@ function calculateCategoryScore(category, prop1, prop2, weight1, weight2) {
         user2Prop2.push(category.user_2[i].get(prop2));
     }
 
-    let prop1Score = compareArrs(user1Prop1, user2Prop1, weight1);
-    let prop2Score = compareArrs(user1Prop2, user2Prop2, weight2);
-    return prop1Score + prop2Score;
+    if(user1Prop1 && user2Prop1 && user1Prop2 && user2Prop2){
+        let prop1Score = compareArrs(user1Prop1, user2Prop1, weight1);
+        let prop2Score = compareArrs(user1Prop2, user2Prop2, weight2);
+    
+        return prop1Score + prop2Score;
+    }
+    return 0
 }
 
 function getScore(movies, shows, hobbies, tags) {
@@ -118,6 +127,11 @@ async function getMatches(params, currentUser) {
         const matchInfo = await getUserInfo(entry);
         const currentUserInfo = await getUserInfo(currentUser);
 
+        if(!entry.get('grad_year')){
+            entry.destroy()
+            return;
+        }
+
         const movieInfo = { user_1: currentUserInfo.movies, user_2: matchInfo.movies };
         const showInfo = { user_1: currentUserInfo.shows, user_2: matchInfo.shows };
         const hobbiesInfo = { user_1: currentUserInfo.hobbies, user_2: matchInfo.hobbies };
@@ -129,6 +143,7 @@ async function getMatches(params, currentUser) {
         matchQuery.equalTo("user_1", currentUser.id);
         matchQuery.equalTo("user_2", entry.id);
         let matchResults = await matchQuery.find();
+
 
         if (matchResults.length > 0) {
             for (let i = 0; i < matchResults.length; i++) {
@@ -142,12 +157,14 @@ async function getMatches(params, currentUser) {
         }
         else {
             const match = new Match();
-            match.set("score", matchScore);
-            match.set("liked", false);
-            match.set("seen", false);
-            match.set("user_1", currentUser.id);
-            match.set("user_2", entry.id);
-            await match.save();
+            if(matchScore){
+                match.set("score", matchScore);
+                match.set("liked", false);
+                match.set("seen", false);
+                match.set("user_1", currentUser.id);
+                match.set("user_2", entry.id);
+                await match.save();
+            }
         }
     })
 }
@@ -155,12 +172,14 @@ async function getMatches(params, currentUser) {
 async function retrieveMatchData(limit, offset, currentUser) {
     const Match = Parse.Object.extend("Match");
     const matchQuery = new Parse.Query(Match);
+
     matchQuery.equalTo("user_1", currentUser.id);
     matchQuery.descending("score");
     matchQuery.limit(parseInt(limit));
     matchQuery.skip(parseInt(offset));
 
     const matchResults = await matchQuery.find();
+
     let usersInfo = [];
     let scoreInfo = [];
     let interestsInfo = []

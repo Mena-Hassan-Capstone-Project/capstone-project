@@ -38,26 +38,32 @@ export default function Media({userInfo, goToBasic, goToInterests, goToEditMedia
         {
           userInfo.ig_access_token
           ?
+          userData  && Array.isArray(userData)
+          ?
+          null
+          :
           <div className = "access-token">
-          <p>{`Instagram Connected! Access Token: ${userInfo.ig_access_token}`}</p>
-          <button onClick = {async () => {
+          <p>{`Instagram Connected!`}</p>
+          <button  className = "insta-btn" onClick = {async () => {
             let data = await getInstaData(userInfo.ig_access_token)
             setUserData(data)
-            console.log(data)
             }}>
-            Get Instagram Data
+            Get Instagram Photos
           </button>
           </div>
           :
-          <button onClick = {() => {setupInsta()}}>
+          <button className = "login-btn" onClick = {() => {setupInsta()}}>
             Connect to Instagram
           </button>
           }
           {
-            userData.username ?
-            <p>{`Username: ${userData.username}`}</p>
-            :
-            null
+            userData  && Array.isArray(userData) ?
+            userData.map((pic, index) => (
+              <div key={index} className="media-item">
+               <img src={pic} className="media-img"/>
+              </div>
+            ))
+            : null
           }
         </div>
         </div>  

@@ -20,3 +20,20 @@
 .access-token{
     width: 150px;
 }
+
+.insta-images{
+    width: 150px;
+    border-radius: 10px;
+}
+
+.insta-btn{
+    font-size: 15px;
+    color: white;
+    background-color: #BE6A6A;
+    width: 130px;
+    height: 50px; 
+    border-radius: 50px;
+    font-family: 'Poppins', sans-serif;
+    border: none;
+    cursor: pointer;
+}

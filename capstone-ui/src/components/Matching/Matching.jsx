@@ -6,9 +6,9 @@ import { FaRegHeart } from "react-icons/fa";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { Carousel } from 'react-responsive-carousel'
 
-export default function Matching({isFetching, userMatches, getMatchesForUser, matchOffset, setOffset, matchLimit, createMatches, goToMatching, setIsFetching={setIsFetching}}) {
+export default function Matching({isFetching, userMatches, getMatchesForUser, matchOffset, setOffset, matchLimit, createMatches, goToMatching, setIsFetching}) {
   return (
-    (isFetching || userMatches.length === 0 || !userMatches)
+    (isFetching || userMatches.length === 0 || !userMatches || !Array.isArray(userMatches))
     ? <Loading></Loading>
     :
     <div className="matching" id="matching">
@@ -41,23 +41,34 @@ export default function Matching({isFetching, userMatches, getMatchesForUser, ma
                     <p className="card-text">Tags: {match.userInfo.tags}</p>
                     <p className="card-text match-interests">Movies: </p>
                     {
+                        Array.isArray(match.interestsInfo.movies) && match.interestsInfo.movies.length > 0
+                        ?
                         match.interestsInfo.movies.map((movie, index) => (
                         <p key = {index} className="card-text match-interests match-movies">{movie.title}</p>
                         ))
+                        :
+                        null
                     }
                     <p></p>
                     <p className="card-text match-interests">Shows: </p>
                     {
+                        Array.isArray(match.interestsInfo.shows) && match.interestsInfo.shows.length > 0
+                        ?
                         match.interestsInfo.shows.map((show, index) => (
                         <p key = {index} className="card-text match-interests match-shows">{show.title}</p>
                         ))
+                        : null
                     }
                     <p></p>
                     <p className="card-text match-interests">Hobbies: </p>
                     {
+                        Array.isArray(match.interestsInfo.hobbies) && match.interestsInfo.hobbies.length > 0
+                        ?
                         match.interestsInfo.hobbies.map((hobby, index) => (
                         <p key = {index} className="card-text match-interests match-hobbies">{hobby.name}</p>
                         ))
+                        :
+                        null
                     }
                     <br />
                     <button className = "login-btn" onClick = {async () => {

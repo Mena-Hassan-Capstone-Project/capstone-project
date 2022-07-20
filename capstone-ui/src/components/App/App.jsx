@@ -15,11 +15,13 @@ import InterestsEdit from "../User/Interests/InterestsEdit/InterestsEdit";
 import MediaEdit from "../User/Media/MediaEdit/MediaEdit";
 import Matching from "../Matching/Matching";
 import NotFound from "../NotFound/NotFound";
+import Loading from "../Loading/Loading";
+import InstaRedirect from "../InstaRedirect/InstaRedirect";
 
 export default function App() {
   const API_KEY = "658568773162c3aaffcb3981d4f5587b"
   const INSTA_APP_ID = "390997746348889"
-  const RED_URI = "https://localhost:3000/user/basic"
+  const RED_URI = "https://localhost:3000/insta-redirect"
   const INSTA_APP_SECRET = "facb6a96ac24a92b82f0a6b254c0ec69"
   const MOVIE_SEARCH_URL = `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=`
   const TV_SEARCH_URL = `https://api.themoviedb.org/3/search/tv?api_key=${API_KEY}&query=`
@@ -37,10 +39,9 @@ export default function App() {
   const [matchOffset, setOffset] = useState(0);
   const matchLimit = 10
 
-  const [instaAccessToken, setAccessToken] = useState();
-
   const PORT = '3001'
 
+  //update matches when user info changes
   React.useEffect(() => {
     if(userInfo.interests){
       createMatches({})
@@ -51,7 +52,7 @@ export default function App() {
   React.useEffect(() => {
     setIsFetching(true)
     if (window.performance) {
-      if (String(window.performance.getEntriesByType("navigation")[0].type) === "reload" && (userInfo.ig_accessToken)) {
+      if (String(window.performance.getEntriesByType("navigation")[0].type) === "reload" && window.localStorage.getItem('userInfo')) {
         refreshLogin()
       }
     }
@@ -59,23 +60,16 @@ export default function App() {
   }, []);
 
   React.useEffect(() => {
-    console.log("post insta")
-    if(window.location.href.includes("code") && !instaAccessToken && !isFetching && !userInfo.ig_accessToken){
+    if(window.location.href.includes("code") && !isFetching && !userInfo.ig_accessToken){
       postInsta()
     }
   }, []);
 
-  React.useEffect(() => {
-    if(userInfo.preferredName){
-      navigate('/user/basic')
-    }
-  }, [userInfo.ig_accessToken]);
-
   function refreshLogin(){
+    setIsFetching(true);
     const loggedInUser = window.localStorage.getItem('userInfo');
     if (loggedInUser) {
       const foundUser = JSON.parse(loggedInUser);
-      setIsFetching(true);
       axios.post(`https://localhost:${PORT}/login`, {
         email: foundUser.email,
         password: foundUser.password
@@ -86,7 +80,6 @@ export default function App() {
       })
       .catch(function(err){
         console.log(err)
-        setIsFetching(false)
       })
     }
     setIsFetching(false)
@@ -101,7 +94,6 @@ async function setupInsta(){
 
 async function postInsta(){
   setIsFetching(true)
-  const user = window.localStorage.getItem('userInfo');
 
   const queryString = window.location.href;
   const code = queryString.split("?code=")[1].slice(0,-2);
@@ -110,53 +102,45 @@ async function postInsta(){
     redirectUri: RED_URI, // needs to be registered at fb developer console
   })
   .then(({ data }) => {
-    if(data.typeStatus == "danger"){
-      console.log("error")
-      setIsFetching(false)
-      return;
-    }
-
     if(data.accessToken){
       getAccessToken(data.accessToken)
     }
-    setIsFetching(false)
   })
   .catch(({ error }) => {
     console.log("error", error)
-    setIsFetching(false)
   })
+  setIsFetching(false)
 }
 
 
 //get long term access token from short term access token
 function getAccessToken(accessToken){
-  setIsFetching(true)
-  console.log("short term access token", accessToken)
-  try {
-    axios.get(`https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${INSTA_APP_SECRET}&access_token=${accessToken}`)
-    .then(function(response){
-      accessToken = response.data.access_token;
-      console.log("long term accessToken", accessToken)
-      axios.post(`https://localhost:${PORT}/user/update`, {
-        accessToken : accessToken
-      }).then(function(response){
-        console.log("response", response.data)
-        setUserInfo(response.data.userInfo)
-        setAccessToken(accessToken)
-        getInterestsFromUser()
+  if(!isFetching){
+    setIsFetching(true)
+    try {
+      axios.get(`https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${INSTA_APP_SECRET}&access_token=${accessToken}`)
+      .then(function(response){
+        accessToken = response.data.access_token;
+        axios.post(`https://localhost:${PORT}/user/update`, {
+          accessToken : accessToken
+        }).then(function(response){
+          setIsFetching(false)
+        })
       })
-    })
-    setIsFetching(false)
-} catch (e) {
-    console.log("Error getting long term access token", e);
-}
+  } catch (e) {
+      console.log("Error getting long term access token", e);
+  }
+  }
 }
 
 
   async function getInstaData(accessToken){
     try {
-      let resp = await axios.get(`https://graph.instagram.com/me?fields=id,username&access_token=${accessToken}`);
-      return resp.data
+      //let resp = await axios.get(`https://graph.instagram.com/me?fields=id,username&access_token=${accessToken}`);
+      let resp = await axios.get(`https://graph.instagram.com/me/media?fields=media_type,permalink,media_url&access_token=${accessToken}`);
+      resp = resp.data;
+      let instaPhotos = resp.data.map(d => d.media_url);
+      return instaPhotos
     } catch (e) {
        return e.response.data.error;
     }
@@ -197,16 +181,17 @@ function getAccessToken(accessToken){
   }
 
   //creates matches for current user
-  async function createMatches (params){
-    if(userInfo != "" && userInfo && !String(window.performance.getEntriesByType("navigation")[0].type) === "reload"){
+  function createMatches (params){
+    if(userInfo && userInfo != 0){
       setIsFetching(true)
-      await axios.post(`https://localhost:${PORT}/matches`, {
+      axios.post(`https://localhost:${PORT}/matches`, {
         params : params
       })
       .then(function(response){
         setIsFetching(false)
       })
       .catch(function(err){
+        setIsFetching(false)
         console.log(err)
       })
     }
@@ -248,6 +233,7 @@ function getAccessToken(accessToken){
   }
 
   const goToMatching = () => {
+    getMatchesForUser(10, 0)
     navigate('/user/matching')
   }
 
@@ -265,10 +251,10 @@ function getAccessToken(accessToken){
 
   //retrieves matches for user
   //sets user info
-  async function getMatchesForUser(limit, offset) {
+  function getMatchesForUser(limit, offset) {
     if(!isFetching && userInfo && userInfo != ""){
       setIsFetching(true)
-      await axios.get(`https://localhost:${PORT}/matches`, {
+      axios.get(`https://localhost:${PORT}/matches`, {
         params: {
           limit: limit,
           offset: offset
@@ -384,12 +370,8 @@ function getAccessToken(accessToken){
     if(userInfo.tags){
       tags = userInfo.tags
     }
-    if(tags.indexOf(document.getElementById('tags').value) === -1){
+    if(tags.indexOf(document.getElementById('tags').value) === -1 && document.getElementById('tags').value !== 'None'){
       tags.push(document.getElementById('tags').value)
-    }
-
-    if(document.getElementById('tags').value === 'None'){
-      tags = []
     }
 
     await axios.post(`https://localhost:${PORT}/user/basic`, {
@@ -420,7 +402,6 @@ function getAccessToken(accessToken){
       if(response.data.typeStatus == "danger"){
         alert("Login error")
         navigate('/login')
-        setIsFetching(false)
       }
       else{
         window.localStorage.clear();
@@ -428,12 +409,13 @@ function getAccessToken(accessToken){
         window.localStorage.setItem('userInfo', JSON.stringify({email: email, password: password, objectId : response.data.userInfo.objectId}))
         setUserMatches([])
         navigate('/user/basic')
-        setIsFetching(false)
       }
+      setIsFetching(false)
     })
     .catch(function(err){
       console.log(err)
       window.localStorage.clear();
+      setIsFetching(false)
     })
   }
 
@@ -532,6 +514,13 @@ function getAccessToken(accessToken){
         <Route path="*" element=
             {<NotFound />}
             />
+        <Route path="/insta-redirect" element=
+            {<InstaRedirect/>}
+            />
+        <Route 
+        path = "/loading"
+        element = {<Loading></Loading>}
+        />
       </Routes>
       </main>
     </div>
