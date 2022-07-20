@@ -1,10 +1,10 @@
 import * as React from "react"
-import {Route, Routes, useNavigate} from 'react-router-dom'
+import {Route, Routes, useNavigate} from 'react-router-dom';
 import { useState } from "react";
 import './App.css';
-import axios from "axios"
-import Login from '../Login/Login'
-import SignUp from '../SignUp/SignUp'
+import axios from "axios";
+import Login from '../Login/Login';
+import SignUp from '../SignUp/SignUp';
 import VerifyStudent from "../SignUp/VerifyStudent/VerifyStudent";
 import Navbar from "../Navbar/Navbar";
 import BasicInfo from "../User/BasicInfo/BasicInfo";
@@ -19,49 +19,49 @@ import Loading from "../Loading/Loading";
 import InstaRedirect from "../InstaRedirect/InstaRedirect";
 
 export default function App() {
-  const API_KEY = "658568773162c3aaffcb3981d4f5587b"
-  const INSTA_APP_ID = "390997746348889"
-  const RED_URI = "https://localhost:3000/insta-redirect"
-  const INSTA_APP_SECRET = "facb6a96ac24a92b82f0a6b254c0ec69"
-  const MOVIE_SEARCH_URL = `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=`
-  const TV_SEARCH_URL = `https://api.themoviedb.org/3/search/tv?api_key=${API_KEY}&query=`
+  const API_KEY = "658568773162c3aaffcb3981d4f5587b";
+  const INSTA_APP_ID = "390997746348889";
+  const RED_URI = "https://localhost:3000/insta-redirect";
+  const INSTA_APP_SECRET = "facb6a96ac24a92b82f0a6b254c0ec69";
+  const MOVIE_SEARCH_URL = `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=`;
+  const TV_SEARCH_URL = `https://api.themoviedb.org/3/search/tv?api_key=${API_KEY}&query=`;
 
   const navigate = useNavigate();
-  const [userInfo, setUserInfo] = useState("")
-  const [isFetching, setIsFetching] = useState(false)
+  const [userInfo, setUserInfo] = useState("");
+  const [isFetching, setIsFetching] = useState(false);
 
-  const [movie, setMovie] = useState("")
-  const [TV, setTV] = useState("")
-  const [hobbiesList, setHobbiesList] = useState("")
+  const [movie, setMovie] = useState("");
+  const [TV, setTV] = useState("");
+  const [hobbiesList, setHobbiesList] = useState("");
   const [selectedHobbyOption, setSelectedHobbyOption] = useState(null);
 
   const [userMatches, setUserMatches] = useState([]);
   const [matchOffset, setOffset] = useState(0);
-  const matchLimit = 10
+  const matchLimit = 10;
 
-  const PORT = '3001'
+  const PORT = '3001';
 
   //update matches when user info changes
   React.useEffect(() => {
     if(userInfo.interests){
-      createMatches({})
-      getMatchesForUser(10, 0)
+      createMatches({});
+      getMatchesForUser(10, 0);
     }
   }, [userInfo]);
 
   React.useEffect(() => {
-    setIsFetching(true)
+    setIsFetching(true);
     if (window.performance) {
       if (String(window.performance.getEntriesByType("navigation")[0].type) === "reload" && window.localStorage.getItem('userInfo')) {
-        refreshLogin()
+        refreshLogin();
       }
     }
-    setIsFetching(false)
+    setIsFetching(false);
   }, []);
 
   React.useEffect(() => {
     if(window.location.href.includes("code") && !isFetching && !userInfo.ig_accessToken){
-      postInsta()
+      postInsta();
     }
   }, []);
 
@@ -75,14 +75,14 @@ export default function App() {
         password: foundUser.password
       })
       .then(function(response){
-        setUserInfo(response.data.userInfo)
-        setUserMatches([])
+        setUserInfo(response.data.userInfo);
+        setUserMatches([]);
       })
       .catch(function(err){
-        console.log(err)
+        console.log(err);
       })
     }
-    setIsFetching(false)
+    setIsFetching(false);
   }
 
 // Invoke this function on button click or whatever other use case
@@ -93,7 +93,7 @@ async function setupInsta(){
 }
 
 async function postInsta(){
-  setIsFetching(true)
+  setIsFetching(true);
 
   const queryString = window.location.href;
   const code = queryString.split("?code=")[1].slice(0,-2);
@@ -103,20 +103,20 @@ async function postInsta(){
   })
   .then(({ data }) => {
     if(data.accessToken){
-      getAccessToken(data.accessToken)
+      getAccessToken(data.accessToken);
     }
   })
   .catch(({ error }) => {
-    console.log("error", error)
+    console.log("error", error);
   })
-  setIsFetching(false)
+  setIsFetching(false);
 }
 
 
 //get long term access token from short term access token
 function getAccessToken(accessToken){
   if(!isFetching){
-    setIsFetching(true)
+    setIsFetching(true);
     try {
       axios.get(`https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${INSTA_APP_SECRET}&access_token=${accessToken}`)
       .then(function(response){
@@ -124,7 +124,7 @@ function getAccessToken(accessToken){
         axios.post(`https://localhost:${PORT}/user/update`, {
           accessToken : accessToken
         }).then(function(response){
-          setIsFetching(false)
+          setIsFetching(false);
         })
       })
   } catch (e) {
@@ -136,11 +136,10 @@ function getAccessToken(accessToken){
 
   async function getInstaData(accessToken){
     try {
-      //let resp = await axios.get(`https://graph.instagram.com/me?fields=id,username&access_token=${accessToken}`);
       let resp = await axios.get(`https://graph.instagram.com/me/media?fields=media_type,permalink,media_url&access_token=${accessToken}`);
       resp = resp.data;
       let instaPhotos = resp.data.map(d => d.media_url);
-      return instaPhotos
+      return instaPhotos;
     } catch (e) {
        return e.response.data.error;
     }
@@ -148,104 +147,104 @@ function getAccessToken(accessToken){
 
   //fetch results for movies on page using TMDB API
   async function getResults(PAGE_URL){
-    const response = await fetch(PAGE_URL)
-    const result = await response.json()
-    return result.results
+    const response = await fetch(PAGE_URL);
+    const result = await response.json();
+    return result.results;
   }
 
 
   //gets search result from api for interests movie search bar
   const getMovieSearch = () => {
-    const query = document.getElementById('enter-movie').value
+    const query = document.getElementById('enter-movie').value;
     if(query === ""){
-      setMovie("")
+      setMovie("");
     }
     getResults(MOVIE_SEARCH_URL + query)
     .then(function(response){
-      setMovie(response[0])
-      setIsFetching(false)
+      setMovie(response[0]);
+      setIsFetching(false);
     })
 }
 
   //gets tv result from api for interests movie search bar
   const getTVSearch = () => {
-    const query = document.getElementById('enter-tv').value
+    const query = document.getElementById('enter-tv').value;
     if(query === ""){
-      setTV("")
+      setTV("");
     }
     getResults(TV_SEARCH_URL + query)
     .then(function(response){
-      setTV(response[0])
-      setIsFetching(false)
+      setTV(response[0]);
+      setIsFetching(false);
     })
   }
 
   //creates matches for current user
   function createMatches (params){
     if(userInfo && userInfo != 0){
-      setIsFetching(true)
+      setIsFetching(true);
       axios.post(`https://localhost:${PORT}/matches`, {
         params : params
       })
       .then(function(response){
-        setIsFetching(false)
+        setIsFetching(false);
       })
       .catch(function(err){
-        setIsFetching(false)
-        console.log(err)
+        setIsFetching(false);
+        console.log(err);
       })
     }
   }
 
   //navigate to pages
   const goToSignUp = () => {
-    navigate('/signup')
+    navigate('/signup');
   }
 
   const goToLogin = () => {
-    navigate('/login')
+    navigate('/login');
   }
 
   const goToBasic = () => {
-    navigate('/user/basic')
+    navigate('/user/basic');
   }
 
   const goToEditInfo = () => {
-    navigate('/user/basic/edit')
+    navigate('/user/basic/edit');
   }
 
   const goToEditMedia = () => {
-    navigate('/user/media/edit')
+    navigate('/user/media/edit');
   }
 
   const goToEditInterests = () => {
     setMovie("")
-    navigate('/user/interests/edit')
+    navigate('/user/interests/edit');
   }
 
   const goToInterests = () => {
-    getInterestsFromUser()
-    navigate('/user/interests')
+    getInterestsFromUser();
+    navigate('/user/interests');
   }
 
   const goToMedia = () => {
-    navigate('/user/media')
+    navigate('/user/media');
   }
 
   const goToMatching = () => {
-    getMatchesForUser(10, 0)
-    navigate('/user/matching')
+    getMatchesForUser(10, 0);
+    navigate('/user/matching');
   }
 
   //retrieves movies, tv shows, and hobbies for user
   //sets user info
   function getInterestsFromUser() {
-    setIsFetching(true)
+    setIsFetching(true);
     axios.get(`https://localhost:${PORT}/user/interests`)
     .then(resp => {
-      setHobbiesList(resp.data.hobbiesList)
-      setUserInfo({...userInfo, interests : {movies : resp.data.movies, shows : resp.data.shows, hobbies : resp.data.hobbies}})
-      setIsFetching(false)
+      setHobbiesList(resp.data.hobbiesList);
+      setUserInfo({...userInfo, interests : {movies : resp.data.movies, shows : resp.data.shows, hobbies : resp.data.hobbies}});
+      setIsFetching(false);
     });
   }
 
@@ -253,7 +252,7 @@ function getAccessToken(accessToken){
   //sets user info
   function getMatchesForUser(limit, offset) {
     if(!isFetching && userInfo && userInfo != ""){
-      setIsFetching(true)
+      setIsFetching(true);
       axios.get(`https://localhost:${PORT}/matches`, {
         params: {
           limit: limit,
@@ -262,13 +261,13 @@ function getAccessToken(accessToken){
       })
       .then(resp => {
         if(offset == 0){
-          setUserMatches(resp.data.matchesInfo)
+          setUserMatches(resp.data.matchesInfo);
         }
         else if(userMatches.length >= 10 && resp.data.matchesInfo[0] && !userMatches.includes(resp.data.matchesInfo[0])){
-          let newMatches = userMatches.concat(resp.data.matchesInfo)
-          setUserMatches(newMatches)
+          let newMatches = userMatches.concat(resp.data.matchesInfo);
+          setUserMatches(newMatches);
         }
-        setIsFetching(false)
+        setIsFetching(false);
       });
       }
   }
@@ -278,13 +277,13 @@ function getAccessToken(accessToken){
     axios.post(`https://localhost:${PORT}/logout`, {
     })  
     .then(function(response){
-      setUserInfo("")
-      setUserMatches([])
+      setUserInfo("");
+      setUserMatches([]);
       window.localStorage.clear();
-      navigate('/login')
+      navigate('/login');
     })
     .catch(function(err){
-      console.log(err)
+      console.log(err);
       window.localStorage.clear();
     })
   }
@@ -292,48 +291,48 @@ function getAccessToken(accessToken){
   //remove movie from user movies
   //reloads interests
   function removeMovie (movie){
-    setIsFetching(true)
+    setIsFetching(true);
     axios.post(`https://localhost:${PORT}/user/interests/remove`, {
       movie : movie
     })
     .then(function(response){
-      getInterestsFromUser()
-      setIsFetching(false)
+      getInterestsFromUser();
+      setIsFetching(false);
     })
     .catch(function(err){
-      console.log(err)
+      console.log(err);
     })
   }
 
   //remove show from user shows
   //reloads interests
   function removeShow (show){
-    setIsFetching(true)
+    setIsFetching(true);
     axios.post(`https://localhost:${PORT}/user/interests/remove`, {
       show : show
     })
     .then(function(response){
-      getInterestsFromUser()
-      setIsFetching(false)
+      getInterestsFromUser();
+      setIsFetching(false);
     })
     .catch(function(err){
-      console.log(err)
+      console.log(err);
     })
   }
 
   //remove hobby from user hobbies
   //reloads interests
   function removeHobby (hobby){
-    setIsFetching(true)
+    setIsFetching(true);
     axios.post(`https://localhost:${PORT}/user/interests/remove`, {
       hobby : hobby
     })
     .then(function(response){
-      getInterestsFromUser()
-      setIsFetching(false)
+      getInterestsFromUser();
+      setIsFetching(false);
     })
     .catch(function(err){
-      console.log(err)
+      console.log(err);
     })
   }
 
@@ -341,7 +340,7 @@ function getAccessToken(accessToken){
   //sends user interests to backend
   //reloads interests
   const saveInterests = () => {
-    setIsFetching(true)
+    setIsFetching(true);
     axios.post(`https://localhost:${PORT}/user/interests`, {
       interests : {
         movie : movie,
@@ -352,26 +351,26 @@ function getAccessToken(accessToken){
       }
     })
     .then(function(response){
-      getInterestsFromUser()
-      navigate('/user/interests')
-      setMovie("")
-      setTV("")
-      setIsFetching(false)
+      getInterestsFromUser();
+      navigate('/user/interests');
+      setMovie("");
+      setTV("");
+      setIsFetching(false);
     })
     .catch(function(err){
-      console.log(err)
+      console.log(err);
     })
   }
 
   //sends basic info to backend
   const saveBasicInfo = async () => {
-    setIsFetching(true)
-    var tags = []
+    setIsFetching(true);
+    var tags = [];
     if(userInfo.tags){
-      tags = userInfo.tags
+      tags = userInfo.tags;
     }
     if(tags.indexOf(document.getElementById('tags').value) === -1 && document.getElementById('tags').value !== 'None'){
-      tags.push(document.getElementById('tags').value)
+      tags.push(document.getElementById('tags').value);
     }
 
     await axios.post(`https://localhost:${PORT}/user/basic`, {
@@ -381,17 +380,17 @@ function getAccessToken(accessToken){
       tags: tags,
     })
     .then(function(response){
-      setUserInfo(response.data.userInfo)
-      navigate('/user/basic')
-      setIsFetching(false)
+      setUserInfo(response.data.userInfo);
+      navigate('/user/basic');
+      setIsFetching(false);
     })
     .catch(function(err){
-      console.log(err)
+      console.log(err);
     })
   }
 
   const createLoginParser = async () => {
-    setIsFetching(true)
+    setIsFetching(true);
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     await axios.post(`https://localhost:${PORT}/login`, {
@@ -400,31 +399,31 @@ function getAccessToken(accessToken){
     })
     .then(function(response){
       if(response.data.typeStatus == "danger"){
-        alert("Login error")
-        navigate('/login')
+        alert("Login error");
+        navigate('/login');
       }
       else{
         window.localStorage.clear();
-        setUserInfo(response.data.userInfo)
-        window.localStorage.setItem('userInfo', JSON.stringify({email: email, password: password, objectId : response.data.userInfo.objectId}))
-        setUserMatches([])
-        navigate('/user/basic')
+        setUserInfo(response.data.userInfo);
+        window.localStorage.setItem('userInfo', JSON.stringify({email: email, password: password, objectId : response.data.userInfo.objectId}));
+        setUserMatches([]);
+        navigate('/user/basic');
       }
-      setIsFetching(false)
+      setIsFetching(false);
     })
     .catch(function(err){
-      console.log(err)
+      console.log(err);
       window.localStorage.clear();
-      setIsFetching(false)
+      setIsFetching(false);
     })
   }
 
   const createSignUpParser = () => {
     if(!document.getElementById('email').value.endsWith('.edu')){
-      alert('Please enter a valid .edu email')
+      alert('Please enter a valid .edu email');
     }
     else if(document.getElementById('password').value !== document.getElementById('confirm-password').value){
-      alert('Passwords do not match')
+      alert('Passwords do not match');
     }
     else{
       setIsFetching(true)
@@ -435,18 +434,18 @@ function getAccessToken(accessToken){
       })
       .then(function(response){
         if(response.data.typeStatus === "success"){
-          navigate('/verify')
+          navigate('/verify');
         }
-        setIsFetching(false)
+        setIsFetching(false);
       })
       .catch(function(err){
-        console.log(err)
+        console.log(err);
       })
     }
   }
 
   const createVerifyParser = () => {
-    setIsFetching(true)
+    setIsFetching(true);
     axios.post(`https://localhost:${PORT}/verify`, {
       firstName: document.getElementById('firstName').value,
       lastName: document.getElementById('lastName').value,
@@ -454,12 +453,12 @@ function getAccessToken(accessToken){
       dob: document.getElementById('DOB').value
     })
     .then(function(response){
-      setUserInfo(response.data.userInfo)
-      navigate('/user/basic/edit')
-      setIsFetching(false)
+      setUserInfo(response.data.userInfo);
+      navigate('/user/basic/edit');
+      setIsFetching(false);
     })
     .catch(function(err){
-      console.log(err)
+      console.log(err);
     })
   }
 

@@ -10,23 +10,23 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.json());
 app.use(morgan('tiny'))
 const fs = require('fs');
-const cors = require('cors')
+const cors = require('cors');
 
-app.use(cors())
+app.use(cors());
 
-Parse.initialize('78hKdRq48OxfwlPbCkgFfgfquxCqwLiK86y3bjLU', '76IvY9V2pEqghFHqV3mZf8xhcUaPL6WndGCJbGhc')
-Parse.serverURL = 'http://parseapi.back4app.com/'
+Parse.initialize('78hKdRq48OxfwlPbCkgFfgfquxCqwLiK86y3bjLU', '76IvY9V2pEqghFHqV3mZf8xhcUaPL6WndGCJbGhc');
+Parse.serverURL = 'http://parseapi.back4app.com/';
 
 const WEIGHT_MOVIE_GENRES = 0.2;
 const WEIGHT_MOVIE_TITLE = 0.05;
 const WEIGHT_SHOW_GENRES = 0.2;
 const WEIGHT_SHOW_TITLE = 0.05;
-const WEIGHT_HOBBY_CATEGORY = 0.25
-const WEIGHT_HOBBY_NAMES = 0.1
-const WEIGHT_TAGS = 0.15
+const WEIGHT_HOBBY_CATEGORY = 0.25;
+const WEIGHT_HOBBY_NAMES = 0.1;
+const WEIGHT_TAGS = 0.15;
 
-const INSTA_APP_ID = "390997746348889"
-const INSTA_APP_SECRET = "facb6a96ac24a92b82f0a6b254c0ec69"
+const INSTA_APP_ID = "390997746348889";
+const INSTA_APP_SECRET = "facb6a96ac24a92b82f0a6b254c0ec69";
 
 async function getUserInfo(user) {
     const Movie = Parse.Object.extend("Movie");
@@ -66,9 +66,9 @@ function compareArrs(arr1, arr2, weight) {
             matches++;
         }
     }
-    let total = arr1.length + arr2.length
+    let total = arr1.length + arr2.length;
     if(total == 0){
-        return 0
+        return 0;
     }
 
     return (matches / (arr1.length + arr2.length)).toFixed(3) * weight;
@@ -128,7 +128,7 @@ async function getMatches(params, currentUser) {
         const currentUserInfo = await getUserInfo(currentUser);
 
         if(!entry.get('grad_year')){
-            entry.destroy()
+            entry.destroy();
             return;
         }
 
@@ -182,18 +182,18 @@ async function retrieveMatchData(limit, offset, currentUser) {
 
     let usersInfo = [];
     let scoreInfo = [];
-    let interestsInfo = []
+    let interestsInfo = [];
 
     for (let i = 0; i < matchResults.length; i++) {
         let userId = matchResults[i].get('user_2');
         const query = new Parse.Query(Parse.User);
         query.equalTo("objectId", userId);
         const userInfo = await query.first();
-        const interests = await getUserInfo(userInfo)
+        const interests = await getUserInfo(userInfo);
 
         usersInfo.push(userInfo);
         scoreInfo.push({ score: matchResults[i].get('score'), liked: matchResults[i].get('liked'), seen: matchResults[i].get('seen') });
-        interestsInfo.push(interests)
+        interestsInfo.push(interests);
     }
     let matchesInfo = usersInfo.map(function (_, i) {
         return {
@@ -440,7 +440,7 @@ app.post('/user/update', async (req, res) => {
             if(infoUser.accessToken){
                 currentUser.set("ig_access_token", infoUser.accessToken);
             }
-            await currentUser.save()
+            await currentUser.save();
             res.send({ userInfo: currentUser, updateInfoMessage: "User basic info saved!", typeStatus: "success", infoUser: infoUser });
         } else {
             res.send({ userInfo: "", updateInfoMessage: "Can't get current user", typeStatus: "danger", infoUser: infoUser });
@@ -451,29 +451,29 @@ app.post('/user/update', async (req, res) => {
 })
 
 app.post('/user/basic', async (req, res) => {
-    Parse.User.enableUnsafeCurrentUser()
-    const infoUser = req.body
+    Parse.User.enableUnsafeCurrentUser();
+    const infoUser = req.body;
 
     try {
         const currentUser = Parse.User.current();
         if (currentUser) {
             if (infoUser.year && infoUser.year != "") {
-                currentUser.set("grad_year", infoUser.year)
+                currentUser.set("grad_year", infoUser.year);
             }
             if (infoUser.major && infoUser.major != "") {
-                currentUser.set("major", infoUser.major)
+                currentUser.set("major", infoUser.major);
             }
             if (infoUser.hometown && infoUser.hometown != "") {
-                currentUser.set("hometown", infoUser.hometown)
+                currentUser.set("hometown", infoUser.hometown);
             }
             if (infoUser.profile_photo && infoUser.profile_photo != "") {
-                currentUser.set("profile_photo", infoUser.profile_photo)
+                currentUser.set("profile_photo", infoUser.profile_photo);
             }
             if (infoUser.tags) {
-                currentUser.set("tags", infoUser.tags)
+                currentUser.set("tags", infoUser.tags);
             }
             if (infoUser.media) {
-                currentUser.set("media", infoUser.media)
+                currentUser.set("media", infoUser.media);
             }
             await currentUser.save()
             res.send({ userInfo: currentUser, saveInfoMessage: "User basic info saved!", typeStatus: "success", infoUser: infoUser });
@@ -498,11 +498,11 @@ function requestToken(res, redirect_uri, code, userInfo, params){
         }
     }, 
     function (err, httpResponse, body) {
-        let result = JSON.parse(body)
+        let result = JSON.parse(body);
         if(result.access_token){
             // Got access token. Parse string response to JSON
             let accessToken = result.access_token;
-            res.send({params: params, userInfo : userInfo, result: result, accessToken : accessToken, typeStatus : "success"})
+            res.send({params: params, userInfo : userInfo, result: result, accessToken : accessToken, typeStatus : "success"});
         }
     });
 }
@@ -517,9 +517,9 @@ app.post('/init-insta', async (req, res) => {
     query.equalTo("objectId", objectId);
     const userInfo = await query.first();
     try {
-       requestToken(res, redirect_uri, code, userInfo, req.body)
+       requestToken(res, redirect_uri, code, userInfo, req.body);
     } catch (e) {
-        res.send({request: req.body, instaMessage: "short term access token failed",typeStatus : "danger", error : e, userInfo : userInfo})
+        res.send({request: req.body, instaMessage: "short term access token failed",typeStatus : "danger", error : e, userInfo : userInfo});
     }
 })
 module.exports = app;
