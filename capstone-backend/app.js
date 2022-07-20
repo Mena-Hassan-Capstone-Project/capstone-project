@@ -208,12 +208,10 @@ app.post('/logout', async (req, res) => {
 })
 
 app.post('/signup', async (req, res) => {
-    console.log("in sign up backend")
     Parse.User.enableUnsafeCurrentUser();
     const infoUser = req.body;
     let user = new Parse.User();
 
-    console.log("set user info")
     user.set("username", infoUser.email);
     user.set("email", infoUser.email);
     user.set("password", infoUser.password);
@@ -221,10 +219,7 @@ app.post('/signup', async (req, res) => {
 
     try {
         await user.signUp();
-        console.log("sign up user")
         await Parse.User.logIn(infoUser.email, infoUser.password);
-        console.log("user logged in")
-        console.log({ signupMessage: "User signed up!", typeStatus: 'success', infoUser: infoUser })
         res.send({ signupMessage: "User signed up!", typeStatus: 'success', infoUser: infoUser });
     }
     catch (error) {
@@ -417,14 +412,14 @@ app.post('/user/interests', async (req, res) => {
 })
 
 app.post('/user/update', async (req, res) => {
-    Parse.User.enableUnsafeCurrentUser()
-    const infoUser = req.body
+    Parse.User.enableUnsafeCurrentUser();
+    const infoUser = req.body;
 
     try {
         const currentUser = Parse.User.current();
         if (currentUser) {
             if(infoUser.accessToken){
-                currentUser.set("ig_access_token", infoUser.accessToken)
+                currentUser.set("ig_access_token", infoUser.accessToken);
             }
             await currentUser.save()
             res.send({ userInfo: currentUser, updateInfoMessage: "User basic info saved!", typeStatus: "success", infoUser: infoUser });
@@ -485,7 +480,6 @@ function requestToken(res, redirect_uri, code, userInfo, params){
     }, 
     function (err, httpResponse, body) {
         let result = JSON.parse(body)
-        console.log("result", result)
         if(result.access_token){
             // Got access token. Parse string response to JSON
             let accessToken = result.access_token;
@@ -506,7 +500,6 @@ app.post('/init-insta', async (req, res) => {
     try {
        requestToken(res, redirect_uri, code, userInfo, req.body)
     } catch (e) {
-        console.log("error", e)
         res.send({request: req.body, instaMessage: "short term access token failed",typeStatus : "danger", error : e, userInfo : userInfo})
     }
 })

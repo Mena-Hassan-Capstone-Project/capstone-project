@@ -1,9 +1,11 @@
 import * as React from "react"
+import { useState } from "react";
 import "./Media.css"
 import Loading from "../../Loading/Loading"
 
 
 export default function Media({userInfo, goToBasic, goToInterests, goToEditMedia, isFetching, setupInsta, getInstaData}) {
+  const [userData, setUserData] = useState("");
   return (
     isFetching
     ? <Loading></Loading>
@@ -38,7 +40,11 @@ export default function Media({userInfo, goToBasic, goToInterests, goToEditMedia
           ?
           <div className = "access-token">
           <p>{`Instagram Connected! Access Token: ${userInfo.ig_access_token}`}</p>
-          <button onClick = {() => {getInstaData(userInfo.ig_access_token)}}>
+          <button onClick = {async () => {
+            let data = await getInstaData(userInfo.ig_access_token)
+            setUserData(data)
+            console.log(data)
+            }}>
             Get Instagram Data
           </button>
           </div>
@@ -46,6 +52,12 @@ export default function Media({userInfo, goToBasic, goToInterests, goToEditMedia
           <button onClick = {() => {setupInsta()}}>
             Connect to Instagram
           </button>
+          }
+          {
+            userData.username ?
+            <p>{`Username: ${userData.username}`}</p>
+            :
+            null
           }
         </div>
         </div>  

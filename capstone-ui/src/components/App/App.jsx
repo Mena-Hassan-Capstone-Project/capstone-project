@@ -42,33 +42,40 @@ export default function App() {
   const PORT = '3001'
 
   React.useEffect(() => {
-    createMatches({})
-    getMatchesForUser(10, 0)
+    if(userInfo.interests){
+      createMatches({})
+      getMatchesForUser(10, 0)
+    }
   }, [userInfo]);
 
   React.useEffect(() => {
     setIsFetching(true)
     if (window.performance) {
-      if (String(window.performance.getEntriesByType("navigation")[0].type) === "reload" && (userInfo == "" || !userInfo)) {
-        console.log("page reload")
-        //refreshLogin()
+      if (String(window.performance.getEntriesByType("navigation")[0].type) === "reload" && (userInfo.ig_accessToken)) {
+        refreshLogin()
       }
     }
     setIsFetching(false)
-  }, [userInfo]);
+  }, []);
 
-  // React.useEffect(() => {
-  //   if(window.location.href.includes("code") && !instaAccessToken && !isFetching){
-  //     postInsta()
-  //   }
-  // }, []);
+  React.useEffect(() => {
+    console.log("post insta")
+    if(window.location.href.includes("code") && !instaAccessToken && !isFetching && !userInfo.ig_accessToken){
+      postInsta()
+    }
+  }, []);
 
-  /*function refreshLogin(){
-    console.log("in refresh login")
-    //const loggedInUser = window.localStorage.getItem('userInfo');
+  React.useEffect(() => {
+    if(userInfo.preferredName){
+      navigate('/user/basic')
+    }
+  }, [userInfo.ig_accessToken]);
+
+  function refreshLogin(){
+    const loggedInUser = window.localStorage.getItem('userInfo');
     if (loggedInUser) {
-      const foundUser = JSON.parse(loggedInUser)
-      setIsFetching(true)
+      const foundUser = JSON.parse(loggedInUser);
+      setIsFetching(true);
       axios.post(`https://localhost:${PORT}/login`, {
         email: foundUser.email,
         password: foundUser.password
@@ -83,7 +90,7 @@ export default function App() {
       })
     }
     setIsFetching(false)
-  }*/
+  }
 
 // Invoke this function on button click or whatever other use case
 async function setupInsta(){
@@ -92,58 +99,54 @@ async function setupInsta(){
 	window.open(url, "_blank").focus();
 }
 
-// async function postInsta(){
-//   setIsFetching(true)
-//   const user = window.localStorage.getItem('userInfo');
-//   const objectId = JSON.parse(user).objectId
+async function postInsta(){
+  setIsFetching(true)
+  const user = window.localStorage.getItem('userInfo');
 
-//   const queryString = window.location.href;
-//   const code = queryString.split("?code=")[1].slice(0,-2);
-//   await axios.post(`https://localhost:${PORT}/init-insta`, {
-//     code: code,
-//     redirectUri: RED_URI, // needs to be registered at fb developer console
-//     objectId : objectId
-//   })
-//   .then(({ data }) => {
-//     if(data.typeStatus == "danger"){
-//       console.log("error")
-//       setIsFetching(false)
-//       return;
-//     }
+  const queryString = window.location.href;
+  const code = queryString.split("?code=")[1].slice(0,-2);
+  await axios.post(`https://localhost:${PORT}/init-insta`, {
+    code: code,
+    redirectUri: RED_URI, // needs to be registered at fb developer console
+  })
+  .then(({ data }) => {
+    if(data.typeStatus == "danger"){
+      console.log("error")
+      setIsFetching(false)
+      return;
+    }
 
-//     if(data.accessToken){
-//       getAccessToken(data.accessToken)
-//       console.log("access token retrieved")
-//     }
-//     setIsFetching(false)
-//   })
-//   .catch(({ error }) => {
-//     console.log("error", error)
-//     setIsFetching(false)
-//   })
-// }
+    if(data.accessToken){
+      getAccessToken(data.accessToken)
+    }
+    setIsFetching(false)
+  })
+  .catch(({ error }) => {
+    console.log("error", error)
+    setIsFetching(false)
+  })
+}
 
 
 //get long term access token from short term access token
 function getAccessToken(accessToken){
+  setIsFetching(true)
   console.log("short term access token", accessToken)
-  console.log("getting long term access token")
   try {
     axios.get(`https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${INSTA_APP_SECRET}&access_token=${accessToken}`)
     .then(function(response){
       accessToken = response.data.access_token;
       console.log("long term accessToken", accessToken)
-      //refreshLogin()
       axios.post(`https://localhost:${PORT}/user/update`, {
         accessToken : accessToken
       }).then(function(response){
         console.log("response", response.data)
         setUserInfo(response.data.userInfo)
+        setAccessToken(accessToken)
         getInterestsFromUser()
-        navigate('/user/basic')
       })
-      setAccessToken(accessToken)
     })
+    setIsFetching(false)
 } catch (e) {
     console.log("Error getting long term access token", e);
 }
@@ -153,9 +156,9 @@ function getAccessToken(accessToken){
   async function getInstaData(accessToken){
     try {
       let resp = await axios.get(`https://graph.instagram.com/me?fields=id,username&access_token=${accessToken}`);
-      console.log(resp.data)
+      return resp.data
     } catch (e) {
-       console.log(e.response.data.error);
+       return e.response.data.error;
     }
   }
 
@@ -291,13 +294,12 @@ function getAccessToken(accessToken){
     .then(function(response){
       setUserInfo("")
       setUserMatches([])
-      console.log("clearing storage")
-      //window.localStorage.clear();
+      window.localStorage.clear();
       navigate('/login')
     })
     .catch(function(err){
       console.log(err)
-      //window.localStorage.clear();
+      window.localStorage.clear();
     })
   }
 
@@ -421,9 +423,9 @@ function getAccessToken(accessToken){
         setIsFetching(false)
       }
       else{
-        //window.localStorage.clear();
+        window.localStorage.clear();
         setUserInfo(response.data.userInfo)
-        //window.localStorage.setItem('userInfo', JSON.stringify({email: email, password: password, objectId : response.data.userInfo.objectId}))
+        window.localStorage.setItem('userInfo', JSON.stringify({email: email, password: password, objectId : response.data.userInfo.objectId}))
         setUserMatches([])
         navigate('/user/basic')
         setIsFetching(false)
@@ -431,38 +433,34 @@ function getAccessToken(accessToken){
     })
     .catch(function(err){
       console.log(err)
+      window.localStorage.clear();
     })
   }
 
   const createSignUpParser = () => {
-    console.log("in sign up")
-    /*if(!document.getElementById('email').value.endsWith('.edu')){
-      console.log("not valid edu")
+    if(!document.getElementById('email').value.endsWith('.edu')){
       alert('Please enter a valid .edu email')
     }
     else if(document.getElementById('password').value !== document.getElementById('confirm-password').value){
-      console.log("not valid password")
       alert('Passwords do not match')
     }
-    else{*/
-      console.log("making post call")
-      //setIsFetching(true)
+    else{
+      setIsFetching(true)
       axios.post(`https://localhost:${PORT}/signup`, {
       email: document.getElementById('email').value,
       password: document.getElementById('password').value,
       preferredName: document.getElementById('preferredName').value
       })
       .then(function(response){
-        console.log(response)
-        //if(response.data.typeStatus === "success"){
+        if(response.data.typeStatus === "success"){
           navigate('/verify')
-        //}
-        //setIsFetching(false)
+        }
+        setIsFetching(false)
       })
       .catch(function(err){
         console.log(err)
       })
-    //}
+    }
   }
 
   const createVerifyParser = () => {
@@ -486,7 +484,7 @@ function getAccessToken(accessToken){
   return (
     <div className="App">
       <main>
-      <Navbar userInfo = {userInfo} logOut = {logOut} goToMatching={goToMatching} goToBasic={goToBasic} goToSignUp={goToSignUp}/>
+      <Navbar userInfo = {userInfo} logOut = {logOut} goToMatching={goToMatching} goToBasic={goToBasic} goToSignUp={goToSignUp} goToLogin={goToLogin}/>
       <Routes>
         <Route 
         path = "/login"
@@ -494,7 +492,7 @@ function getAccessToken(accessToken){
         />
         <Route 
         path = "/signup"
-        element = {<SignUp createSignUpParser = {createSignUpParser} goToLogin={goToLogin} isFetching={isFetching}></SignUp>}
+        element = {<SignUp createSignUpParser = {createSignUpParser} goToLogin={goToLogin}></SignUp>}
         />
         <Route 
         path = "/verify"
@@ -520,11 +518,11 @@ function getAccessToken(accessToken){
         />
         <Route 
         path = "/user/media"
-        element = {<Media userInfo = {userInfo} goToBasic={goToBasic} goToInterests={goToInterests} goToEditMedia ={goToEditMedia} isFetching={isFetching} setupInsta = {setupInsta} getInstaData={getInstaData}></Media>}
+        element = {<Media userInfo = {userInfo} goToBasic={goToBasic} goToInterests={goToInterests} goToEditMedia ={goToEditMedia} isFetching={isFetching} setupInsta={setupInsta} getInstaData={getInstaData}></Media>}
         />
         <Route 
         path = "/user/media/edit"
-        element = {<MediaEdit userInfo = {userInfo} goToBasic={goToBasic} goToInterests={goToInterests} imageList={userInfo?.media ? userInfo.media : []} maxImages = {10} setUserInfo={setUserInfo} isFetching={isFetching} setIsFetching={setIsFetching}></MediaEdit>}
+        element = {<MediaEdit userInfo = {userInfo} goToBasic={goToBasic} goToInterests={goToInterests} imageList={userInfo.media} maxImages = {10} setUserInfo={setUserInfo} isFetching={isFetching} setIsFetching={setIsFetching}></MediaEdit>}
         />
         <Route 
         path = "/user/matching"

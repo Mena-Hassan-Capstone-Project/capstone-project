@@ -10,7 +10,6 @@ export default function ProfilePhoto({imageList}) {
 
     const onChange = (imageList, addUpdateIndex) => {
         // data for submit
-        console.log(imageList, addUpdateIndex);
         setImages(imageList);
     };
 
@@ -18,8 +17,7 @@ export default function ProfilePhoto({imageList}) {
 
     const saveProfilePic = () => {
       var profile_img = images[0]
-      console.log("Profile image:", images[0])
-      axios.post(`http://localhost:${PORT}/user/basic`, {
+      axios.post(`https://localhost:${PORT}/user/basic`, {
         profile_photo: profile_img.data_url,
       })
       .then(function(response){

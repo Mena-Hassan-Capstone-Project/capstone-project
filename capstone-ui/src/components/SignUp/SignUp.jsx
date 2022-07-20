@@ -12,7 +12,6 @@ export default function SignUp({createSignUpParser, goToLogin, isFetching}) {
       :
       <div>
         <h1>Create Account</h1>
-        <form>
         <input id = "email" className = "input signup-input" type="email" placeholder="Enter your school email" />
         <br />
         <input id = "password" className = "input signup-input" type="password" placeholder="Create a Password" />
@@ -24,7 +23,6 @@ export default function SignUp({createSignUpParser, goToLogin, isFetching}) {
         <button className = "login-btn" onClick = {() => createSignUpParser()}>
             Next
         </button>
-        </form>
         <p>Already Have an Account? <b onClick={goToLogin} className="signup-link">Log In</b></p>
         </div>
         }

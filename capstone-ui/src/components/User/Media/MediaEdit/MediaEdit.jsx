@@ -13,7 +13,6 @@ export default function MediaEdit({userInfo, goToBasic, goToInterests, imageList
   const maxNumber = maxImages;
 
   const onChange = (imageList, addUpdateIndex) => {
-    console.log(imageList, addUpdateIndex);
     setImages(imageList);
   };
 
@@ -21,13 +20,10 @@ export default function MediaEdit({userInfo, goToBasic, goToInterests, imageList
 
     const saveMedia = () => {
       setIsFetching(true)
-      console.log("images len:", images.length)
-      console.log("images", images)
-      axios.post(`http://localhost:${PORT}/user/basic`, {
+      axios.post(`https://localhost:${PORT}/user/basic`, {
         media: images,
       })
       .then(function(response){
-        console.log("Media Response:", response)
         setUserInfo({...userInfo, media : images})
         navigate('/user/media')
         setIsFetching(false)
