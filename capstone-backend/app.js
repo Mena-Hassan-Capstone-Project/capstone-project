@@ -1,5 +1,6 @@
 'use strict';
 const Parse = require('parse/node')
+const request = require('request');
 const express = require('express')
 const morgan = require('morgan')
 const bodyParser = require('body-parser')
@@ -9,20 +10,23 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.json());
 app.use(morgan('tiny'))
 const fs = require('fs');
-const cors = require('cors')
+const cors = require('cors');
 
-app.use(cors())
+app.use(cors());
 
-Parse.initialize('78hKdRq48OxfwlPbCkgFfgfquxCqwLiK86y3bjLU', '76IvY9V2pEqghFHqV3mZf8xhcUaPL6WndGCJbGhc')
-Parse.serverURL = 'http://parseapi.back4app.com/'
+Parse.initialize('78hKdRq48OxfwlPbCkgFfgfquxCqwLiK86y3bjLU', '76IvY9V2pEqghFHqV3mZf8xhcUaPL6WndGCJbGhc');
+Parse.serverURL = 'http://parseapi.back4app.com/';
 
 const WEIGHT_MOVIE_GENRES = 0.2;
 const WEIGHT_MOVIE_TITLE = 0.05;
 const WEIGHT_SHOW_GENRES = 0.2;
 const WEIGHT_SHOW_TITLE = 0.05;
-const WEIGHT_HOBBY_CATEGORY = 0.25
-const WEIGHT_HOBBY_NAMES = 0.1
-const WEIGHT_TAGS = 0.15
+const WEIGHT_HOBBY_CATEGORY = 0.25;
+const WEIGHT_HOBBY_NAMES = 0.1;
+const WEIGHT_TAGS = 0.15;
+
+const INSTA_APP_ID = "390997746348889";
+const INSTA_APP_SECRET = "facb6a96ac24a92b82f0a6b254c0ec69";
 
 async function getUserInfo(user) {
     const Movie = Parse.Object.extend("Movie");
@@ -62,11 +66,16 @@ function compareArrs(arr1, arr2, weight) {
             matches++;
         }
     }
+    let total = arr1.length + arr2.length;
+    if (total == 0) {
+        return 0;
+    }
 
     return (matches / (arr1.length + arr2.length)).toFixed(3) * weight;
 }
 
 function calculateCategoryScore(category, prop1, prop2, weight1, weight2) {
+
     let user1Prop1 = [];
     let user1Prop2 = [];
     for (let i = 0; i < category.user_1.length; i++) {
@@ -81,9 +90,13 @@ function calculateCategoryScore(category, prop1, prop2, weight1, weight2) {
         user2Prop2.push(category.user_2[i].get(prop2));
     }
 
-    let prop1Score = compareArrs(user1Prop1, user2Prop1, weight1);
-    let prop2Score = compareArrs(user1Prop2, user2Prop2, weight2);
-    return prop1Score + prop2Score;
+    if (user1Prop1 && user2Prop1 && user1Prop2 && user2Prop2) {
+        let prop1Score = compareArrs(user1Prop1, user2Prop1, weight1);
+        let prop2Score = compareArrs(user1Prop2, user2Prop2, weight2);
+
+        return prop1Score + prop2Score;
+    }
+    return 0
 }
 
 function getScore(movies, shows, hobbies, tags) {
@@ -114,6 +127,11 @@ async function getMatches(params, currentUser) {
         const matchInfo = await getUserInfo(entry);
         const currentUserInfo = await getUserInfo(currentUser);
 
+        if (!entry.get('grad_year')) {
+            entry.destroy();
+            return;
+        }
+
         const movieInfo = { user_1: currentUserInfo.movies, user_2: matchInfo.movies };
         const showInfo = { user_1: currentUserInfo.shows, user_2: matchInfo.shows };
         const hobbiesInfo = { user_1: currentUserInfo.hobbies, user_2: matchInfo.hobbies };
@@ -125,6 +143,7 @@ async function getMatches(params, currentUser) {
         matchQuery.equalTo("user_1", currentUser.id);
         matchQuery.equalTo("user_2", entry.id);
         let matchResults = await matchQuery.find();
+
 
         if (matchResults.length > 0) {
             for (let i = 0; i < matchResults.length; i++) {
@@ -138,12 +157,14 @@ async function getMatches(params, currentUser) {
         }
         else {
             const match = new Match();
-            match.set("score", matchScore);
-            match.set("liked", false);
-            match.set("seen", false);
-            match.set("user_1", currentUser.id);
-            match.set("user_2", entry.id);
-            await match.save();
+            if (matchScore) {
+                match.set("score", matchScore);
+                match.set("liked", false);
+                match.set("seen", false);
+                match.set("user_1", currentUser.id);
+                match.set("user_2", entry.id);
+                await match.save();
+            }
         }
     })
 }
@@ -151,32 +172,34 @@ async function getMatches(params, currentUser) {
 async function retrieveMatchData(limit, offset, currentUser) {
     const Match = Parse.Object.extend("Match");
     const matchQuery = new Parse.Query(Match);
+
     matchQuery.equalTo("user_1", currentUser.id);
     matchQuery.descending("score");
     matchQuery.limit(parseInt(limit));
     matchQuery.skip(parseInt(offset));
 
     const matchResults = await matchQuery.find();
+
     let usersInfo = [];
     let scoreInfo = [];
-    let interestsInfo = []
+    let interestsInfo = [];
 
     for (let i = 0; i < matchResults.length; i++) {
         let userId = matchResults[i].get('user_2');
         const query = new Parse.Query(Parse.User);
         query.equalTo("objectId", userId);
         const userInfo = await query.first();
-        const interests = await getUserInfo(userInfo)
+        const interests = await getUserInfo(userInfo);
 
         usersInfo.push(userInfo);
         scoreInfo.push({ score: matchResults[i].get('score'), liked: matchResults[i].get('liked'), seen: matchResults[i].get('seen') });
-        interestsInfo.push(interests)
+        interestsInfo.push(interests);
     }
     let matchesInfo = usersInfo.map(function (_, i) {
         return {
             userInfo: usersInfo[i],
             scoreInfo: scoreInfo[i],
-            interestsInfo : interestsInfo[i]
+            interestsInfo: interestsInfo[i]
         };
     });
     return ({ matchesInfo: matchesInfo, matchResults: matchResults, matchMessage: "Matches Retrieved!", typeStatus: "success" });
@@ -215,8 +238,8 @@ app.post('/signup', async (req, res) => {
 
     try {
         await user.signUp();
+        await Parse.User.logIn(infoUser.email, infoUser.password);
         res.send({ signupMessage: "User signed up!", typeStatus: 'success', infoUser: infoUser });
-        let userLogin = await Parse.User.logIn(infoUser.email, infoUser.password);
     }
     catch (error) {
         res.send({ signupMessage: error.message, typeStatus: 'danger', infoUser: infoUser });
@@ -247,12 +270,17 @@ app.get('/matches', async (req, res) => {
     const currentUser = Parse.User.current();
     const limit = req.query["limit"];
     const offset = req.query["offset"];
-    if (currentUser) {
-        let matchData = await retrieveMatchData(limit, offset, currentUser);
-        res.send(matchData);
+    try {
+        if (currentUser) {
+            let matchData = await retrieveMatchData(limit, offset, currentUser);
+            res.send(matchData);
+        }
+        else {
+            res.send({ matchMessage: "Can't get current user", typeStatus: "danger" });
+        }
     }
-    else {
-        res.send({ matchMessage: "Can't get current user", typeStatus: "danger" });
+    catch (err) {
+        res.send({ matchMessage: "Error retrieving match", typeStatus: "danger" });
     }
 });
 
@@ -402,30 +430,50 @@ app.post('/user/interests', async (req, res) => {
     }
 })
 
+app.post('/user/update', async (req, res) => {
+    Parse.User.enableUnsafeCurrentUser();
+    const infoUser = req.body;
+
+    try {
+        const currentUser = Parse.User.current();
+        if (currentUser) {
+            if (infoUser.accessToken) {
+                currentUser.set("ig_access_token", infoUser.accessToken);
+            }
+            await currentUser.save();
+            res.send({ userInfo: currentUser, updateInfoMessage: "User basic info saved!", typeStatus: "success", infoUser: infoUser });
+        } else {
+            res.send({ userInfo: "", updateInfoMessage: "Can't get current user", typeStatus: "danger", infoUser: infoUser });
+        }
+    } catch (error) {
+        res.send({ updateInfoMessage: error.message, typeStatus: "danger", infoUser: infoUser });
+    }
+})
+
 app.post('/user/basic', async (req, res) => {
-    Parse.User.enableUnsafeCurrentUser()
-    const infoUser = req.body
+    Parse.User.enableUnsafeCurrentUser();
+    const infoUser = req.body;
 
     try {
         const currentUser = Parse.User.current();
         if (currentUser) {
             if (infoUser.year && infoUser.year != "") {
-                currentUser.set("grad_year", infoUser.year)
+                currentUser.set("grad_year", infoUser.year);
             }
             if (infoUser.major && infoUser.major != "") {
-                currentUser.set("major", infoUser.major)
+                currentUser.set("major", infoUser.major);
             }
             if (infoUser.hometown && infoUser.hometown != "") {
-                currentUser.set("hometown", infoUser.hometown)
+                currentUser.set("hometown", infoUser.hometown);
             }
             if (infoUser.profile_photo && infoUser.profile_photo != "") {
-                currentUser.set("profile_photo", infoUser.profile_photo)
+                currentUser.set("profile_photo", infoUser.profile_photo);
             }
             if (infoUser.tags) {
-                currentUser.set("tags", infoUser.tags)
+                currentUser.set("tags", infoUser.tags);
             }
             if (infoUser.media) {
-                currentUser.set("media", infoUser.media)
+                currentUser.set("media", infoUser.media);
             }
             await currentUser.save()
             res.send({ userInfo: currentUser, saveInfoMessage: "User basic info saved!", typeStatus: "success", infoUser: infoUser });
@@ -434,6 +482,44 @@ app.post('/user/basic', async (req, res) => {
         }
     } catch (error) {
         res.send({ saveInfoMessage: error.message, typeStatus: "danger", infoUser: infoUser });
+    }
+})
+
+function requestToken(res, redirect_uri, code, userInfo, params) {
+    // send form based request to Instagram API
+    request.post({
+        url: 'https://api.instagram.com/oauth/access_token',
+        form: {
+            client_id: INSTA_APP_ID,
+            client_secret: INSTA_APP_SECRET,
+            grant_type: 'authorization_code',
+            redirect_uri,
+            code
+        }
+    },
+        function (err, httpResponse, body) {
+            let result = JSON.parse(body);
+            if (result.access_token) {
+                // Got access token. Parse string response to JSON
+                let accessToken = result.access_token;
+                res.send({ params: params, userInfo: userInfo, result: result, accessToken: accessToken, typeStatus: "success" });
+            }
+        });
+}
+
+app.post('/init-insta', async (req, res) => {
+    // data from frontend
+    let code = req.body.code;
+    let redirect_uri = req.body.redirectUri;
+    let objectId = req.body.objectId;
+
+    const query = new Parse.Query(Parse.User);
+    query.equalTo("objectId", objectId);
+    const userInfo = await query.first();
+    try {
+        requestToken(res, redirect_uri, code, userInfo, req.body);
+    } catch (e) {
+        res.send({ request: req.body, instaMessage: "short term access token failed", typeStatus: "danger", error: e, userInfo: userInfo });
     }
 })
 module.exports = app;

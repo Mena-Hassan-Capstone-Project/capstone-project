@@ -1,20 +1,20 @@
 .row {
-    display: flex;
-  }
-  
-  /* Create two equal columns that sits next to each other */
-  .column {
-    flex: 75%;
-    padding: 10px;
-  }
-
-  .basic-input{
-    height: 50px;
-    width: 350px;
-    margin-top: 25px;
+  display: flex;
 }
 
-.tag-item{
+/* Create two equal columns that sits next to each other */
+.column {
+  flex: 75%;
+  padding: 10px;
+}
+
+.basic-input {
+  height: 50px;
+  width: 350px;
+  margin-top: 25px;
+}
+
+.tag-item {
   background-color: #A74B4B;
   color: white;
   width: 120px;
@@ -27,15 +27,16 @@
   padding: 5px;
 }
 
-.tag-text{
+.tag-text {
   display: inline;
 }
-.remove-tag{
+
+.remove-tag {
   display: inline;
   cursor: pointer;
 }
 
-.tags-dropdown{
+.tags-dropdown {
   border-radius: 10px;
   padding: 3px;
   margin-left: 10px;
@@ -43,7 +44,7 @@
   border: #a3a3a3;
 }
 
-.add-tag{
+.add-tag {
   font-size: 16px;
   font-family: 'Poppins', sans-serif;
 }

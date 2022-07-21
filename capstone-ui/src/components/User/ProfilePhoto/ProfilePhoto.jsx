@@ -4,34 +4,32 @@ import ImageUploading from 'react-images-uploading';
 import axios from "axios"
 
 
-export default function ProfilePhoto({imageList}) {
-    const [images, setImages] = React.useState(imageList);
-    const maxNumber = 1;
+export default function ProfilePhoto({ imageList }) {
+  const [images, setImages] = React.useState(imageList);
+  const maxNumber = 1;
 
-    const onChange = (imageList, addUpdateIndex) => {
-        // data for submit
-        console.log(imageList, addUpdateIndex);
-        setImages(imageList);
-    };
+  const onChange = (imageList, addUpdateIndex) => {
+    // data for submit
+    setImages(imageList);
+  };
 
-    const PORT = '3001'
+  const PORT = '3001'
 
-    const saveProfilePic = () => {
-      var profile_img = images[0]
-      console.log("Profile image:", images[0])
-      axios.post(`http://localhost:${PORT}/user/basic`, {
-        profile_photo: profile_img.data_url,
-      })
-      .then(function(response){
+  const saveProfilePic = () => {
+    var profile_img = images[0]
+    axios.post(`https://localhost:${PORT}/user/basic`, {
+      profile_photo: profile_img.data_url,
+    })
+      .then(function (response) {
         console.log("Profile Response:", response)
       })
-      .catch(function(err){
+      .catch(function (err) {
         console.log(err)
       })
-    }
+  }
   return (
     <div className="profilePhoto" id="profilePhoto">
-        <ImageUploading
+      <ImageUploading
         multiple
         value={images}
         onChange={onChange}
@@ -51,7 +49,7 @@ export default function ProfilePhoto({imageList}) {
           <div className="upload__image-wrapper">
             {imageList.map((image, index) => (
               <div key={index} className="image-item">
-                <img id= "profile-img" src={image['data_url']} alt="" className="profile-img"/>
+                <img id="profile-img" src={image['data_url']} alt="" className="profile-img" />
                 <div className="image-item__btn-wrapper">
                   <button className="img-btn" onClick={() => onImageUpdate(index)}>Update</button>
                   <button className="img-btn" onClick={() => onImageRemove(index)}>Remove</button>
@@ -60,26 +58,26 @@ export default function ProfilePhoto({imageList}) {
             ))}
             &nbsp;
             {
-                images.length === 0
+              images.length === 0
                 ?
                 <button
-                className="img-btn"
-                onClick={
-                  () => {
-                    onImageUpload();
-                }
-                }
-                {...dragProps}>
-                Upload
+                  className="img-btn"
+                  onClick={
+                    () => {
+                      onImageUpload();
+                    }
+                  }
+                  {...dragProps}>
+                  Upload
                 </button>
-                : 
-                  document.getElementById('profile-img') == null
+                :
+                document.getElementById('profile-img') == null
                   ? console.log("loading")
                   : saveProfilePic()
             }
           </div>
         )}
       </ImageUploading>
-    </div> 
+    </div>
   )
 }
