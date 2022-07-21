@@ -7,15 +7,15 @@ body {
   font-family: 'Poppins', sans-serif;
 }
 
-h1{
+h1 {
   font-size: 55px;
 }
 
-h2{
+h2 {
   font-size: 25px;
 }
 
-.input{
+.input {
   background-color: #AC9494;
   color: white;
   font-family: 'Poppins', sans-serif;
@@ -23,15 +23,16 @@ h2{
   border-radius: 10px;
   border: none;
 }
+
 ::-webkit-input-placeholder {
   color: white;
 }
 
-.login-btn{
+.login-btn {
   color: white;
   background-color: #BE6A6A;
   width: 130px;
-  height: 50px; 
+  height: 50px;
   border-radius: 50px;
   font-size: 20px;
   font-family: 'Poppins', sans-serif;

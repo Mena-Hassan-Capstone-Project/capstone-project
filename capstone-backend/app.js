@@ -1,6 +1,6 @@
 'use strict';
 const Parse = require('parse/node')
-var request = require('request');
+const request = require('request');
 const express = require('express')
 const morgan = require('morgan')
 const bodyParser = require('body-parser')
@@ -67,7 +67,7 @@ function compareArrs(arr1, arr2, weight) {
         }
     }
     let total = arr1.length + arr2.length;
-    if(total == 0){
+    if (total == 0) {
         return 0;
     }
 
@@ -90,10 +90,10 @@ function calculateCategoryScore(category, prop1, prop2, weight1, weight2) {
         user2Prop2.push(category.user_2[i].get(prop2));
     }
 
-    if(user1Prop1 && user2Prop1 && user1Prop2 && user2Prop2){
+    if (user1Prop1 && user2Prop1 && user1Prop2 && user2Prop2) {
         let prop1Score = compareArrs(user1Prop1, user2Prop1, weight1);
         let prop2Score = compareArrs(user1Prop2, user2Prop2, weight2);
-    
+
         return prop1Score + prop2Score;
     }
     return 0
@@ -127,7 +127,7 @@ async function getMatches(params, currentUser) {
         const matchInfo = await getUserInfo(entry);
         const currentUserInfo = await getUserInfo(currentUser);
 
-        if(!entry.get('grad_year')){
+        if (!entry.get('grad_year')) {
             entry.destroy();
             return;
         }
@@ -157,7 +157,7 @@ async function getMatches(params, currentUser) {
         }
         else {
             const match = new Match();
-            if(matchScore){
+            if (matchScore) {
                 match.set("score", matchScore);
                 match.set("liked", false);
                 match.set("seen", false);
@@ -199,7 +199,7 @@ async function retrieveMatchData(limit, offset, currentUser) {
         return {
             userInfo: usersInfo[i],
             scoreInfo: scoreInfo[i],
-            interestsInfo : interestsInfo[i]
+            interestsInfo: interestsInfo[i]
         };
     });
     return ({ matchesInfo: matchesInfo, matchResults: matchResults, matchMessage: "Matches Retrieved!", typeStatus: "success" });
@@ -270,7 +270,7 @@ app.get('/matches', async (req, res) => {
     const currentUser = Parse.User.current();
     const limit = req.query["limit"];
     const offset = req.query["offset"];
-    try{
+    try {
         if (currentUser) {
             let matchData = await retrieveMatchData(limit, offset, currentUser);
             res.send(matchData);
@@ -279,7 +279,7 @@ app.get('/matches', async (req, res) => {
             res.send({ matchMessage: "Can't get current user", typeStatus: "danger" });
         }
     }
-    catch(err){
+    catch (err) {
         res.send({ matchMessage: "Error retrieving match", typeStatus: "danger" });
     }
 });
@@ -437,7 +437,7 @@ app.post('/user/update', async (req, res) => {
     try {
         const currentUser = Parse.User.current();
         if (currentUser) {
-            if(infoUser.accessToken){
+            if (infoUser.accessToken) {
                 currentUser.set("ig_access_token", infoUser.accessToken);
             }
             await currentUser.save();
@@ -485,7 +485,7 @@ app.post('/user/basic', async (req, res) => {
     }
 })
 
-function requestToken(res, redirect_uri, code, userInfo, params){
+function requestToken(res, redirect_uri, code, userInfo, params) {
     // send form based request to Instagram API
     request.post({
         url: 'https://api.instagram.com/oauth/access_token',
@@ -496,15 +496,15 @@ function requestToken(res, redirect_uri, code, userInfo, params){
             redirect_uri,
             code
         }
-    }, 
-    function (err, httpResponse, body) {
-        let result = JSON.parse(body);
-        if(result.access_token){
-            // Got access token. Parse string response to JSON
-            let accessToken = result.access_token;
-            res.send({params: params, userInfo : userInfo, result: result, accessToken : accessToken, typeStatus : "success"});
-        }
-    });
+    },
+        function (err, httpResponse, body) {
+            let result = JSON.parse(body);
+            if (result.access_token) {
+                // Got access token. Parse string response to JSON
+                let accessToken = result.access_token;
+                res.send({ params: params, userInfo: userInfo, result: result, accessToken: accessToken, typeStatus: "success" });
+            }
+        });
 }
 
 app.post('/init-insta', async (req, res) => {
@@ -517,9 +517,9 @@ app.post('/init-insta', async (req, res) => {
     query.equalTo("objectId", objectId);
     const userInfo = await query.first();
     try {
-       requestToken(res, redirect_uri, code, userInfo, req.body);
+        requestToken(res, redirect_uri, code, userInfo, req.body);
     } catch (e) {
-        res.send({request: req.body, instaMessage: "short term access token failed",typeStatus : "danger", error : e, userInfo : userInfo});
+        res.send({ request: req.body, instaMessage: "short term access token failed", typeStatus: "danger", error: e, userInfo: userInfo });
     }
 })
 module.exports = app;

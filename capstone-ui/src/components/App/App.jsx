@@ -1,5 +1,5 @@
 import * as React from "react"
-import {Route, Routes, useNavigate} from 'react-router-dom';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 import { useState } from "react";
 import './App.css';
 import axios from "axios";
@@ -43,7 +43,7 @@ export default function App() {
 
   //update matches when user info changes
   React.useEffect(() => {
-    if(userInfo.interests){
+    if (userInfo.interests) {
       createMatches({});
       getMatchesForUser(10, 0);
     }
@@ -60,12 +60,12 @@ export default function App() {
   }, []);
 
   React.useEffect(() => {
-    if(window.location.href.includes("code") && !isFetching && !userInfo.ig_accessToken){
+    if (window.location.href.includes("code") && !isFetching && !userInfo.ig_accessToken) {
       postInsta();
     }
   }, []);
 
-  function refreshLogin(){
+  function refreshLogin() {
     setIsFetching(true);
     const loggedInUser = window.localStorage.getItem('userInfo');
     if (loggedInUser) {
@@ -74,79 +74,79 @@ export default function App() {
         email: foundUser.email,
         password: foundUser.password
       })
-      .then(function(response){
-        setUserInfo(response.data.userInfo);
-        setUserMatches([]);
-      })
-      .catch(function(err){
-        console.log(err);
-      })
+        .then(function (response) {
+          setUserInfo(response.data.userInfo);
+          setUserMatches([]);
+        })
+        .catch(function (err) {
+          console.log(err);
+        })
     }
     setIsFetching(false);
   }
 
-// Invoke this function on button click or whatever other use case
-async function setupInsta(){
-	let appId = INSTA_APP_ID;
-	let url = `https://api.instagram.com/oauth/authorize?client_id=${appId}&redirect_uri=${RED_URI}&scope=user_profile,user_media&response_type=code`;
-	window.open(url, "_blank").focus();
-}
+  // Invoke this function on button click or whatever other use case
+  async function setupInsta() {
+    let appId = INSTA_APP_ID;
+    let url = `https://api.instagram.com/oauth/authorize?client_id=${appId}&redirect_uri=${RED_URI}&scope=user_profile,user_media&response_type=code`;
+    window.open(url, "_blank").focus();
+  }
 
-async function postInsta(){
-  setIsFetching(true);
-
-  const queryString = window.location.href;
-  const code = queryString.split("?code=")[1].slice(0,-2);
-  await axios.post(`https://localhost:${PORT}/init-insta`, {
-    code: code,
-    redirectUri: RED_URI, // needs to be registered at fb developer console
-  })
-  .then(({ data }) => {
-    if(data.accessToken){
-      getAccessToken(data.accessToken);
-    }
-  })
-  .catch(({ error }) => {
-    console.log("error", error);
-  })
-  setIsFetching(false);
-}
-
-
-//get long term access token from short term access token
-function getAccessToken(accessToken){
-  if(!isFetching){
+  async function postInsta() {
     setIsFetching(true);
-    try {
-      axios.get(`https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${INSTA_APP_SECRET}&access_token=${accessToken}`)
-      .then(function(response){
-        accessToken = response.data.access_token;
-        axios.post(`https://localhost:${PORT}/user/update`, {
-          accessToken : accessToken
-        }).then(function(response){
-          setIsFetching(false);
-        })
+
+    const queryString = window.location.href;
+    const code = queryString.split("?code=")[1].slice(0, -2);
+    await axios.post(`https://localhost:${PORT}/init-insta`, {
+      code: code,
+      redirectUri: RED_URI, // needs to be registered at fb developer console
+    })
+      .then(({ data }) => {
+        if (data.accessToken) {
+          getAccessToken(data.accessToken);
+        }
       })
-  } catch (e) {
-      console.log("Error getting long term access token", e);
+      .catch(({ error }) => {
+        console.log("error", error);
+      })
+    setIsFetching(false);
   }
-  }
-}
 
 
-  async function getInstaData(accessToken){
+  //get long term access token from short term access token
+  function getAccessToken(accessToken) {
+    if (!isFetching) {
+      setIsFetching(true);
+      try {
+        axios.get(`https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${INSTA_APP_SECRET}&access_token=${accessToken}`)
+          .then(function (response) {
+            accessToken = response.data.access_token;
+            axios.post(`https://localhost:${PORT}/user/update`, {
+              accessToken: accessToken
+            }).then(function (response) {
+              setIsFetching(false);
+            })
+          })
+      } catch (e) {
+        console.log("Error getting long term access token", e);
+      }
+    }
+  }
+
+
+  async function getInstaData(accessToken) {
     try {
       let resp = await axios.get(`https://graph.instagram.com/me/media?fields=media_type,permalink,media_url&access_token=${accessToken}`);
       resp = resp.data;
       let instaPhotos = resp.data.map(d => d.media_url);
       return instaPhotos;
     } catch (e) {
-       return e.response.data.error;
+      return e.response.data.error;
     }
   }
 
   //fetch results for movies on page using TMDB API
-  async function getResults(PAGE_URL){
+  async function getResults(PAGE_URL) {
     const response = await fetch(PAGE_URL);
     const result = await response.json();
     return result.results;
@@ -156,43 +156,43 @@ function getAccessToken(accessToken){
   //gets search result from api for interests movie search bar
   const getMovieSearch = () => {
     const query = document.getElementById('enter-movie').value;
-    if(query === ""){
+    if (query === "") {
       setMovie("");
     }
     getResults(MOVIE_SEARCH_URL + query)
-    .then(function(response){
-      setMovie(response[0]);
-      setIsFetching(false);
-    })
-}
+      .then(function (response) {
+        setMovie(response[0]);
+        setIsFetching(false);
+      })
+  }
 
   //gets tv result from api for interests movie search bar
   const getTVSearch = () => {
     const query = document.getElementById('enter-tv').value;
-    if(query === ""){
+    if (query === "") {
       setTV("");
     }
     getResults(TV_SEARCH_URL + query)
-    .then(function(response){
-      setTV(response[0]);
-      setIsFetching(false);
-    })
+      .then(function (response) {
+        setTV(response[0]);
+        setIsFetching(false);
+      })
   }
 
   //creates matches for current user
-  function createMatches (params){
-    if(userInfo && userInfo != 0){
+  function createMatches(params) {
+    if (userInfo && userInfo != 0) {
       setIsFetching(true);
       axios.post(`https://localhost:${PORT}/matches`, {
-        params : params
+        params: params
       })
-      .then(function(response){
-        setIsFetching(false);
-      })
-      .catch(function(err){
-        setIsFetching(false);
-        console.log(err);
-      })
+        .then(function (response) {
+          setIsFetching(false);
+        })
+        .catch(function (err) {
+          setIsFetching(false);
+          console.log(err);
+        })
     }
   }
 
@@ -241,17 +241,17 @@ function getAccessToken(accessToken){
   function getInterestsFromUser() {
     setIsFetching(true);
     axios.get(`https://localhost:${PORT}/user/interests`)
-    .then(resp => {
-      setHobbiesList(resp.data.hobbiesList);
-      setUserInfo({...userInfo, interests : {movies : resp.data.movies, shows : resp.data.shows, hobbies : resp.data.hobbies}});
-      setIsFetching(false);
-    });
+      .then(resp => {
+        setHobbiesList(resp.data.hobbiesList);
+        setUserInfo({ ...userInfo, interests: { movies: resp.data.movies, shows: resp.data.shows, hobbies: resp.data.hobbies } });
+        setIsFetching(false);
+      });
   }
 
   //retrieves matches for user
   //sets user info
   function getMatchesForUser(limit, offset) {
-    if(!isFetching && userInfo && userInfo != ""){
+    if (!isFetching && userInfo && userInfo != "") {
       setIsFetching(true);
       axios.get(`https://localhost:${PORT}/matches`, {
         params: {
@@ -259,81 +259,81 @@ function getAccessToken(accessToken){
           offset: offset
         }
       })
-      .then(resp => {
-        if(offset == 0){
-          setUserMatches(resp.data.matchesInfo);
-        }
-        else if(userMatches.length >= 10 && resp.data.matchesInfo[0] && !userMatches.includes(resp.data.matchesInfo[0])){
-          let newMatches = userMatches.concat(resp.data.matchesInfo);
-          setUserMatches(newMatches);
-        }
-        setIsFetching(false);
-      });
-      }
+        .then(resp => {
+          if (offset == 0) {
+            setUserMatches(resp.data.matchesInfo);
+          }
+          else if (userMatches.length >= 10 && resp.data.matchesInfo[0] && !userMatches.includes(resp.data.matchesInfo[0])) {
+            let newMatches = userMatches.concat(resp.data.matchesInfo);
+            setUserMatches(newMatches);
+          }
+          setIsFetching(false);
+        });
+    }
   }
 
   //log user out
   const logOut = () => {
     axios.post(`https://localhost:${PORT}/logout`, {
-    })  
-    .then(function(response){
-      setUserInfo("");
-      setUserMatches([]);
-      window.localStorage.clear();
-      navigate('/login');
     })
-    .catch(function(err){
-      console.log(err);
-      window.localStorage.clear();
-    })
+      .then(function (response) {
+        setUserInfo("");
+        setUserMatches([]);
+        window.localStorage.clear();
+        navigate('/login');
+      })
+      .catch(function (err) {
+        console.log(err);
+        window.localStorage.clear();
+      })
   }
 
   //remove movie from user movies
   //reloads interests
-  function removeMovie (movie){
+  function removeMovie(movie) {
     setIsFetching(true);
     axios.post(`https://localhost:${PORT}/user/interests/remove`, {
-      movie : movie
+      movie: movie
     })
-    .then(function(response){
-      getInterestsFromUser();
-      setIsFetching(false);
-    })
-    .catch(function(err){
-      console.log(err);
-    })
+      .then(function (response) {
+        getInterestsFromUser();
+        setIsFetching(false);
+      })
+      .catch(function (err) {
+        console.log(err);
+      })
   }
 
   //remove show from user shows
   //reloads interests
-  function removeShow (show){
+  function removeShow(show) {
     setIsFetching(true);
     axios.post(`https://localhost:${PORT}/user/interests/remove`, {
-      show : show
+      show: show
     })
-    .then(function(response){
-      getInterestsFromUser();
-      setIsFetching(false);
-    })
-    .catch(function(err){
-      console.log(err);
-    })
+      .then(function (response) {
+        getInterestsFromUser();
+        setIsFetching(false);
+      })
+      .catch(function (err) {
+        console.log(err);
+      })
   }
 
   //remove hobby from user hobbies
   //reloads interests
-  function removeHobby (hobby){
+  function removeHobby(hobby) {
     setIsFetching(true);
     axios.post(`https://localhost:${PORT}/user/interests/remove`, {
-      hobby : hobby
+      hobby: hobby
     })
-    .then(function(response){
-      getInterestsFromUser();
-      setIsFetching(false);
-    })
-    .catch(function(err){
-      console.log(err);
-    })
+      .then(function (response) {
+        getInterestsFromUser();
+        setIsFetching(false);
+      })
+      .catch(function (err) {
+        console.log(err);
+      })
   }
 
 
@@ -342,34 +342,34 @@ function getAccessToken(accessToken){
   const saveInterests = () => {
     setIsFetching(true);
     axios.post(`https://localhost:${PORT}/user/interests`, {
-      interests : {
-        movie : movie,
-        TV : TV,
-        hobby : selectedHobbyOption 
-        ? selectedHobbyOption.value
-        : null
+      interests: {
+        movie: movie,
+        TV: TV,
+        hobby: selectedHobbyOption
+          ? selectedHobbyOption.value
+          : null
       }
     })
-    .then(function(response){
-      getInterestsFromUser();
-      navigate('/user/interests');
-      setMovie("");
-      setTV("");
-      setIsFetching(false);
-    })
-    .catch(function(err){
-      console.log(err);
-    })
+      .then(function (response) {
+        getInterestsFromUser();
+        navigate('/user/interests');
+        setMovie("");
+        setTV("");
+        setIsFetching(false);
+      })
+      .catch(function (err) {
+        console.log(err);
+      })
   }
 
   //sends basic info to backend
   const saveBasicInfo = async () => {
     setIsFetching(true);
     var tags = [];
-    if(userInfo.tags){
+    if (userInfo.tags) {
       tags = userInfo.tags;
     }
-    if(tags.indexOf(document.getElementById('tags').value) === -1 && document.getElementById('tags').value !== 'None'){
+    if (tags.indexOf(document.getElementById('tags').value) === -1 && document.getElementById('tags').value !== 'None') {
       tags.push(document.getElementById('tags').value);
     }
 
@@ -379,14 +379,14 @@ function getAccessToken(accessToken){
       hometown: document.getElementById('hometown').value,
       tags: tags,
     })
-    .then(function(response){
-      setUserInfo(response.data.userInfo);
-      navigate('/user/basic');
-      setIsFetching(false);
-    })
-    .catch(function(err){
-      console.log(err);
-    })
+      .then(function (response) {
+        setUserInfo(response.data.userInfo);
+        navigate('/user/basic');
+        setIsFetching(false);
+      })
+      .catch(function (err) {
+        console.log(err);
+      })
   }
 
   const createLoginParser = async () => {
@@ -397,50 +397,50 @@ function getAccessToken(accessToken){
       email: email,
       password: password
     })
-    .then(function(response){
-      if(response.data.typeStatus == "danger"){
-        alert("Login error");
-        navigate('/login');
-      }
-      else{
-        window.localStorage.clear();
-        setUserInfo(response.data.userInfo);
-        window.localStorage.setItem('userInfo', JSON.stringify({email: email, password: password, objectId : response.data.userInfo.objectId}));
-        setUserMatches([]);
-        navigate('/user/basic');
-      }
-      setIsFetching(false);
-    })
-    .catch(function(err){
-      console.log(err);
-      window.localStorage.clear();
-      setIsFetching(false);
-    })
-  }
-
-  const createSignUpParser = () => {
-    if(!document.getElementById('email').value.endsWith('.edu')){
-      alert('Please enter a valid .edu email');
-    }
-    else if(document.getElementById('password').value !== document.getElementById('confirm-password').value){
-      alert('Passwords do not match');
-    }
-    else{
-      setIsFetching(true)
-      axios.post(`https://localhost:${PORT}/signup`, {
-      email: document.getElementById('email').value,
-      password: document.getElementById('password').value,
-      preferredName: document.getElementById('preferredName').value
-      })
-      .then(function(response){
-        if(response.data.typeStatus === "success"){
-          navigate('/verify');
+      .then(function (response) {
+        if (response.data.typeStatus == "danger") {
+          alert("Login error");
+          navigate('/login');
+        }
+        else {
+          window.localStorage.clear();
+          setUserInfo(response.data.userInfo);
+          window.localStorage.setItem('userInfo', JSON.stringify({ email: email, password: password, objectId: response.data.userInfo.objectId }));
+          setUserMatches([]);
+          navigate('/user/basic');
         }
         setIsFetching(false);
       })
-      .catch(function(err){
+      .catch(function (err) {
         console.log(err);
+        window.localStorage.clear();
+        setIsFetching(false);
       })
+  }
+
+  const createSignUpParser = () => {
+    if (!document.getElementById('email').value.endsWith('.edu')) {
+      alert('Please enter a valid .edu email');
+    }
+    else if (document.getElementById('password').value !== document.getElementById('confirm-password').value) {
+      alert('Passwords do not match');
+    }
+    else {
+      setIsFetching(true)
+      axios.post(`https://localhost:${PORT}/signup`, {
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+        preferredName: document.getElementById('preferredName').value
+      })
+        .then(function (response) {
+          if (response.data.typeStatus === "success") {
+            navigate('/verify');
+          }
+          setIsFetching(false);
+        })
+        .catch(function (err) {
+          console.log(err);
+        })
     }
   }
 
@@ -452,75 +452,75 @@ function getAccessToken(accessToken){
       university: document.getElementById('university').value,
       dob: document.getElementById('DOB').value
     })
-    .then(function(response){
-      setUserInfo(response.data.userInfo);
-      navigate('/user/basic/edit');
-      setIsFetching(false);
-    })
-    .catch(function(err){
-      console.log(err);
-    })
+      .then(function (response) {
+        setUserInfo(response.data.userInfo);
+        navigate('/user/basic/edit');
+        setIsFetching(false);
+      })
+      .catch(function (err) {
+        console.log(err);
+      })
   }
 
   return (
     <div className="App">
       <main>
-      <Navbar userInfo = {userInfo} logOut = {logOut} goToMatching={goToMatching} goToBasic={goToBasic} goToSignUp={goToSignUp} goToLogin={goToLogin}/>
-      <Routes>
-        <Route 
-        path = "/login"
-        element = {<Login createLoginParser = {createLoginParser} isFetching={isFetching} goToSignUp={goToSignUp}></Login>}
-        />
-        <Route 
-        path = "/signup"
-        element = {<SignUp createSignUpParser = {createSignUpParser} goToLogin={goToLogin}></SignUp>}
-        />
-        <Route 
-        path = "/verify"
-        element = {<VerifyStudent createVerifyParser = {createVerifyParser}></VerifyStudent>}
-        />
-        <Route 
-        path = "/user/basic"
-        element = {<BasicInfo userInfo = {userInfo} goToInterests={goToInterests} goToMedia={goToMedia} goToEditInfo={goToEditInfo} isFetching={isFetching}></BasicInfo>}
-        />
-        <Route 
-        path = "/user/basic/edit"
-        element = {<BasicInfoEdit userInfo = {userInfo} saveBasicInfo={saveBasicInfo} setUserInfo = {setUserInfo} isFetching={isFetching}></BasicInfoEdit>}
-        />
-        <Route 
-        path = "/user/interests"
-        element = {<Interests userInfo = {userInfo} goToBasic={goToBasic} goToMedia={goToMedia} gotToEditInterests={goToEditInterests} isFetching={isFetching}></Interests>}
-        />
-        <Route 
-        path = "/user/interests/edit"
-        element = {<InterestsEdit userInfo = {userInfo} goToBasic={goToBasic} goToMedia={goToMedia} saveInterests={saveInterests} getMovieSearch={getMovieSearch} movie= {movie} 
-        removeMovie={removeMovie} isFetching={isFetching} getTVSearch={getTVSearch} TV={TV} removeShow={removeShow} selectedHobbyOption={selectedHobbyOption} 
-        setSelectedHobbyOption={setSelectedHobbyOption} hobbiesList={hobbiesList} removeHobby={removeHobby}></InterestsEdit>}
-        />
-        <Route 
-        path = "/user/media"
-        element = {<Media userInfo = {userInfo} goToBasic={goToBasic} goToInterests={goToInterests} goToEditMedia ={goToEditMedia} isFetching={isFetching} setupInsta={setupInsta} getInstaData={getInstaData}></Media>}
-        />
-        <Route 
-        path = "/user/media/edit"
-        element = {<MediaEdit userInfo = {userInfo} goToBasic={goToBasic} goToInterests={goToInterests} imageList={userInfo.media} maxImages = {10} setUserInfo={setUserInfo} isFetching={isFetching} setIsFetching={setIsFetching}></MediaEdit>}
-        />
-        <Route 
-        path = "/user/matching"
-        element = {<Matching isFetching = {isFetching} userMatches={userMatches} getMatchesForUser = {getMatchesForUser} matchOffset={matchOffset} setOffset={setOffset} matchLimit={matchLimit} 
-        goToMatching={goToMatching} createMatches = {createMatches} setIsFetching={setIsFetching}></Matching>}
-        />
-        <Route path="*" element=
+        <Navbar userInfo={userInfo} onClickLogout={logOut} onClickMatching={goToMatching} goToBasic={goToBasic} goToSignUp={goToSignUp} goToLogin={goToLogin} />
+        <Routes>
+          <Route
+            path="/login"
+            element={<Login onClickLogin={createLoginParser} isFetching={isFetching} onClickSignUp={goToSignUp}></Login>}
+          />
+          <Route
+            path="/signup"
+            element={<SignUp onClickSignUp={createSignUpParser} onClickLogin={goToLogin} isFetching={isFetching}></SignUp>}
+          />
+          <Route
+            path="/verify"
+            element={<VerifyStudent onClickVerify={createVerifyParser}></VerifyStudent>}
+          />
+          <Route
+            path="/user/basic"
+            element={<BasicInfo userInfo={userInfo} onClickInterests={goToInterests} onClickMedia={goToMedia} goToEditInfo={goToEditInfo} isFetching={isFetching}></BasicInfo>}
+          />
+          <Route
+            path="/user/basic/edit"
+            element={<BasicInfoEdit userInfo={userInfo} onClickInterests={goToInterests} onClickMedia={goToMedia} saveBasicInfo={saveBasicInfo} setUserInfo={setUserInfo} isFetching={isFetching}></BasicInfoEdit>}
+          />
+          <Route
+            path="/user/interests"
+            element={<Interests userInfo={userInfo} onClickBasic={goToBasic} onClickMedia={goToMedia} onClickEditInterests={goToEditInterests} isFetching={isFetching}></Interests>}
+          />
+          <Route
+            path="/user/interests/edit"
+            element={<InterestsEdit userInfo={userInfo} onClickBasic={goToBasic} onClickMedia={goToMedia} saveInterests={saveInterests} getMovieSearch={getMovieSearch} movie={movie}
+              removeMovie={removeMovie} isFetching={isFetching} getTVSearch={getTVSearch} TV={TV} removeShow={removeShow} selectedHobbyOption={selectedHobbyOption}
+              setSelectedHobbyOption={setSelectedHobbyOption} hobbiesList={hobbiesList} removeHobby={removeHobby}></InterestsEdit>}
+          />
+          <Route
+            path="/user/media"
+            element={<Media userInfo={userInfo} onClickBasic={goToBasic} onClickInterests={goToInterests} onClickEditMedia={goToEditMedia} isFetching={isFetching} onClickInsta={setupInsta} getInstaData={getInstaData}></Media>}
+          />
+          <Route
+            path="/user/media/edit"
+            element={<MediaEdit userInfo={userInfo} onClickBasic={goToBasic} onClickInterests={goToInterests} imageList={userInfo.media} maxImages={10} setUserInfo={setUserInfo} isFetching={isFetching} setIsFetching={setIsFetching}></MediaEdit>}
+          />
+          <Route
+            path="/user/matching"
+            element={<Matching isFetching={isFetching} userMatches={userMatches} getMatchesForUser={getMatchesForUser} matchOffset={matchOffset} setOffset={setOffset} matchLimit={matchLimit}
+              goToMatching={goToMatching} createMatches={createMatches} setIsFetching={setIsFetching}></Matching>}
+          />
+          <Route path="*" element=
             {<NotFound />}
-            />
-        <Route path="/insta-redirect" element=
-            {<InstaRedirect/>}
-            />
-        <Route 
-        path = "/loading"
-        element = {<Loading></Loading>}
-        />
-      </Routes>
+          />
+          <Route path="/insta-redirect" element=
+            {<InstaRedirect />}
+          />
+          <Route
+            path="/loading"
+            element={<Loading></Loading>}
+          />
+        </Routes>
       </main>
     </div>
   );

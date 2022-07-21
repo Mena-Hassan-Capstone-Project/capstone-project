@@ -1,14 +1,14 @@
-.col-2{
+.col-2 {
     justify-content: center;
     align-items: center;
 }
 
-.search-select{
+.search-select {
     margin-left: 110px;
     margin-right: 110px;
 }
 
-.movie-input{
+.movie-input {
     margin-left: 110px;
     margin-right: 110px;
     background-color: #AC9494;
@@ -19,11 +19,11 @@
     border: none;
 }
 
-.hidden{
+.hidden {
     visibility: hidden;
 }
 
-.add-interest-button{
+.add-interest-button {
     color: white;
     background-color: #7f5959;
     width: 180px;
@@ -34,6 +34,6 @@
     cursor: pointer;
 }
 
-.remove-movie{
+.remove-movie {
     cursor: pointer;
 }

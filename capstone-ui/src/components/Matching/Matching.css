@@ -1,4 +1,4 @@
-.card{
+.card {
     max-height: 800px;
     background-color: white;
     margin-left: 100px;
@@ -10,23 +10,23 @@
     padding: 5px;
 }
 
-.match-interests{
+.match-interests {
     display: inline;
 }
 
-.match-movies ~ .match-movies::before {
-    content: ', '; 
+.match-movies~.match-movies::before {
+    content: ', ';
 }
 
-.match-shows ~ .match-shows::before {
-content: ', '; 
+.match-shows~.match-shows::before {
+    content: ', ';
 }
 
-.match-hobbies ~ .match-hobbies::before {
-content: ', '; 
+.match-hobbies~.match-hobbies::before {
+    content: ', ';
 }
 
-.media-carousel{
+.media-carousel {
     max-width: 200px;
     border-radius: 10px;
 }
