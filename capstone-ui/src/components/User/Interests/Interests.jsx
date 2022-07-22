@@ -4,8 +4,9 @@ import Loading from "../../Loading/Loading"
 
 
 export default function Interests({ userInfo, onClickBasic, onClickMedia, onClickEditInterests, isFetching }) {
+  console.log("userinfo", userInfo)
   return (
-    isFetching
+    (isFetching || !userInfo.interests)
       ? <Loading></Loading>
       :
       <div className="interests" id="interests">

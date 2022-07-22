@@ -1,11 +1,11 @@
 .card {
-    max-height: 800px;
+    max-height: 850px;
     background-color: white;
     margin-left: 100px;
     margin-right: 100px;
     margin-top: 10px;
     margin-bottom: 10px;
-    margin-right: 10px;
+    margin-right: 100px;
     border-radius: 20px;
     padding: 5px;
 }

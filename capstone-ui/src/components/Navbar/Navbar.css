@@ -40,3 +40,11 @@
     padding-left: 40px;
     cursor: pointer;
 }
+
+@media only screen and (max-width: 700px) {
+
+    .stick-to-right {
+        margin-left: 80px;
+        margin-right: 5px;
+    }
+  }

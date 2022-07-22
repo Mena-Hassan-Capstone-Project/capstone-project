@@ -4,8 +4,9 @@ import "./Media.css"
 import Loading from "../../Loading/Loading"
 
 
-export default function Media({ userInfo, onClickBasic, onClickInterests, onClickEditMedia, isFetching, onClickInsta, getInstaData }) {
+export default function Media({ userInfo, onClickBasic, onClickInterests, onClickEditMedia, isFetching, onClickInsta, getInstaPhotos }) {
   const [userData, setUserData] = useState([]);
+  console.log("userData", userData)
   return (
     isFetching
       ? <Loading></Loading>
@@ -38,14 +39,10 @@ export default function Media({ userInfo, onClickBasic, onClickInterests, onClic
             {
               userInfo.ig_access_token
                 ?
-                userData && Array.isArray(userData)
-                  ?
-                  null
-                  :
                   <div className="access-token">
                     <p>{`Instagram Connected!`}</p>
                     <button className="insta-btn" onClick={async () => {
-                      const data = await getInstaData(userInfo.ig_access_token)
+                      const data = await getInstaPhotos(userInfo.ig_access_token)
                       setUserData(data)
                     }}>
                       Get Instagram Photos

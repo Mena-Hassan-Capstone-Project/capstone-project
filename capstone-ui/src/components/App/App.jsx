@@ -37,22 +37,25 @@ export default function App() {
 
   const [userMatches, setUserMatches] = useState([]);
   const [matchOffset, setOffset] = useState(0);
-  const matchLimit = 10;
+  const matchLimit = 2;
+  const [fetchingMatches, setFetchingMatches] = useState(false);
 
   const PORT = '3001';
 
   //update matches when user info changes
   React.useEffect(() => {
-    if (userInfo.interests) {
-      createMatches({});
-      getMatchesForUser(10, 0);
+    if (userInfo.interests && userInfo.preferredName) {
+      if(userMatches.length == 0 && !fetchingMatches){
+        createMatches({})
+      }
+      getMatchesForUser(matchLimit, 0);
     }
   }, [userInfo]);
 
   React.useEffect(() => {
     setIsFetching(true);
     if (window.performance) {
-      if (String(window.performance.getEntriesByType("navigation")[0].type) === "reload" && window.localStorage.getItem('userInfo')) {
+      if (window.localStorage.getItem('userInfo') && !userInfo) {
         refreshLogin();
       }
     }
@@ -77,12 +80,13 @@ export default function App() {
         .then(function (response) {
           setUserInfo(response.data.userInfo);
           setUserMatches([]);
+          setIsFetching(false);
         })
         .catch(function (err) {
           console.log(err);
+          setIsFetching(false);
         })
     }
-    setIsFetching(false);
   }
 
   // Invoke this function on button click or whatever other use case
@@ -134,12 +138,22 @@ export default function App() {
   }
 
 
-  async function getInstaData(accessToken) {
+  async function getInstaPhotos(accessToken) {
     try {
       let resp = await axios.get(`https://graph.instagram.com/me/media?fields=media_type,permalink,media_url&access_token=${accessToken}`);
       resp = resp.data;
       let instaPhotos = resp.data.map(d => d.media_url);
       return instaPhotos;
+    } catch (e) {
+      return e.response.data.error;
+    }
+  }
+
+  async function getInstaUsername(accessToken) {
+    try {
+      let resp = await axios.get(`'https://graph.instagram.com/me?fields=id,username&access_token=${accessToken}`);
+      console.log("insta username", resp.data)
+      return resp.data.username;
     } catch (e) {
       return e.response.data.error;
     }
@@ -180,20 +194,20 @@ export default function App() {
   }
 
   //creates matches for current user
-  function createMatches(params) {
+  async function createMatches(params) {
+    setFetchingMatches(true)
     if (userInfo && userInfo != 0) {
-      setIsFetching(true);
-      axios.post(`https://localhost:${PORT}/matches`, {
+      await axios.post(`https://localhost:${PORT}/matches`, {
         params: params
       })
         .then(function (response) {
-          setIsFetching(false);
+          console.log("matches created", response)
         })
         .catch(function (err) {
-          setIsFetching(false);
           console.log(err);
         })
     }
+    setFetchingMatches(false)
   }
 
   //navigate to pages
@@ -223,8 +237,11 @@ export default function App() {
   }
 
   const goToInterests = () => {
-    getInterestsFromUser();
-    navigate('/user/interests');
+    if (!userInfo.interests) {
+      setTimeout(getInterestsFromUser, 1000)
+    }
+    navigate('/user/interests')
+    
   }
 
   const goToMedia = () => {
@@ -232,40 +249,51 @@ export default function App() {
   }
 
   const goToMatching = () => {
-    getMatchesForUser(10, 0);
+    if(userMatches.length === 0){
+      createMatches({})
+      getMatchesForUser(matchLimit, 0);
+    }
     navigate('/user/matching');
   }
 
   //retrieves movies, tv shows, and hobbies for user
   //sets user info
-  function getInterestsFromUser() {
-    setIsFetching(true);
-    axios.get(`https://localhost:${PORT}/user/interests`)
+  async function getInterestsFromUser() {
+    //setIsFetching(true);
+    await axios.get(`https://localhost:${PORT}/user/interests`)
       .then(resp => {
-        setHobbiesList(resp.data.hobbiesList);
-        setUserInfo({ ...userInfo, interests: { movies: resp.data.movies, shows: resp.data.shows, hobbies: resp.data.hobbies } });
-        setIsFetching(false);
+        if (resp.data.movies && userInfo) {
+          setHobbiesList(resp.data.hobbiesList);
+          setUserInfo({ ...userInfo, interests: { movies: resp.data.movies, shows: resp.data.shows, hobbies: resp.data.hobbies } });
+          setIsFetching(false)
+        }
+        else if (resp.data.typeStatus == "danger") {
+          setIsFetching(false);
+        }
       });
   }
 
   //retrieves matches for user
   //sets user info
-  function getMatchesForUser(limit, offset) {
+  async function getMatchesForUser(limit, offset) {
     if (!isFetching && userInfo && userInfo != "") {
       setIsFetching(true);
-      axios.get(`https://localhost:${PORT}/matches`, {
+      await axios.get(`https://localhost:${PORT}/matches`, {
         params: {
           limit: limit,
           offset: offset
         }
       })
         .then(resp => {
-          if (offset == 0) {
-            setUserMatches(resp.data.matchesInfo);
-          }
-          else if (userMatches.length >= 10 && resp.data.matchesInfo[0] && !userMatches.includes(resp.data.matchesInfo[0])) {
-            let newMatches = userMatches.concat(resp.data.matchesInfo);
-            setUserMatches(newMatches);
+          console.log("user matches", resp.data.matchesInfo)
+          if(resp.data.typeStatus == "success"){
+            if (offset == 0) {
+              setUserMatches(resp.data.matchesInfo);
+            }
+            else if (userMatches.length >= matchLimit && resp.data.matchesInfo[0] && !userMatches.includes(resp.data.matchesInfo[0])) {
+              let newMatches = userMatches.concat(resp.data.matchesInfo);
+              setUserMatches(newMatches);
+            }
           }
           setIsFetching(false);
         });
@@ -273,7 +301,7 @@ export default function App() {
   }
 
   //log user out
-  const logOut = () => {
+  function logOut () {
     axios.post(`https://localhost:${PORT}/logout`, {
     })
       .then(function (response) {
@@ -281,6 +309,7 @@ export default function App() {
         setUserMatches([]);
         window.localStorage.clear();
         navigate('/login');
+        setIsFetching(false)
       })
       .catch(function (err) {
         console.log(err);
@@ -390,6 +419,7 @@ export default function App() {
   }
 
   const createLoginParser = async () => {
+    window.localStorage.clear()
     setIsFetching(true);
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
@@ -403,13 +433,15 @@ export default function App() {
           navigate('/login');
         }
         else {
-          window.localStorage.clear();
           setUserInfo(response.data.userInfo);
           window.localStorage.setItem('userInfo', JSON.stringify({ email: email, password: password, objectId: response.data.userInfo.objectId }));
+          refreshLogin()
+          getInterestsFromUser()
           setUserMatches([]);
+          setOffset(0)
           navigate('/user/basic');
         }
-        setIsFetching(false);
+        setIsFetching(false)
       })
       .catch(function (err) {
         console.log(err);
@@ -430,7 +462,8 @@ export default function App() {
       axios.post(`https://localhost:${PORT}/signup`, {
         email: document.getElementById('email').value,
         password: document.getElementById('password').value,
-        preferredName: document.getElementById('preferredName').value
+        preferredName: document.getElementById('preferredName').value,
+        phoneNum: document.getElementById('phoneNum').value
       })
         .then(function (response) {
           if (response.data.typeStatus === "success") {
@@ -499,7 +532,7 @@ export default function App() {
           />
           <Route
             path="/user/media"
-            element={<Media userInfo={userInfo} onClickBasic={goToBasic} onClickInterests={goToInterests} onClickEditMedia={goToEditMedia} isFetching={isFetching} onClickInsta={setupInsta} getInstaData={getInstaData}></Media>}
+            element={<Media userInfo={userInfo} onClickBasic={goToBasic} onClickInterests={goToInterests} onClickEditMedia={goToEditMedia} isFetching={isFetching} onClickInsta={setupInsta} getInstaPhotos={getInstaPhotos}></Media>}
           />
           <Route
             path="/user/media/edit"
@@ -508,7 +541,7 @@ export default function App() {
           <Route
             path="/user/matching"
             element={<Matching isFetching={isFetching} userMatches={userMatches} getMatchesForUser={getMatchesForUser} matchOffset={matchOffset} setOffset={setOffset} matchLimit={matchLimit}
-              goToMatching={goToMatching} createMatches={createMatches} setIsFetching={setIsFetching}></Matching>}
+              goToMatching={goToMatching} createMatches={createMatches} setIsFetching={setIsFetching} getInstaUsername={getInstaUsername}></Matching>}
           />
           <Route path="*" element=
             {<NotFound />}
