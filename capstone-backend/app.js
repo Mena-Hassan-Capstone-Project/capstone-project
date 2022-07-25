@@ -1,10 +1,10 @@
 'use strict';
-const Parse = require('parse/node')
+const Parse = require('parse/node');
 const request = require('request');
-const express = require('express')
-const morgan = require('morgan')
-const bodyParser = require('body-parser')
-const app = express()
+const express = require('express');
+const morgan = require('morgan');
+const bodyParser = require('body-parser');
+const app = express();
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.json());
@@ -14,8 +14,8 @@ const cors = require('cors');
 
 app.use(cors());
 
-const PARSE_APP_ID = "wil1DmHQz4YSzumdV5qg5zqoyuynWwZa5jt11Ceo"
-const PARSE_JS_KEY = "p5aB5jobn5ApbufIKx3FAUjumfqlMqF1uyz4dBYy"
+const PARSE_APP_ID = "wil1DmHQz4YSzumdV5qg5zqoyuynWwZa5jt11Ceo";
+const PARSE_JS_KEY = "p5aB5jobn5ApbufIKx3FAUjumfqlMqF1uyz4dBYy";
 
 Parse.initialize(PARSE_APP_ID, PARSE_JS_KEY);
 Parse.serverURL = 'http://parseapi.back4app.com/';
@@ -113,8 +113,8 @@ function calculateCategoryScore(category, prop1, prop2, weight1, weight2) {
         return prop1Score + prop2Score;
     }
     catch (err) {
-        console.log("error", err)
-        return 0
+        console.log("error", err);
+        return 0;
     }
 }
 
@@ -151,7 +151,7 @@ async function updateMatch(params, currentUser) {
     privateInfoQuery.equalTo("user_1", params.matchId);
     let privateInfoResults = await privateInfoQuery.first();
     if (privateInfoResults) {
-        privateInfoResults.set("display_private", params.liked)
+        privateInfoResults.set("display_private", params.liked);
         await privateInfoResults.save();
     }
 }
@@ -192,8 +192,8 @@ async function getMatches(currentUser) {
         let matchResults2 = await matchQuery2.first();
 
         if (matchResults) {
-            matchResults.set("score", matchScore)
-            matchResults2.set("score", matchScore)
+            matchResults.set("score", matchScore);
+            matchResults2.set("score", matchScore);
         }
         else {
             const match = new Match();
@@ -314,7 +314,7 @@ app.post('/matches', async (req, res) => {
     try {
         if (currentUser) {
             if (params.liked) {
-                updateMatch(params, currentUser)
+                updateMatch(params, currentUser);
             }
             else {
                 getMatches(currentUser);
@@ -333,7 +333,7 @@ app.post('/matches', async (req, res) => {
 app.get('/matches', async (req, res) => {
     Parse.User.enableUnsafeCurrentUser();
     const currentUser = Parse.User.current();
-    const limit = 2;//req.query["limit"];
+    const limit = req.query["limit"];
     const offset = req.query["offset"];
     try {
         if (currentUser) {
@@ -377,7 +377,7 @@ async function removeInterest(objectName, itemKey, itemValue, currentUser) {
     query.equalTo(itemKey, itemValue);
     query.equalTo("User", currentUser);
     const entry = await query.find();
-    entry[0].destroy()
+    entry[0].destroy();
 }
 
 app.post('/user/interests/remove', async (req, res) => {
@@ -402,7 +402,6 @@ app.post('/user/interests/remove', async (req, res) => {
         }
     }
     catch (error) {
-
         res.send({ removeMessage: error.message, typeStatus: "danger" });
     }
 });
@@ -494,8 +493,8 @@ app.post('/user/interests', async (req, res) => {
 
                         });
                     }
-                    hobby.set("name", infoInterests.interests.hobby.name)
-                    hobby.set("category", infoInterests.interests.hobby.category)
+                    hobby.set("name", infoInterests.interests.hobby.name);
+                    hobby.set("category", infoInterests.interests.hobby.category);
                     let usersRelation = hobby.relation('User');
                     usersRelation.add(currentUser);
                     await hobby.save();

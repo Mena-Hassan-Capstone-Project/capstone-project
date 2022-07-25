@@ -45,7 +45,7 @@ export default function App() {
 
   //update matches when user info changes
   React.useEffect(() => {
-    if (userInfo.interests && userInfo.preferredName) {
+    if (window.localStorage.getItem('userInfo') && userInfo.interests) {
       if (userMatches.length == 0 && !fetchingMatches) {
         createMatches({})
       }
@@ -53,15 +53,15 @@ export default function App() {
     }
   }, [userInfo]);
 
-  /*React.useEffect(() => {
+  React.useEffect(() => {
     setIsFetching(true);
     if (window.performance) {
-      if (window.localStorage.getItem('userInfo') && !userInfo) {
+      if (window.localStorage.getItem('userInfo') && !userInfo && String(window.performance.getEntriesByType("navigation")[0].type) === "reload") {
         refreshLogin();
       }
     }
     setIsFetching(false);
-  }, []);*/
+  }, []);
 
   React.useEffect(() => {
     if (window.location.href.includes("code") && !isFetching && !userInfo.ig_accessToken) {
@@ -81,11 +81,12 @@ export default function App() {
         .then(function (response) {
           setUserInfo(response.data.userInfo);
           setUserMatches([]);
-          setIsFetching(false);
+          setTimeout(getInterestsFromUser, 500)
+          getMatchesForUser(matchLimit, 0)
+          setTimeout(setFetchingFalse, 1500)
         })
         .catch(function (err) {
           console.log(err);
-          setIsFetching(false);
         })
     }
   }
@@ -254,12 +255,10 @@ export default function App() {
   }
 
   const goToInterests = () => {
-    if (!userInfo.interests) {
-      setTimeout(getInterestsFromUser, 1000)
+    if (!userInfo.interests && !isFetching) {
+      getInterestsFromUser()
     }
-    setIsFetching(false)
     navigate('/user/interests')
-
   }
 
   const goToMedia = () => {
@@ -268,8 +267,8 @@ export default function App() {
 
   const goToMatching = () => {
     if (userMatches.length === 0) {
-      createMatches({})
       getMatchesForUser(matchLimit, 0);
+      createMatches({})
     }
     navigate('/user/matching');
   }
@@ -280,7 +279,7 @@ export default function App() {
     //setIsFetching(true);
     await axios.get(`https://localhost:${PORT}/user/interests`)
       .then(resp => {
-        if (resp.data.movies && userInfo) {
+        if (userInfo) {
           setHobbiesList(resp.data.hobbiesList);
           setUserInfo({ ...userInfo, interests: { movies: resp.data.movies, shows: resp.data.shows, hobbies: resp.data.hobbies } });
           setIsFetching(false)
@@ -294,27 +293,23 @@ export default function App() {
   //retrieves matches for user
   //sets user info
   async function getMatchesForUser(limit, offset) {
-    if (!isFetching && userInfo && userInfo != "") {
-      //setIsFetching(true);
-      await axios.get(`https://localhost:${PORT}/matches`, {
-        params: {
-          limit: limit,
-          offset: offset
-        }
-      })
-        .then(resp => {
-          if (resp.data.typeStatus == "success") {
-            if (offset == 0) {
-              setUserMatches(resp.data.matchesInfo);
-            }
-            else if (userMatches.length >= matchLimit && resp.data.matchesInfo[0] && !userMatches.includes(resp.data.matchesInfo[0])) {
-              let newMatches = userMatches.concat(resp.data.matchesInfo);
-              setUserMatches(newMatches);
-            }
+    await axios.get(`https://localhost:${PORT}/matches`, {
+      params: {
+        limit: limit,
+        offset: offset
+      }
+    })
+      .then(resp => {
+        if (resp.data.typeStatus == "success") {
+          if (offset == 0) {
+            setUserMatches(resp.data.matchesInfo);
           }
-          //setIsFetching(false);
-        });
-    }
+          else if (userMatches.length >= matchLimit && resp.data.matchesInfo[0] && !userMatches.includes(resp.data.matchesInfo[0])) {
+            let newMatches = userMatches.concat(resp.data.matchesInfo);
+            setUserMatches(newMatches);
+          }
+        }
+      });
   }
 
   //log user out
@@ -458,21 +453,16 @@ export default function App() {
         else {
           setUserInfo(response.data.userInfo);
           window.localStorage.setItem('userInfo', JSON.stringify({ email: email, password: password, objectId: response.data.userInfo.objectId }));
-          refreshLogin()
+          setTimeout(refreshLogin, 500)
           setUserMatches([]);
           setSelectedHobbyOption(null)
           setOffset(0)
-          setTimeout(getInterestsFromUser, 2000)
-          setTimeout(setFetchingFalse, 2000)
           navigate('/user/basic');
-          //setIsFetching(false);
         }
-        setIsFetching(false)
       })
       .catch(function (err) {
         console.log(err);
         window.localStorage.clear();
-        setIsFetching(false);
       })
   }
 

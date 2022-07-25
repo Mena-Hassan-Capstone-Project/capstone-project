@@ -4,7 +4,6 @@ import Loading from "../../Loading/Loading"
 
 
 export default function Interests({ userInfo, onClickBasic, onClickMedia, onClickEditInterests, isFetching }) {
-  console.log("userinfo", userInfo)
   return (
     (isFetching || !userInfo.interests)
       ? <Loading></Loading>
