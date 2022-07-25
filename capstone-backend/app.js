@@ -31,16 +31,16 @@ const WEIGHT_TAGS = 0.15;
 const INSTA_APP_ID = "390997746348889";
 const INSTA_APP_SECRET = "facb6a96ac24a92b82f0a6b254c0ec69";
 
-function handleParseError(err) {
-    if(err?.code){
+function handleParseError(err, res) {
+    if (err?.code) {
         switch (err.code) {
             case Parse.Error.INVALID_SESSION_TOKEN:
                 Parse.User.logOut();
                 res.redirect('/login');
                 break;
-            }
+        }
     }
-  }
+}
 
 async function getUserInfo(user) {
     const Movie = Parse.Object.extend("Movie");
@@ -62,7 +62,7 @@ async function getUserInfo(user) {
 }
 
 function compareArrs(arr1, arr2, weight) {
-    if(!arr1 || !arr2){
+    if (!arr1 || !arr2) {
         return 0;
     }
     let matches = 0;
@@ -106,13 +106,13 @@ function calculateCategoryScore(category, prop1, prop2, weight1, weight2) {
         user2Prop1 = user2Prop1.concat(category.user_2[i].get(prop1));
         user2Prop2.push(category.user_2[i].get(prop2));
     }
-    try{
+    try {
         let prop1Score = compareArrs(user1Prop1, user2Prop1, weight1);
         let prop2Score = compareArrs(user1Prop2, user2Prop2, weight2);
 
         return prop1Score + prop2Score;
     }
-    catch(err){
+    catch (err) {
         console.log("error", err)
         return 0
     }
@@ -136,7 +136,7 @@ async function getInterestQuery(currentUser, objectName) {
     return await query.find();
 }
 
-async function updateMatch(params, currentUser){
+async function updateMatch(params, currentUser) {
     const Match = Parse.Object.extend("Match");
     const matchQuery = new Parse.Query(Match);
     matchQuery.equalTo("user_1", currentUser.id);
@@ -150,7 +150,7 @@ async function updateMatch(params, currentUser){
     privateInfoQuery.equalTo("user_2", currentUser.id);
     privateInfoQuery.equalTo("user_1", params.matchId);
     let privateInfoResults = await privateInfoQuery.first();
-    if(privateInfoResults){
+    if (privateInfoResults) {
         privateInfoResults.set("display_private", params.liked)
         await privateInfoResults.save();
     }
@@ -167,10 +167,10 @@ async function getMatches(currentUser) {
     entries.forEach(async entry => {
         const matchInfo = await getUserInfo(entry);
         const currentUserInfo = await getUserInfo(currentUser);
-        count ++;
+        count++;
         //skip if entry profile incomplete or either users have no interests added
-        if ((!matchInfo.movies && !matchInfo.shows && !matchInfo.hobbies) 
-        || (!currentUserInfo.movies && !currentUserInfo.shows && !currentUserInfo.hobbies)) {
+        if ((!matchInfo.movies && !matchInfo.shows && !matchInfo.hobbies)
+            || (!currentUserInfo.movies && !currentUserInfo.shows && !currentUserInfo.hobbies)) {
             return;
         }
 
@@ -261,12 +261,12 @@ app.post('/login', async (req, res) => {
         var currentUser = Parse.User.current();
         if (currentUser) {
             // do stuff with the user
-            Parse.User.logOut();
-        } 
+            await Parse.User.logOut();
+        }
         const user = await Parse.User.logIn(infoUser.email, infoUser.password);
         res.send({ userInfo: user, loginMessage: "User logged in!", typeStatus: "success", infoUser: infoUser });
     } catch (error) {
-        handleParseError(error);
+        handleParseError(error, res);
         res.send({ loginMessage: error.message, typeStatus: "danger", infoUser: infoUser });
     }
 })
@@ -284,9 +284,9 @@ app.post('/logout', async (req, res) => {
 app.post('/signup', async (req, res) => {
     Parse.User.enableUnsafeCurrentUser();
     var currentUser = Parse.User.current();
-        if (currentUser) {
-            Parse.User.logOut();
-        } 
+    if (currentUser) {
+        await Parse.User.logOut();
+    }
     const infoUser = req.body;
     let user = new Parse.User();
 
@@ -313,10 +313,10 @@ app.post('/matches', async (req, res) => {
     const currentUser = Parse.User.current();
     try {
         if (currentUser) {
-            if(params.liked){
+            if (params.liked) {
                 updateMatch(params, currentUser)
             }
-            else{
+            else {
                 getMatches(currentUser);
             }
             res.send({ matchMessage: "Matches created", typeStatus: 'success' });
@@ -366,7 +366,7 @@ app.post('/verify', async (req, res) => {
             res.send({ verifyMessage: "Can't get current user", typeStatus: "danger", infoUser: infoUser });
         }
     } catch (error) {
-        
+
         res.send({ verifyMessage: error.message, typeStatus: "danger", infoUser: infoUser });
     }
 })
@@ -402,7 +402,7 @@ app.post('/user/interests/remove', async (req, res) => {
         }
     }
     catch (error) {
-        
+
         res.send({ removeMessage: error.message, typeStatus: "danger" });
     }
 });
@@ -443,6 +443,9 @@ app.post('/user/interests', async (req, res) => {
         const Hobby = Parse.Object.extend("Hobby");
         const hobby = new Hobby();
 
+        const rawdata = fs.readFileSync('data/hobbies.json');
+        const hobbiesList = await JSON.parse(rawdata);
+
         const currentUser = Parse.User.current();
         if (currentUser) {
             if (infoInterests.interests.movie && infoInterests.interests.movie != "") {
@@ -479,11 +482,23 @@ app.post('/user/interests', async (req, res) => {
                 query.equalTo("name", infoInterests.interests.hobby.name);
                 const entries = await query.find();
                 if (!entries[0]) {
+                    let currentHobbies = hobbiesList.hobbies[infoInterests.interests.hobby.hobbyIndex];
+                    //add new hobby to data json
+                    if (!currentHobbies.options.includes(infoInterests.interests.hobby.name)) {
+                        currentHobbies.options.push(infoInterests.interests.hobby.name);
+                        hobbiesList.hobbies[infoInterests.interests.hobby.hobbyIndex] = currentHobbies;
+                        var newData = JSON.stringify(hobbiesList);
+                        fs.writeFile('data/hobbies.json', newData, err => {
+                            // error checking
+                            if (err) throw err;
+
+                        });
+                    }
                     hobby.set("name", infoInterests.interests.hobby.name)
                     hobby.set("category", infoInterests.interests.hobby.category)
                     let usersRelation = hobby.relation('User');
-                    usersRelation.add(currentUser)
-                    await hobby.save()
+                    usersRelation.add(currentUser);
+                    await hobby.save();
                 }
             }
             res.send({ hobby: hobby, show: show, movie: movie, userInfo: currentUser, interestsMessage: "User interests info saved!", typeStatus: "success", infoInterests: infoInterests });
@@ -491,7 +506,7 @@ app.post('/user/interests', async (req, res) => {
             res.send({ hobby: hobby, show: show, movie: movie, userInfo: "", interestsMessage: "Can't get current user", typeStatus: "danger", infoInterests: infoInterests });
         }
     } catch (error) {
-        
+
         res.send({ interestsMessage: error.message, typeStatus: "danger", infoInterests: infoInterests });
     }
 })
@@ -506,13 +521,19 @@ app.post('/user/update', async (req, res) => {
             if (infoUser.accessToken) {
                 currentUser.set("ig_access_token", infoUser.accessToken);
             }
+            if (infoUser.username) {
+                currentUser.set("ig_username", infoUser.username);
+            }
+            if (infoUser.photos) {
+                currentUser.set("ig_media", infoUser.photos);
+            }
             await currentUser.save();
             res.send({ userInfo: currentUser, updateInfoMessage: "User basic info saved!", typeStatus: "success", infoUser: infoUser });
         } else {
             res.send({ userInfo: "", updateInfoMessage: "Can't get current user", typeStatus: "danger", infoUser: infoUser });
         }
     } catch (error) {
-        
+
         res.send({ updateInfoMessage: error.message, typeStatus: "danger", infoUser: infoUser });
     }
 })
@@ -548,7 +569,7 @@ app.post('/user/basic', async (req, res) => {
             res.send({ userInfo: "", saveInfoMessage: "Can't get current user", typeStatus: "danger", infoUser: infoUser });
         }
     } catch (error) {
-        
+
         res.send({ saveInfoMessage: error.message, typeStatus: "danger", infoUser: infoUser });
     }
 })

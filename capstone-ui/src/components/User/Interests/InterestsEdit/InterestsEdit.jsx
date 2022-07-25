@@ -6,7 +6,8 @@ import Select from 'react-select'
 
 
 export default function InterestsEdit({ userInfo, onClickBasic, onClickMedia, saveInterests, getMovieSearch, movie, removeMovie,
-  isFetching, getTVSearch, TV, removeShow, setSelectedHobbyOption, selectedHobbyOption, hobbiesList, removeHobby }) {
+  isFetching, getTVSearch, TV, removeShow, setSelectedHobbyOption, selectedHobbyOption, hobbiesList, removeHobby, addNewHobby }) {
+  setSelectedHobbyOption(null)
   const [movieClass, setMovieClass] = useState("hidden")
   const [tvClass, setTvClass] = useState("hidden")
   const [hobbyClass, setHobbyClass] = useState("hidden")
@@ -161,8 +162,18 @@ export default function InterestsEdit({ userInfo, onClickBasic, onClickMedia, sa
                     onChange={setSelectedHobbyOption}
                     options={hobbiesList[selectedOption.value].options.map
                       ((hobby) => {
-                        return { label: hobby, value: { name: hobby, category: selectedOption.label } };
+                        return { label: hobby, value: { name: hobby, category: selectedOption.label, hobbyIndex: selectedOption.value } };
                       })} />
+                  {
+                    selectedHobbyOption
+                      ?
+                      null
+                      :
+                      <div>
+                        <p>Or add your own:</p>
+                        <input id="enter-hobby" className={hobbyClass} type="text" onChange={() => addNewHobby(selectedOption.label, selectedOption.value)} />
+                      </div>
+                  }
                 </div>
                 : null
             }

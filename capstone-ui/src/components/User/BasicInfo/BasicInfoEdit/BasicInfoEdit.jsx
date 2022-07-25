@@ -17,8 +17,8 @@ export default function BasicInfoEdit({ userInfo, onClickInterests, onClickMedia
             <h2>{userInfo.preferredName}</h2>
             <div className="user-info">
               <p className="menu-item active">Basic Info</p>
-              <p onClick = {onClickInterests} className="menu-item">Interests</p>
-              <p onClick = {onClickMedia} className="menu-item">Media</p>
+              <p onClick={onClickInterests} className="menu-item">Interests</p>
+              <p onClick={onClickMedia} className="menu-item">Media</p>
             </div>
           </div>
           <div className="column" >

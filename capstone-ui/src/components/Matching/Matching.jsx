@@ -6,141 +6,143 @@ import { FaRegHeart } from "react-icons/fa";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { Carousel } from 'react-responsive-carousel'
 
-export default function Matching({ isFetching, userMatches, getMatchesForUser, matchOffset, setOffset, matchLimit, createMatches, goToMatching, setIsFetching, getInstaUsername }) {
+export default function Matching({ isFetching, userMatches, getMatchesForUser, matchOffset, setOffset, matchLimit, createMatches, goToMatching, setIsFetching }) {
+
     console.log("userMatches in matching", userMatches)
     function formatPhoneNumber(phoneNumberString) {
         var cleaned = ('' + phoneNumberString).replace(/\D/g, '');
         var match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
         if (match) {
-          return '(' + match[1] + ') ' + match[2] + '-' + match[3];
+            return '(' + match[1] + ') ' + match[2] + '-' + match[3];
         }
         return null;
-      }
+    }
     return (
         (isFetching || !userMatches || !Array.isArray(userMatches))
             ? <Loading />
             :
             userMatches.length == 0
-            ? <p>No matches yet</p>
-            :
-            <div className="matching" id="matching">
-                {
-                    userMatches.map((match, index) => (
-                        <div key={index} className="card">
-                            <p className="card-text">{match.userInfo.preferredName}</p>
-                            {
-                                match.userInfo.profile_photo
-                                    ?
-                                    <Carousel
-                                        statusFormatter={function () { }}
-                                        dynamicHeight={true}
-                                        showArrows={false}
-                                        showThumbs={false}>
-                                        <div>
-                                            <img key={index} className="media-carousel" src={match.userInfo.profile_photo} />
-                                        </div>
-                                        {
-                                            match.userInfo.media
-                                                ?
-                                                match.userInfo.media.map((photo, index) => (
-                                                    <div>
-                                                        <img key={index} className="media-carousel" src={photo.data_url} />
-                                                    </div>
-                                                ))
-                                                : null
-                                        }
-                                    </Carousel>
-                                    : null
-                            }
-
-                            <p className="card-text"><b>Match Score: {(match.scoreInfo.score * 100).toFixed(1)}%</b></p>
-                            <p className="card-text">University: {match.userInfo.university}</p>
-                            <p className="card-text">Graduation Year: {match.userInfo.grad_year}</p>
-                            <p className="card-text">Major: {match.userInfo.major}</p>
-                            <p className="card-text">Hometown: {match.userInfo.hometown}</p>
-                            <p className="card-text">{match.userInfo.tags.length > 0 ? `Tags: ${match.userInfo.tags}` : ""}</p>
-                            {
-                                Array.isArray(match.interestsInfo.movies) && match.interestsInfo.movies.length > 0
-                                    ?
-                                    <div>
-                                        <p className="card-text match-interests">Movies: </p>
-                                        {match.interestsInfo.movies.map((movie, index) => (
-
-                                            <p key={index} className="card-text match-interests match-movies">{movie.title}</p>
-                                        ))}
-                                    </div>
-                                    :
-                                    null
-                            }
-                            <p></p>
-                            {
-                                Array.isArray(match.interestsInfo.shows) && match.interestsInfo.shows.length > 0
-                                    ?
-                                    <div>
-                                        <p className="card-text match-interests">Shows: </p>
-                                        {match.interestsInfo.shows.map((show, index) => (
-                                            <p key={index} className="card-text match-interests match-shows">{show.title}</p>
-
-                                        ))}
-                                    </div>
-                                    : null
-                            }
-                            <p></p>
-                            {
-                                Array.isArray(match.interestsInfo.hobbies) && match.interestsInfo.hobbies.length > 0
-                                    ?
-                                    <div>
-                                        <p className="card-text match-interests">Hobbies: </p>
-                                        {match.interestsInfo.hobbies.map((hobby, index) => (
-                                            <p key={index} className="card-text match-interests match-hobbies">{hobby.name}</p>
-                                        ))}
-                                    </div>
-                                    :
-                                    null
-                            }
-                            {
-                                match.scoreInfo.display_private
-                                    ?
-                                    <div>
-                                        <p><b>{`${match.userInfo.preferredName} liked you! Contact ${match.userInfo.preferredName}:`}</b></p>
-                                        <p>{`Phone number: ${formatPhoneNumber(match.userInfo.phoneNum)}`}</p>
-                                    </div>
-                                    :
-                                    null
-                            }
-                            <br />
-                            {<button className="login-btn" onClick={async () => {
-                                setIsFetching(true)
-                                const liked = match.scoreInfo.liked
-                                await createMatches({ matchId: match.userInfo.objectId, liked: !liked })
-                                await getMatchesForUser(10, 0)
-                                await goToMatching()
-                                setIsFetching(false)
-                            }}>
+                ? <p>No matches yet</p>
+                :
+                <div className="matching" id="matching">
+                    {
+                        userMatches.map((match, index) => (
+                            <div key={index} className="card">
+                                <p className="card-text">{match.userInfo.preferredName}</p>
                                 {
-                                    match.scoreInfo.liked
+                                    match.userInfo.profile_photo
                                         ?
-                                        <FaHeart />
-                                        : <FaRegHeart />
+                                        <Carousel
+                                            statusFormatter={function () { }}
+                                            dynamicHeight={true}
+                                            showArrows={false}
+                                            showThumbs={false}>
+                                            <div>
+                                                <img key={index} className="media-carousel" src={match.userInfo.profile_photo} />
+                                            </div>
+                                            {
+                                                match.userInfo.media
+                                                    ?
+                                                    match.userInfo.media.map((photo, index) => (
+                                                        <div>
+                                                            <img key={index} className="media-carousel" src={photo.data_url} />
+                                                        </div>
+                                                    ))
+                                                    : null
+                                            }
+                                        </Carousel>
+                                        : null
                                 }
-                            </button>}
-                        </div>
-                    ))
-                }
-                {
-                    userMatches.length < matchLimit
-                        ? null
-                        : <button className="login-btn" onClick={() => {
-                            console.log("offset", matchOffset)
-                            console.log("limit", matchLimit)
-                            let newOffset = parseInt(matchOffset) + parseInt(matchLimit);
-                            console.log("new offset", newOffset)
-                            getMatchesForUser(matchLimit, newOffset)
-                            setOffset(newOffset)
-                        }}>
-                            See More
-                        </button>
-                }
-            </div>
+
+                                <p className="card-text"><b>Match Score: {(match.scoreInfo.score * 100).toFixed(1)}%</b></p>
+                                <p className="card-text">University: {match.userInfo.university}</p>
+                                <p className="card-text">Graduation Year: {match.userInfo.grad_year}</p>
+                                <p className="card-text">Major: {match.userInfo.major}</p>
+                                <p className="card-text">Hometown: {match.userInfo.hometown}</p>
+                                <p className="card-text">{match.userInfo.tags.length > 0 ? `Tags: ${match.userInfo.tags}` : ""}</p>
+                                {
+                                    Array.isArray(match.interestsInfo.movies) && match.interestsInfo.movies.length > 0
+                                        ?
+                                        <div>
+                                            <p className="card-text match-interests">Movies: </p>
+                                            {match.interestsInfo.movies.map((movie, index) => (
+
+                                                <p key={index} className="card-text match-interests match-movies">{movie.title}</p>
+                                            ))}
+                                        </div>
+                                        :
+                                        null
+                                }
+                                <p></p>
+                                {
+                                    Array.isArray(match.interestsInfo.shows) && match.interestsInfo.shows.length > 0
+                                        ?
+                                        <div>
+                                            <p className="card-text match-interests">Shows: </p>
+                                            {match.interestsInfo.shows.map((show, index) => (
+                                                <p key={index} className="card-text match-interests match-shows">{show.title}</p>
+
+                                            ))}
+                                        </div>
+                                        : null
+                                }
+                                <p></p>
+                                {
+                                    Array.isArray(match.interestsInfo.hobbies) && match.interestsInfo.hobbies.length > 0
+                                        ?
+                                        <div>
+                                            <p className="card-text match-interests">Hobbies: </p>
+                                            {match.interestsInfo.hobbies.map((hobby, index) => (
+                                                <p key={index} className="card-text match-interests match-hobbies">{hobby.name}</p>
+                                            ))}
+                                        </div>
+                                        :
+                                        null
+                                }
+                                {
+                                    match.scoreInfo.display_private
+                                        ?
+                                        <div>
+                                            <p><b>{`${match.userInfo.preferredName} liked you! Contact ${match.userInfo.preferredName}:`}</b></p>
+                                            <p>{`Phone number: ${formatPhoneNumber(match.userInfo.phoneNum)}`}</p>
+                                            {match.userInfo.ig_username ? <p>{`Instagram username: ${match.userInfo.ig_username}`}</p> : null}
+                                        </div>
+                                        :
+                                        null
+                                }
+                                <br />
+                                {<button className="login-btn" onClick={async () => {
+                                    setIsFetching(true)
+                                    const liked = match.scoreInfo.liked
+                                    await createMatches({ matchId: match.userInfo.objectId, liked: !liked })
+                                    await getMatchesForUser(10, 0)
+                                    await goToMatching()
+                                    setIsFetching(false)
+                                }}>
+                                    {
+                                        match.scoreInfo.liked
+                                            ?
+                                            <FaHeart />
+                                            : <FaRegHeart />
+                                    }
+                                </button>}
+                            </div>
+                        ))
+                    }
+                    {
+                        userMatches.length < matchLimit
+                            ? null
+                            : <button className="login-btn" onClick={() => {
+                                console.log("offset", matchOffset)
+                                console.log("limit", matchLimit)
+                                let newOffset = parseInt(matchOffset) + parseInt(matchLimit);
+                                console.log("new offset", newOffset)
+                                getMatchesForUser(matchLimit, newOffset)
+                                setOffset(newOffset)
+                            }}>
+                                See More
+                            </button>
+                    }
+                </div>
     )
 }
