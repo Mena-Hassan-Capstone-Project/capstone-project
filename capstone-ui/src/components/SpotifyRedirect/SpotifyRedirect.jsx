@@ -2,7 +2,7 @@ import * as React from "react"
 import "./SpotifyRedirect.css"
 
 
-export default function SpotifyRedirect({goToLogin}) {
+export default function SpotifyRedirect({ goToLogin }) {
   const [counter, setCounter] = React.useState(5);
 
   React.useEffect(() => {

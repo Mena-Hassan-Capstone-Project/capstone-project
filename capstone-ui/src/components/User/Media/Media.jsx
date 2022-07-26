@@ -39,29 +39,37 @@ export default function Media({ userInfo, onClickBasic, onClickInterests, onClic
               userInfo.ig_access_token
                 ?
                 userInfo.ig_media
-                ?
-                userInfo.ig_media.map((pic, index) => (
-                  <div key={index} className="media-item">
-                    <img src={pic} alt="" className="media-img" />
+                  ?
+                  <p>Instagram photos added to media!</p>
+                  :
+                  <div className="access-token">
+                    <p>{`Instagram Connected!`}</p>
+                    <button className="insta-btn" onClick={async () => {
+                      const data = await getInstaPhotos(userInfo.ig_access_token);
+                      setUserData(data)
+                      if (!userInfo.ig_media) {
+                        uploadInstaPhotos(data)
+                      }
+                    }}>
+                      Add Instagram Photos to Profile
+                    </button>
                   </div>
-                ))
                 :
-                <div className="access-token">
-                  <p>{`Instagram Connected!`}</p>
-                  <button className="insta-btn" onClick={async () => {
-                    const data = await getInstaPhotos(userInfo.ig_access_token);
-                    setUserData(data)
-                    if (!userInfo.ig_media) {
-                      uploadInstaPhotos(data)
-                    }
-                  }}>
-                    Add Instagram Photos to Profile
-                  </button>
-                </div>
-                :
-                <button className="login-btn" onClick={onClickInsta}>
+                <button className="insta-btn" onClick={onClickInsta}>
                   Connect to Instagram
                 </button>
+            }
+            {
+              userInfo.ig_media
+                ?
+                <div>
+                  {userInfo.ig_media.map((pic, index) => (
+                    <div key={index} className="media-item">
+                      <img src={pic} alt="" className="media-img" />
+                    </div>
+                  ))}
+                </div>
+                : null
             }
             {
               userData && Array.isArray(userData) ?

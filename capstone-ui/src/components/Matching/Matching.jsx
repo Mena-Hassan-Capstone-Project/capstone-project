@@ -8,22 +8,21 @@ import { Carousel } from 'react-responsive-carousel'
 
 export default function Matching({ isFetching, userMatches, getMatchesForUser, matchOffset, setOffset, matchLimit, createMatches, goToMatching, setIsFetching }) {
 
-    console.log("userMatches", userMatches)
     //add max 10 photos to match's media carousel
     const MAX_MEDIA = 10
-    function getMediaArray(media, igMedia){
+    function getMediaArray(media, igMedia) {
         let mediaArray = []
         let count = 0
-        if(media){
-            for(let i = 0; i < media.length && count < MAX_MEDIA; i++){
+        if (media) {
+            for (let i = 0; i < media.length && count < MAX_MEDIA; i++) {
                 mediaArray.push(media[i].data_url);
-                count ++;
+                count++;
             }
         }
-        if(igMedia){
-            for(let i = 0; i < igMedia.length && count < MAX_MEDIA; i++){
+        if (igMedia) {
+            for (let i = 0; i < igMedia.length && count < MAX_MEDIA; i++) {
                 mediaArray.push(igMedia[i]);
-                count ++;
+                count++;
             }
         }
         return mediaArray
@@ -62,17 +61,17 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
                                             </div>
                                             {
                                                 match.userInfo.ig_media ?
-                                                getMediaArray(match.userInfo.media, match.userInfo.ig_media).map((photo, index) => (
-                                                    <div>
-                                                        <img key={index} className="media-carousel" src={photo} />
-                                                    </div>
-                                                ))
-                                                :
-                                                getMediaArray(match.userInfo.media, []).map((photo, index) => (
-                                                    <div>
-                                                        <img key={index} className="media-carousel" src={photo} />
-                                                    </div>
-                                                ))
+                                                    getMediaArray(match.userInfo.media, match.userInfo.ig_media).map((photo, index) => (
+                                                        <div>
+                                                            <img key={index} className="media-carousel" src={photo} />
+                                                        </div>
+                                                    ))
+                                                    :
+                                                    getMediaArray(match.userInfo.media, []).map((photo, index) => (
+                                                        <div>
+                                                            <img key={index} className="media-carousel" src={photo} />
+                                                        </div>
+                                                    ))
                                             }
                                         </Carousel>
                                         : null
@@ -118,8 +117,8 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
                                             <p className="card-text match-interests">Top Spotify Artists: </p>
                                             {match.userInfo.spotify_artists.map((artist, index) => (
                                                 <div key={index}>
-                                                 <p>{`${index + 1}. ${artist.name}`}</p>
-                                              </div>
+                                                    <p>{`${index + 1}. ${artist.name}`}</p>
+                                                </div>
                                             ))}
                                         </div>
                                         : null

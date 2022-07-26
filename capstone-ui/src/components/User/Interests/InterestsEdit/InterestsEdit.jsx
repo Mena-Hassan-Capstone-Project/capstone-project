@@ -119,20 +119,20 @@ export default function InterestsEdit({ userInfo, onClickBasic, onClickMedia, sa
             {/* Music */}
             <p className="interests-title">Music:</p>
             {
-              userInfo.spotify_artists 
-              ? 
-              <div>
-                <p><b>Top Spotify Artists:</b></p>
-              {userInfo.spotify_artists.map((track, index) => (
-                <div key={index}>
-                  <p><b>{`${index + 1}. ${track.name}`}</b></p>
+              userInfo.spotify_artists
+                ?
+                <div>
+                  <p><b>Top Spotify Artists:</b></p>
+                  {userInfo.spotify_artists.map((track, index) => (
+                    <div key={index}>
+                      <p><b>{`${index + 1}. ${track.name}`}</b></p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-              </div>
-              :
-              <button className="login-btn" onClick = {onClickSpotify}>
-              Connect to Spotify
-            </button>
+                :
+                <button className="login-btn" onClick={onClickSpotify}>
+                  Connect to Spotify
+                </button>
             }
 
             {/* Hobbies */}
@@ -196,7 +196,7 @@ export default function InterestsEdit({ userInfo, onClickBasic, onClickMedia, sa
             <button className="login-btn" onClick={() => {
               saveInterests();
               setSelectedHobbyOption(null);
-              }}>
+            }}>
               Save
             </button>
           </div>

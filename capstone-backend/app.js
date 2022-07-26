@@ -20,13 +20,15 @@ const PARSE_JS_KEY = "p5aB5jobn5ApbufIKx3FAUjumfqlMqF1uyz4dBYy";
 Parse.initialize(PARSE_APP_ID, PARSE_JS_KEY);
 Parse.serverURL = 'http://parseapi.back4app.com/';
 
-const WEIGHT_MOVIE_GENRES = 0.2;
-const WEIGHT_MOVIE_TITLE = 0.05;
-const WEIGHT_SHOW_GENRES = 0.2;
-const WEIGHT_SHOW_TITLE = 0.05;
-const WEIGHT_HOBBY_CATEGORY = 0.25;
-const WEIGHT_HOBBY_NAMES = 0.1;
-const WEIGHT_TAGS = 0.15;
+const WEIGHT_MOVIE_GENRES = 0.12;
+const WEIGHT_MOVIE_TITLE = 0.03;
+const WEIGHT_SHOW_GENRES = 0.12;
+const WEIGHT_SHOW_TITLE = 0.03;
+const WEIGHT_HOBBY_CATEGORY = 0.22;
+const WEIGHT_HOBBY_NAMES = 0.8;
+const WEIGHT_MUSIC_GENRES = 0.18;
+const WEIGHT_MUSIC_ARTIST = 0.07;
+const WEIGHT_TAGS = 0.05;
 
 const INSTA_APP_ID = "390997746348889";
 const INSTA_APP_SECRET = "facb6a96ac24a92b82f0a6b254c0ec69";
@@ -60,8 +62,7 @@ async function getUserInfo(user) {
     hobbyQuery.equalTo("User", user);
     const userHobbies = await hobbyQuery.find();
 
-
-    return ({ movies: userMovies, shows: userShows, hobbies: userHobbies, tags: user.get("tags"), music: user.get("spotify-artists") });
+    return ({ movies: userMovies, shows: userShows, hobbies: userHobbies, tags: user.get("tags"), music: user.get("spotify_artists") });
 }
 
 function compareArrs(arr1, arr2, weight) {
@@ -94,19 +95,30 @@ function compareArrs(arr1, arr2, weight) {
     return (matches / (arr1.length + arr2.length)).toFixed(3) * weight;
 }
 
-function calculateCategoryScore(category, prop1, prop2, weight1, weight2) {
+function calculateClassScore(category, prop1, prop2, weight1, weight2) {
+    //assuming prop1 is array and prop2 is a string
 
     let user1Prop1 = [];
     let user1Prop2 = [];
     for (let i = 0; i < category.user_1.length; i++) {
-        user1Prop1 = user1Prop1.concat(category.user_1[i].get(prop1));
+        if (Array.isArray(category.user_1[i].get(prop1))) {
+            user1Prop1 = user1Prop1.concat(category.user_1[i].get(prop1));
+        }
+        else {
+            user1Prop1.push(category.user_1[i].get(prop1));
+        }
         user1Prop2.push(category.user_1[i].get(prop2));
     }
 
     let user2Prop1 = [];
     let user2Prop2 = [];
     for (let i = 0; i < category.user_2.length; i++) {
-        user2Prop1 = user2Prop1.concat(category.user_2[i].get(prop1));
+        if (Array.isArray(category.user_2[i].get(prop1))) {
+            user2Prop1 = user2Prop1.concat(category.user_2[i].get(prop1));
+        }
+        else {
+            user2Prop1.push(category.user_2[i].get(prop1));
+        }
         user2Prop2.push(category.user_2[i].get(prop2));
     }
     try {
@@ -121,14 +133,41 @@ function calculateCategoryScore(category, prop1, prop2, weight1, weight2) {
     }
 }
 
-function getScore(movies, shows, hobbies, tags) {
+function calculateUserPropertyScore(category, prop1, prop2, weight1, weight2) {
+    let user1Prop1 = [];
+    let user1Prop2 = [];
+    for (let i = 0; i < category.user_1.length; i++) {
+        user1Prop1 = user1Prop1.concat(category.user_1[i][prop1]);
+        user1Prop2.push(category.user_1[i][prop2]);
+    }
+
+    let user2Prop1 = [];
+    let user2Prop2 = [];
+    for (let i = 0; i < category.user_2.length; i++) {
+        user2Prop1 = user2Prop1.concat(category.user_2[i][prop1]);
+        user2Prop2.push(category.user_2[i][prop2]);
+    }
+    try {
+        let prop1Score = compareArrs(user1Prop1, user2Prop1, weight1);
+        let prop2Score = compareArrs(user1Prop2, user2Prop2, weight2);
+
+        return prop1Score + prop2Score;
+    }
+    catch (err) {
+        console.log("error", err);
+        return 0;
+    }
+}
+
+function getScore(movies, shows, hobbies, tags, music) {
     //get movie genre matches
-    const movieScore = calculateCategoryScore(movies, "genres", "title", WEIGHT_MOVIE_GENRES, WEIGHT_MOVIE_TITLE);
-    const showScore = calculateCategoryScore(shows, "genres", "title", WEIGHT_SHOW_GENRES, WEIGHT_SHOW_TITLE);
-    const hobbiesScore = calculateCategoryScore(hobbies, "category", "name", WEIGHT_HOBBY_CATEGORY, WEIGHT_HOBBY_NAMES);
+    const movieScore = calculateClassScore(movies, "genres", "title", WEIGHT_MOVIE_GENRES, WEIGHT_MOVIE_TITLE);
+    const showScore = calculateClassScore(shows, "genres", "title", WEIGHT_SHOW_GENRES, WEIGHT_SHOW_TITLE);
+    const hobbiesScore = calculateClassScore(hobbies, "category", "name", WEIGHT_HOBBY_CATEGORY, WEIGHT_HOBBY_NAMES);
+    const musicScore = calculateUserPropertyScore(music, "genres", "name", WEIGHT_MUSIC_GENRES, WEIGHT_MUSIC_ARTIST);
     const tagsScore = compareArrs(tags.user_1, tags.user_2, WEIGHT_TAGS);
 
-    return (movieScore + showScore + hobbiesScore + tagsScore);
+    return (movieScore + showScore + hobbiesScore + musicScore + tagsScore);
 }
 
 async function getInterestQuery(currentUser, objectName) {
@@ -139,7 +178,7 @@ async function getInterestQuery(currentUser, objectName) {
     return await query.find();
 }
 
-async function updateMatch(params, currentUser) {
+async function updateMatch(params, currentUser, res) {
     const Match = Parse.Object.extend("Match");
     const matchQuery = new Parse.Query(Match);
     matchQuery.equalTo("user_1", currentUser.id);
@@ -157,9 +196,10 @@ async function updateMatch(params, currentUser) {
         privateInfoResults.set("display_private", params.liked);
         await privateInfoResults.save();
     }
+    res.send({ matchMessage: "Match updated", typeStatus: 'success', params: params, privateInfoResults: privateInfoResults });
 }
 
-async function createNewMatch(match, matchScore, user1, user2){
+async function createNewMatch(match, matchScore, user1, user2) {
     match.set("score", matchScore);
     match.set("liked", false);
     match.set("user_1", user1);
@@ -168,22 +208,19 @@ async function createNewMatch(match, matchScore, user1, user2){
     await match.save();
 }
 
-async function getMatches(currentUser) {
+async function getMatches(currentUser, res) {
     const query = new Parse.Query(Parse.User);
     query.notEqualTo("objectId", currentUser.id);
     const entries = await query.find();
-    console.log("entries", entries.length)
 
     const Match = Parse.Object.extend("Match");
-    let count = 0;
 
     entries.forEach(async entry => {
         const matchInfo = await getUserInfo(entry);
         const currentUserInfo = await getUserInfo(currentUser);
-        count++;
         //skip if entry profile incomplete or either users have no interests added
-        if ((!matchInfo.movies && !matchInfo.shows && !matchInfo.hobbies)
-            || (!currentUserInfo.movies && !currentUserInfo.shows && !currentUserInfo.hobbies)) {
+        if ((!matchInfo.movies && !matchInfo.shows && !matchInfo.hobbies && !matchInfo.music)
+            || (!currentUserInfo.movies && !currentUserInfo.shows && !currentUserInfo.hobbies && !currentUserInfo.music)) {
             return;
         }
 
@@ -191,9 +228,9 @@ async function getMatches(currentUser) {
         const showInfo = { user_1: currentUserInfo.shows, user_2: matchInfo.shows };
         const hobbiesInfo = { user_1: currentUserInfo.hobbies, user_2: matchInfo.hobbies };
         const tagsInfo = { user_1: currentUserInfo.tags, user_2: matchInfo.tags };
-        const matchScore = getScore(movieInfo, showInfo, hobbiesInfo, tagsInfo);
+        const musicInfo = { user_1: currentUserInfo.music, user_2: matchInfo.music };
+        const matchScore = getScore(movieInfo, showInfo, hobbiesInfo, tagsInfo, musicInfo);
 
-        console.log("got create match info")
         //check if match is already in database
         const matchQuery = new Parse.Query(Match);
         matchQuery.equalTo("user_1", currentUser.id);
@@ -217,12 +254,11 @@ async function getMatches(currentUser) {
                 createNewMatch(match2, matchScore, entry.id, currentUser.id)
             }
         }
-        console.log("matches created")
     })
+    res.send({ matchMessage: "Matches created", typeStatus: 'success', entries: entries });
 }
 
 async function retrieveMatchData(limit, offset, currentUser) {
-    console.log("retrieving matches")
     const Match = Parse.Object.extend("Match");
     const matchQuery = new Parse.Query(Match);
 
@@ -232,7 +268,6 @@ async function retrieveMatchData(limit, offset, currentUser) {
     matchQuery.skip(parseInt(offset));
 
     const matchResults = await matchQuery.find();
-    console.log("got matchresults")
 
     let usersInfo = [];
     let scoreInfo = [];
@@ -256,7 +291,6 @@ async function retrieveMatchData(limit, offset, currentUser) {
             interestsInfo: interestsInfo[i]
         };
     });
-    console.log("got match info")
     return ({ matchesInfo: matchesInfo, matchResults: matchResults, matchMessage: "Matches Retrieved!", typeStatus: "success" });
 }
 
@@ -320,12 +354,11 @@ app.post('/matches', async (req, res) => {
     try {
         if (currentUser) {
             if (params.liked) {
-                updateMatch(params, currentUser);
+                updateMatch(params, currentUser, res);
             }
             else {
-                getMatches(currentUser);
+                getMatches(currentUser, res);
             }
-            res.send({ matchMessage: "Matches created", typeStatus: 'success' });
         }
         else {
             res.send({ matchMessage: "Can't get current user", typeStatus: 'danger' });

@@ -54,17 +54,15 @@ export default function App() {
   const RESPONSE_TYPE = "token"
   const AUTH_URL = `${AUTH_ENDPOINT}?client_id=${SPOTIFY_CLIENT_ID}&redirect_uri=${SPOTIFY_RED_URI}&response_type=${RESPONSE_TYPE}&scope=${SCOPE}`
 
-    React.useEffect(() => {
-      console.log("spotify useeffect")
+  React.useEffect(() => {
 
-      if (window.location.href.includes("access_token")) {
-          const queryString = window.location.href;
-          const token = queryString.split("access_token=").pop().split("&token_type")[0];
-          console.log("token", token)
-          getSpotifyUser(token)
-          window.localStorage.setItem("token", token)
-      }
-      setToken(token)
+    if (window.location.href.includes("access_token")) {
+      const queryString = window.location.href;
+      const token = queryString.split("access_token=").pop().split("&token_type")[0];
+      getSpotifyUser(token)
+      window.localStorage.setItem("token", token)
+    }
+    setToken(token)
 
   }, [])
 
@@ -98,7 +96,6 @@ export default function App() {
     setIsFetching(true);
     const loggedInUser = window.localStorage.getItem('userInfo');
     if (loggedInUser) {
-      console.log("refresh login")
       const foundUser = JSON.parse(loggedInUser);
       axios.post(`https://localhost:${PORT}/login`, {
         email: foundUser.email,
@@ -121,18 +118,16 @@ export default function App() {
     setIsFetching(true);
     axios.get("https://api.spotify.com/v1/me/top/artists?&limit=5", {
       headers: {
-          Authorization: `Bearer ${access_token}`
+        Authorization: `Bearer ${access_token}`
       }
-      })
+    })
       .then(function (response) {
         let tracks = response.data.items
-        console.log("spotify response", tracks)
         axios.post(`https://localhost:${PORT}/user/update`, {
-              spotify_artists : tracks
-            }).then(function (response) {
-              console.log("update response", response.data)
-              setIsFetching(false);
-            })
+          spotify_artists: tracks
+        }).then(function (response) {
+          setIsFetching(false);
+        })
       })
       .catch(function (err) {
         console.log(err);
@@ -140,7 +135,6 @@ export default function App() {
   }
 
   async function getSpotifyInfo() {
-    console.log("get spotify info")
     window.open(AUTH_URL, "_blank").focus();
   }
 
@@ -194,6 +188,7 @@ export default function App() {
               accessToken: accessToken,
               username: username
             }).then(function (response) {
+              setUserInfo({ ...userInfo, ig_access_token: accessToken, ig_username: username })
               setIsFetching(false);
             })
           })
@@ -209,6 +204,7 @@ export default function App() {
       photos: photos
     }).then(function (response) {
       setIsFetching(false);
+      setUserInfo({ ...userInfo, ig_media: photos })
     })
   }
 
@@ -266,7 +262,6 @@ export default function App() {
 
   //creates matches for current user
   async function createMatches(params) {
-    console.log("creatematches")
     setFetchingMatches(true)
     if (userInfo && userInfo != "") {
       await axios.post(`https://localhost:${PORT}/matches`, {
@@ -320,8 +315,9 @@ export default function App() {
   }
 
   const goToMatching = () => {
-    getMatchesForUser(matchLimit, 0);
+    setOffset(0)
     createMatches({})
+    getMatchesForUser(matchLimit, 0);
     navigate('/user/matching');
   }
 
@@ -345,25 +341,25 @@ export default function App() {
   //retrieves matches for user
   //sets user info
   async function getMatchesForUser(limit, offset) {
-    console.log("getting matches for user")
+    if (!fetchingMatches) {
       await axios.get(`https://localhost:${PORT}/matches`, {
-      params: {
-        limit: limit,
-        offset: offset
-      }
-    })
-      .then(resp => {
-        console.log("got matches", resp.data)
-        if (resp.data.typeStatus == "success") {
-          if (offset == 0) {
-            setUserMatches(resp.data.matchesInfo);
-          }
-          else if (userMatches.length >= matchLimit && resp.data.matchesInfo[0] && !userMatches.includes(resp.data.matchesInfo[0])) {
-            let newMatches = userMatches.concat(resp.data.matchesInfo);
-            setUserMatches(newMatches);
-          }
+        params: {
+          limit: limit,
+          offset: offset
         }
-      });
+      })
+        .then(resp => {
+          if (resp.data.typeStatus == "success") {
+            if (offset == 0) {
+              setUserMatches(resp.data.matchesInfo);
+            }
+            else if (userMatches.length >= matchLimit && resp.data.matchesInfo[0] && !userMatches.includes(resp.data.matchesInfo[0])) {
+              let newMatches = userMatches.concat(resp.data.matchesInfo);
+              setUserMatches(newMatches);
+            }
+          }
+        });
+    }
   }
 
   //log user out
@@ -380,21 +376,6 @@ export default function App() {
       .catch(function (err) {
         console.log(err);
         window.localStorage.clear();
-        setIsFetching(false)
-      })
-  }
-
-  //log user out
-  function refreshLogout() {
-    axios.post(`https://localhost:${PORT}/logout`, {
-    })
-      .then(function (response) {
-        setUserInfo("");
-        setUserMatches([]);
-        setIsFetching(false)
-      })
-      .catch(function (err) {
-        console.log(err);
         setIsFetching(false)
       })
   }
@@ -614,7 +595,7 @@ export default function App() {
             path="/user/interests/edit"
             element={<InterestsEdit userInfo={userInfo} onClickBasic={goToBasic} onClickMedia={goToMedia} saveInterests={saveInterests} getMovieSearch={getMovieSearch} movie={movie}
               removeMovie={removeMovie} isFetching={isFetching} getTVSearch={getTVSearch} TV={TV} removeShow={removeShow} selectedHobbyOption={selectedHobbyOption}
-              setSelectedHobbyOption={setSelectedHobbyOption} hobbiesList={hobbiesList} removeHobby={removeHobby} addNewHobby={addNewHobby} onClickSpotify = {getSpotifyInfo}></InterestsEdit>}
+              setSelectedHobbyOption={setSelectedHobbyOption} hobbiesList={hobbiesList} removeHobby={removeHobby} addNewHobby={addNewHobby} onClickSpotify={getSpotifyInfo}></InterestsEdit>}
           />
           <Route
             path="/user/media"
@@ -633,10 +614,10 @@ export default function App() {
             {<NotFound />}
           />
           <Route path="/insta-redirect" element=
-            {<InstaRedirect goToLogin={goToLogin}/>}
+            {<InstaRedirect goToLogin={goToLogin} />}
           />
           <Route path="/spotify-redirect" element=
-            {<SpotifyRedirect goToLogin={goToLogin}/>}
+            {<SpotifyRedirect goToLogin={goToLogin} />}
           />
           <Route
             path="/loading"

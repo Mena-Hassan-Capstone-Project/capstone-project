@@ -2,7 +2,7 @@ import * as React from "react"
 import "./InstaRedirect.css"
 
 
-export default function InstaRedirect({goToLogin}) {
+export default function InstaRedirect({ goToLogin }) {
   const [counter, setCounter] = React.useState(5);
 
   React.useEffect(() => {
