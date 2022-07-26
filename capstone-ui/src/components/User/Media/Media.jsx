@@ -4,7 +4,7 @@ import "./Media.css"
 import Loading from "../../Loading/Loading"
 
 
-export default function Media({ userInfo, onClickBasic, onClickInterests, onClickEditMedia, isFetching, onClickInsta, getInstaData }) {
+export default function Media({ userInfo, onClickBasic, onClickInterests, onClickEditMedia, isFetching, onClickInsta, getInstaPhotos, uploadInstaPhotos }) {
   const [userData, setUserData] = useState([]);
   return (
     isFetching
@@ -38,19 +38,18 @@ export default function Media({ userInfo, onClickBasic, onClickInterests, onClic
             {
               userInfo.ig_access_token
                 ?
-                userData && Array.isArray(userData)
-                  ?
-                  null
-                  :
-                  <div className="access-token">
-                    <p>{`Instagram Connected!`}</p>
-                    <button className="insta-btn" onClick={async () => {
-                      const data = await getInstaData(userInfo.ig_access_token)
-                      setUserData(data)
-                    }}>
-                      Get Instagram Photos
-                    </button>
-                  </div>
+                <div className="access-token">
+                  <p>{`Instagram Connected!`}</p>
+                  <button className="insta-btn" onClick={async () => {
+                    const data = await getInstaPhotos(userInfo.ig_access_token);
+                    setUserData(data)
+                    if (!userInfo.ig_media) {
+                      uploadInstaPhotos(data)
+                    }
+                  }}>
+                    Add Instagram Photos to Profile
+                  </button>
+                </div>
                 :
                 <button className="login-btn" onClick={onClickInsta}>
                   Connect to Instagram
