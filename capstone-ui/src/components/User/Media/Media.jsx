@@ -38,6 +38,14 @@ export default function Media({ userInfo, onClickBasic, onClickInterests, onClic
             {
               userInfo.ig_access_token
                 ?
+                userInfo.ig_media
+                ?
+                userInfo.ig_media.map((pic, index) => (
+                  <div key={index} className="media-item">
+                    <img src={pic} alt="" className="media-img" />
+                  </div>
+                ))
+                :
                 <div className="access-token">
                   <p>{`Instagram Connected!`}</p>
                   <button className="insta-btn" onClick={async () => {

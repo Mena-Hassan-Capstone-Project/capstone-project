@@ -8,18 +8,23 @@ import { Carousel } from 'react-responsive-carousel'
 
 export default function Matching({ isFetching, userMatches, getMatchesForUser, matchOffset, setOffset, matchLimit, createMatches, goToMatching, setIsFetching }) {
 
+    console.log("userMatches", userMatches)
     //add max 10 photos to match's media carousel
     const MAX_MEDIA = 10
     function getMediaArray(media, igMedia){
         let mediaArray = []
         let count = 0
-        for(let i = 0; i < media.length && count < MAX_MEDIA; i++){
-            mediaArray.push(media[i].data_url);
-            count ++;
+        if(media){
+            for(let i = 0; i < media.length && count < MAX_MEDIA; i++){
+                mediaArray.push(media[i].data_url);
+                count ++;
+            }
         }
-        for(let i = 0; i < igMedia.length && count < MAX_MEDIA; i++){
-            mediaArray.push(igMedia[i]);
-            count ++;
+        if(igMedia){
+            for(let i = 0; i < igMedia.length && count < MAX_MEDIA; i++){
+                mediaArray.push(igMedia[i]);
+                count ++;
+            }
         }
         return mediaArray
     }
@@ -37,7 +42,7 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
             ? <Loading />
             :
             userMatches.length == 0
-                ? <p>No matches yet</p>
+                ? <p>Still retrieving matches...</p>
                 :
                 <div className="matching" id="matching">
                     {
@@ -107,6 +112,20 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
                                 }
                                 <p></p>
                                 {
+                                    match.userInfo.spotify_artists
+                                        ?
+                                        <div>
+                                            <p className="card-text match-interests">Top Spotify Artists: </p>
+                                            {match.userInfo.spotify_artists.map((artist, index) => (
+                                                <div key={index}>
+                                                 <p>{`${index + 1}. ${artist.name}`}</p>
+                                              </div>
+                                            ))}
+                                        </div>
+                                        : null
+                                }
+                                <p></p>
+                                {
                                     Array.isArray(match.interestsInfo.hobbies) && match.interestsInfo.hobbies.length > 0
                                         ?
                                         <div>
@@ -152,6 +171,7 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
                             ? null
                             : <button className="login-btn" onClick={() => {
                                 const newOffset = parseInt(matchOffset) + parseInt(matchLimit);
+                                console.log("offset", newOffset)
                                 getMatchesForUser(matchLimit, newOffset)
                                 setOffset(newOffset)
                             }}>

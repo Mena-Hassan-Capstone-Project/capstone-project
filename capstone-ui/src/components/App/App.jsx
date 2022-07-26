@@ -17,11 +17,12 @@ import Matching from "../Matching/Matching";
 import NotFound from "../NotFound/NotFound";
 import Loading from "../Loading/Loading";
 import InstaRedirect from "../InstaRedirect/InstaRedirect";
+import SpotifyRedirect from "../SpotifyRedirect/SpotifyRedirect";
 
 export default function App() {
   const API_KEY = "658568773162c3aaffcb3981d4f5587b";
   const INSTA_APP_ID = "390997746348889";
-  const RED_URI = "https://localhost:3000/insta-redirect";
+  const INSTA_RED_URI = "https://localhost:3000/insta-redirect";
   const INSTA_APP_SECRET = "facb6a96ac24a92b82f0a6b254c0ec69";
   const MOVIE_SEARCH_URL = `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=`;
   const TV_SEARCH_URL = `https://api.themoviedb.org/3/search/tv?api_key=${API_KEY}&query=`;
@@ -41,7 +42,31 @@ export default function App() {
   const matchLimit = 2;
   const [fetchingMatches, setFetchingMatches] = useState(false);
 
+  const [token, setToken] = useState("")
+
   const PORT = '3001';
+
+  const SCOPE = "user-top-read user-read-private user-read-email user-read-recently-played"
+  const SPOTIFY_CLIENT_ID = "070101f8397d43e6b9c27755bd380617";
+  const SPOTIFY_CLIENT_SECRET = "1c61ca64fa8f4ea7b8463d5867be592d";
+  const AUTH_ENDPOINT = "https://accounts.spotify.com/authorize"
+  const SPOTIFY_RED_URI = "https://localhost:3000/spotify-redirect";
+  const RESPONSE_TYPE = "token"
+  const AUTH_URL = `${AUTH_ENDPOINT}?client_id=${SPOTIFY_CLIENT_ID}&redirect_uri=${SPOTIFY_RED_URI}&response_type=${RESPONSE_TYPE}&scope=${SCOPE}`
+
+    React.useEffect(() => {
+      console.log("spotify useeffect")
+
+      if (window.location.href.includes("access_token")) {
+          const queryString = window.location.href;
+          const token = queryString.split("access_token=").pop().split("&token_type")[0];
+          console.log("token", token)
+          getSpotifyUser(token)
+          window.localStorage.setItem("token", token)
+      }
+      setToken(token)
+
+  }, [])
 
   //update matches when user info changes
   React.useEffect(() => {
@@ -49,14 +74,14 @@ export default function App() {
       if (userMatches.length == 0 && !fetchingMatches) {
         createMatches({})
       }
-      getMatchesForUser(matchLimit, 0);
+      getMatchesForUser(matchLimit + matchOffset, 0);
     }
   }, [userInfo]);
 
   React.useEffect(() => {
     setIsFetching(true);
     if (window.performance) {
-      if (window.localStorage.getItem('userInfo') && !userInfo && String(window.performance.getEntriesByType("navigation")[0].type) === "reload") {
+      if (!isFetching && window.localStorage.getItem('userInfo') && !userInfo && String(window.performance.getEntriesByType("navigation")[0].type) === "reload") {
         refreshLogin();
       }
     }
@@ -73,6 +98,7 @@ export default function App() {
     setIsFetching(true);
     const loggedInUser = window.localStorage.getItem('userInfo');
     if (loggedInUser) {
+      console.log("refresh login")
       const foundUser = JSON.parse(loggedInUser);
       axios.post(`https://localhost:${PORT}/login`, {
         email: foundUser.email,
@@ -82,13 +108,40 @@ export default function App() {
           setUserInfo(response.data.userInfo);
           setUserMatches([]);
           setTimeout(getInterestsFromUser, 500)
-          getMatchesForUser(matchLimit, 0)
+          getMatchesForUser(matchLimit + matchOffset, 0)
           setTimeout(setFetchingFalse, 1500)
         })
         .catch(function (err) {
           console.log(err);
         })
     }
+  }
+
+  function getSpotifyUser(access_token) {
+    setIsFetching(true);
+    axios.get("https://api.spotify.com/v1/me/top/artists?&limit=5", {
+      headers: {
+          Authorization: `Bearer ${access_token}`
+      }
+      })
+      .then(function (response) {
+        let tracks = response.data.items
+        console.log("spotify response", tracks)
+        axios.post(`https://localhost:${PORT}/user/update`, {
+              spotify_artists : tracks
+            }).then(function (response) {
+              console.log("update response", response.data)
+              setIsFetching(false);
+            })
+      })
+      .catch(function (err) {
+        console.log(err);
+      })
+  }
+
+  async function getSpotifyInfo() {
+    console.log("get spotify info")
+    window.open(AUTH_URL, "_blank").focus();
   }
 
   async function getInstaUsername(accessToken) {
@@ -103,7 +156,7 @@ export default function App() {
   // Invoke this function on button click or whatever other use case
   async function setupInsta() {
     let appId = INSTA_APP_ID;
-    let url = `https://api.instagram.com/oauth/authorize?client_id=${appId}&redirect_uri=${RED_URI}&scope=user_profile,user_media&response_type=code`;
+    let url = `https://api.instagram.com/oauth/authorize?client_id=${appId}&redirect_uri=${INSTA_RED_URI}&scope=user_profile,user_media&response_type=code`;
     window.open(url, "_blank").focus();
   }
 
@@ -114,7 +167,7 @@ export default function App() {
     const code = queryString.split("?code=")[1].slice(0, -2);
     await axios.post(`https://localhost:${PORT}/init-insta`, {
       code: code,
-      redirectUri: RED_URI, // needs to be registered at fb developer console
+      redirectUri: INSTA_RED_URI, // needs to be registered at fb developer console
     })
       .then(({ data }) => {
         if (data.accessToken) {
@@ -213,8 +266,9 @@ export default function App() {
 
   //creates matches for current user
   async function createMatches(params) {
+    console.log("creatematches")
     setFetchingMatches(true)
-    if (userInfo && userInfo != 0) {
+    if (userInfo && userInfo != "") {
       await axios.post(`https://localhost:${PORT}/matches`, {
         params: params
       })
@@ -266,10 +320,8 @@ export default function App() {
   }
 
   const goToMatching = () => {
-    if (userMatches.length === 0) {
-      getMatchesForUser(matchLimit, 0);
-      createMatches({})
-    }
+    getMatchesForUser(matchLimit, 0);
+    createMatches({})
     navigate('/user/matching');
   }
 
@@ -293,13 +345,15 @@ export default function App() {
   //retrieves matches for user
   //sets user info
   async function getMatchesForUser(limit, offset) {
-    await axios.get(`https://localhost:${PORT}/matches`, {
+    console.log("getting matches for user")
+      await axios.get(`https://localhost:${PORT}/matches`, {
       params: {
         limit: limit,
         offset: offset
       }
     })
       .then(resp => {
+        console.log("got matches", resp.data)
         if (resp.data.typeStatus == "success") {
           if (offset == 0) {
             setUserMatches(resp.data.matchesInfo);
@@ -326,6 +380,21 @@ export default function App() {
       .catch(function (err) {
         console.log(err);
         window.localStorage.clear();
+        setIsFetching(false)
+      })
+  }
+
+  //log user out
+  function refreshLogout() {
+    axios.post(`https://localhost:${PORT}/logout`, {
+    })
+      .then(function (response) {
+        setUserInfo("");
+        setUserMatches([]);
+        setIsFetching(false)
+      })
+      .catch(function (err) {
+        console.log(err);
         setIsFetching(false)
       })
   }
@@ -449,13 +518,13 @@ export default function App() {
       .then(function (response) {
         if (response.data.typeStatus == "danger") {
           alert("Login error");
+          navigate('/login')
         }
         else {
           setUserInfo(response.data.userInfo);
           window.localStorage.setItem('userInfo', JSON.stringify({ email: email, password: password, objectId: response.data.userInfo.objectId }));
           setTimeout(refreshLogin, 500)
           setUserMatches([]);
-          setSelectedHobbyOption(null)
           setOffset(0)
           navigate('/user/basic');
         }
@@ -463,6 +532,7 @@ export default function App() {
       .catch(function (err) {
         console.log(err);
         window.localStorage.clear();
+        navigate('/login');
       })
   }
 
@@ -544,7 +614,7 @@ export default function App() {
             path="/user/interests/edit"
             element={<InterestsEdit userInfo={userInfo} onClickBasic={goToBasic} onClickMedia={goToMedia} saveInterests={saveInterests} getMovieSearch={getMovieSearch} movie={movie}
               removeMovie={removeMovie} isFetching={isFetching} getTVSearch={getTVSearch} TV={TV} removeShow={removeShow} selectedHobbyOption={selectedHobbyOption}
-              setSelectedHobbyOption={setSelectedHobbyOption} hobbiesList={hobbiesList} removeHobby={removeHobby} addNewHobby={addNewHobby}></InterestsEdit>}
+              setSelectedHobbyOption={setSelectedHobbyOption} hobbiesList={hobbiesList} removeHobby={removeHobby} addNewHobby={addNewHobby} onClickSpotify = {getSpotifyInfo}></InterestsEdit>}
           />
           <Route
             path="/user/media"
@@ -563,7 +633,10 @@ export default function App() {
             {<NotFound />}
           />
           <Route path="/insta-redirect" element=
-            {<InstaRedirect />}
+            {<InstaRedirect goToLogin={goToLogin}/>}
+          />
+          <Route path="/spotify-redirect" element=
+            {<SpotifyRedirect goToLogin={goToLogin}/>}
           />
           <Route
             path="/loading"

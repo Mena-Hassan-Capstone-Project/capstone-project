@@ -31,6 +31,7 @@ const WEIGHT_TAGS = 0.15;
 const INSTA_APP_ID = "390997746348889";
 const INSTA_APP_SECRET = "facb6a96ac24a92b82f0a6b254c0ec69";
 
+
 function handleParseError(err, res) {
     if (err?.code) {
         switch (err.code) {
@@ -58,7 +59,9 @@ async function getUserInfo(user) {
     const hobbyQuery = new Parse.Query(Hobby);
     hobbyQuery.equalTo("User", user);
     const userHobbies = await hobbyQuery.find();
-    return ({ movies: userMovies, shows: userShows, hobbies: userHobbies, tags: user.get("tags") });
+
+
+    return ({ movies: userMovies, shows: userShows, hobbies: userHobbies, tags: user.get("tags"), music: user.get("spotify-artists") });
 }
 
 function compareArrs(arr1, arr2, weight) {
@@ -169,6 +172,7 @@ async function getMatches(currentUser) {
     const query = new Parse.Query(Parse.User);
     query.notEqualTo("objectId", currentUser.id);
     const entries = await query.find();
+    console.log("entries", entries.length)
 
     const Match = Parse.Object.extend("Match");
     let count = 0;
@@ -189,6 +193,7 @@ async function getMatches(currentUser) {
         const tagsInfo = { user_1: currentUserInfo.tags, user_2: matchInfo.tags };
         const matchScore = getScore(movieInfo, showInfo, hobbiesInfo, tagsInfo);
 
+        console.log("got create match info")
         //check if match is already in database
         const matchQuery = new Parse.Query(Match);
         matchQuery.equalTo("user_1", currentUser.id);
@@ -212,10 +217,12 @@ async function getMatches(currentUser) {
                 createNewMatch(match2, matchScore, entry.id, currentUser.id)
             }
         }
+        console.log("matches created")
     })
 }
 
 async function retrieveMatchData(limit, offset, currentUser) {
+    console.log("retrieving matches")
     const Match = Parse.Object.extend("Match");
     const matchQuery = new Parse.Query(Match);
 
@@ -225,6 +232,7 @@ async function retrieveMatchData(limit, offset, currentUser) {
     matchQuery.skip(parseInt(offset));
 
     const matchResults = await matchQuery.find();
+    console.log("got matchresults")
 
     let usersInfo = [];
     let scoreInfo = [];
@@ -248,6 +256,7 @@ async function retrieveMatchData(limit, offset, currentUser) {
             interestsInfo: interestsInfo[i]
         };
     });
+    console.log("got match info")
     return ({ matchesInfo: matchesInfo, matchResults: matchResults, matchMessage: "Matches Retrieved!", typeStatus: "success" });
 }
 
@@ -265,7 +274,6 @@ app.post('/login', async (req, res) => {
         res.send({ userInfo: user, loginMessage: "User logged in!", typeStatus: "success", infoUser: infoUser });
     } catch (error) {
         handleParseError(error, res);
-        res.send({ loginMessage: error.message, typeStatus: "danger", infoUser: infoUser });
     }
 })
 
@@ -524,6 +532,9 @@ app.post('/user/update', async (req, res) => {
             if (infoUser.photos) {
                 currentUser.set("ig_media", infoUser.photos);
             }
+            if (infoUser.spotify_artists) {
+                currentUser.set("spotify_artists", infoUser.spotify_artists);
+            }
             await currentUser.save();
             res.send({ userInfo: currentUser, updateInfoMessage: "User basic info saved!", typeStatus: "success", infoUser: infoUser });
         } else {
@@ -584,7 +595,6 @@ function requestToken(res, redirect_uri, code, userInfo, params) {
         }
     },
         function (err, httpResponse, body) {
-            //handleParseError(err);
             let result = JSON.parse(body);
             if (result.access_token) {
                 // Got access token. Parse string response to JSON
