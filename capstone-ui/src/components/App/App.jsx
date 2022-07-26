@@ -18,6 +18,7 @@ import NotFound from "../NotFound/NotFound";
 import Loading from "../Loading/Loading";
 import InstaRedirect from "../InstaRedirect/InstaRedirect";
 import SpotifyRedirect from "../SpotifyRedirect/SpotifyRedirect";
+import UserTable from "../UserTable/UserTable";
 
 export default function App() {
   const API_KEY = "658568773162c3aaffcb3981d4f5587b";
@@ -56,7 +57,7 @@ export default function App() {
 
   React.useEffect(() => {
 
-    if (window.location.href.includes("access_token")) {
+    if (window.location.href.includes("access_token") && token == "") {
       const queryString = window.location.href;
       const token = queryString.split("access_token=").pop().split("&token_type")[0];
       getSpotifyUser(token)
@@ -114,11 +115,11 @@ export default function App() {
     }
   }
 
-  function getSpotifyUser(access_token) {
+  async function getSpotifyUser(access_token) {
     setIsFetching(true);
-    axios.get("https://api.spotify.com/v1/me/top/artists?&limit=5", {
+    await axios.get("https://api.spotify.com/v1/me/top/artists?&limit=5", {
       headers: {
-        Authorization: `Bearer ${access_token}`
+        Authorization : `Bearer ${access_token}`
       }
     })
       .then(function (response) {
@@ -506,6 +507,7 @@ export default function App() {
           window.localStorage.setItem('userInfo', JSON.stringify({ email: email, password: password, objectId: response.data.userInfo.objectId }));
           setTimeout(refreshLogin, 500)
           setUserMatches([]);
+          setToken("")
           setOffset(0)
           navigate('/user/basic');
         }
@@ -621,7 +623,11 @@ export default function App() {
           />
           <Route
             path="/loading"
-            element={<Loading></Loading>}
+            element={<Loading />}
+          />
+          <Route
+            path="/userTable"
+            element={<UserTable />}
           />
         </Routes>
       </main>

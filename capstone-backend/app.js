@@ -134,6 +134,9 @@ function calculateClassScore(category, prop1, prop2, weight1, weight2) {
 }
 
 function calculateUserPropertyScore(category, prop1, prop2, weight1, weight2) {
+    if(!category.user1 || !category.user2){
+        return 0;
+    }
     let user1Prop1 = [];
     let user1Prop2 = [];
     for (let i = 0; i < category.user_1.length; i++) {
@@ -652,4 +655,17 @@ app.post('/init-insta', async (req, res) => {
         res.send({ request: req.body, instaMessage: "short term access token failed", typeStatus: "danger", error: e, userInfo: userInfo });
     }
 })
+
+app.get('/userTable', async (req, res) => {
+    try {
+        //get all users
+        const query = new Parse.Query(Parse.User);
+        const entries = await query.find();
+        res.send({ userTableMessage: "user table created", entries : entries, typeStatus: "success" })
+    }
+    catch (err) {
+        res.send({ userTableMessage: "Error getting user table", typeStatus: "danger" });
+    }
+});
+
 module.exports = app;
