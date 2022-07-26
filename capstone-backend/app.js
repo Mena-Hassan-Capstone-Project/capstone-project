@@ -156,6 +156,15 @@ async function updateMatch(params, currentUser) {
     }
 }
 
+async function createNewMatch(match, matchScore, user1, user2){
+    match.set("score", matchScore);
+    match.set("liked", false);
+    match.set("user_1", user1);
+    match.set("user_2", user2);
+    match.set("display_private", false);
+    await match.save();
+}
+
 async function getMatches(currentUser) {
     const query = new Parse.Query(Parse.User);
     query.notEqualTo("objectId", currentUser.id);
@@ -199,19 +208,8 @@ async function getMatches(currentUser) {
             const match = new Match();
             const match2 = new Match();
             if (matchScore) {
-                match.set("score", matchScore);
-                match.set("liked", false);
-                match.set("user_1", currentUser.id);
-                match.set("user_2", entry.id);
-                match.set("display_private", false);
-                await match.save();
-
-                match2.set("score", matchScore);
-                match2.set("liked", false);
-                match2.set("user_2", currentUser.id);
-                match2.set("user_1", entry.id);
-                match2.set("display_private", false);
-                await match2.save();
+                createNewMatch(match, matchScore, currentUser.id, entry.id)
+                createNewMatch(match2, matchScore, entry.id, currentUser.id)
             }
         }
     })
@@ -258,7 +256,7 @@ app.post('/login', async (req, res) => {
     const infoUser = req.body;
 
     try {
-        var currentUser = Parse.User.current();
+        const currentUser = Parse.User.current();
         if (currentUser) {
             // do stuff with the user
             await Parse.User.logOut();
@@ -283,7 +281,7 @@ app.post('/logout', async (req, res) => {
 
 app.post('/signup', async (req, res) => {
     Parse.User.enableUnsafeCurrentUser();
-    var currentUser = Parse.User.current();
+    const currentUser = Parse.User.current();
     if (currentUser) {
         await Parse.User.logOut();
     }
@@ -486,7 +484,7 @@ app.post('/user/interests', async (req, res) => {
                     if (!currentHobbies.options.includes(infoInterests.interests.hobby.name)) {
                         currentHobbies.options.push(infoInterests.interests.hobby.name);
                         hobbiesList.hobbies[infoInterests.interests.hobby.hobbyIndex] = currentHobbies;
-                        var newData = JSON.stringify(hobbiesList);
+                        const newData = JSON.stringify(hobbiesList);
                         fs.writeFile('data/hobbies.json', newData, err => {
                             // error checking
                             if (err) throw err;
