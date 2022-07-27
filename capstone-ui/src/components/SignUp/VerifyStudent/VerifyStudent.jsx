@@ -1,8 +1,9 @@
 import * as React from "react"
 import "./VerifyStudent.css"
+import Select from 'react-select'
 
+export default function VerifyStudent({ onClickVerify, collegeList, selectedCollegeOption, setSelectedCollegeOption }) {
 
-export default function VerifyStudent({ onClickVerify }) {
   return (
     <div className="verify" id="verify">
       <h1>Confirm You're a Student</h1>
@@ -10,7 +11,22 @@ export default function VerifyStudent({ onClickVerify }) {
       <br />
       <input className="input signup-input" id="lastName" type="text" placeholder="Last Name" required />
       <br />
-      <input className="input signup-input" id="university" type="text" placeholder="University" required />
+      {
+        collegeList
+          ?
+          <div>
+            <p className="verify-title">Select University:</p>
+            <Select id="university-select"
+              className="verify-search-select"
+              defaultValue={selectedCollegeOption}
+              onChange={setSelectedCollegeOption}
+              options={collegeList.map
+                ((college, index) => {
+                  return { label: college.institution, value: index };
+                })} />
+          </div>
+          : null
+      }
       <br />
       <div>
         <input className="input signup-input" placeholder="DOB" id="DOB" type="date" required />

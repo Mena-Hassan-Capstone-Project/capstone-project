@@ -6,7 +6,7 @@ import { FaRegHeart } from "react-icons/fa";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { Carousel } from 'react-responsive-carousel'
 
-export default function Matching({ isFetching, userMatches, getMatchesForUser, matchOffset, setOffset, matchLimit, createMatches, goToMatching, setIsFetching }) {
+export default function Matching({ isFetching, userMatches, getMatchesForUser, matchOffset, setOffset, matchLimit, createMatches, goToMatching, setIsFetching, goToSuggest, setSuggestMatch }) {
 
     //add max 10 photos to match's media carousel
     const MAX_MEDIA = 10
@@ -142,7 +142,7 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
                                         <div>
                                             <p><b>{`${match.userInfo.preferredName} liked you! Contact ${match.userInfo.preferredName}:`}</b></p>
                                             <p>{`Phone number: ${formatPhoneNumber(match.userInfo.phoneNum)}`}</p>
-                                            {match.userInfo.ig_username ? <p>{`Instagram Username : ${match.userInfo.ig_username}`}</p> : null}
+                                            {match.userInfo.ig_username ? <a className="p-link" href={`https://www.instagram.com/${match.userInfo.ig_username}`} target="_blank">{`Instagram Username : ${match.userInfo.ig_username}`}</a> : null}
                                         </div>
                                         :
                                         null
@@ -162,6 +162,11 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
                                             : <FaRegHeart />
                                     }
                                 </button>}
+                                <br />
+                                <button className="suggest-btn" onClick={() => {
+                                    setSuggestMatch(match.userInfo);
+                                    goToSuggest();
+                                }}>Get Suggestions</button>
                             </div>
                         ))
                     }
@@ -170,7 +175,6 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
                             ? null
                             : <button className="login-btn" onClick={() => {
                                 const newOffset = parseInt(matchOffset) + parseInt(matchLimit);
-                                console.log("offset", newOffset)
                                 getMatchesForUser(matchLimit, newOffset)
                                 setOffset(newOffset)
                             }}>

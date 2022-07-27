@@ -2,9 +2,9 @@ import * as React from "react"
 import "./BasicInfoEdit.css"
 import ProfilePhoto from "../../ProfilePhoto/ProfilePhoto"
 import Loading from "../../../Loading/Loading"
+import Select from 'react-select'
 
-
-export default function BasicInfoEdit({ userInfo, onClickInterests, onClickMedia, saveBasicInfo, setUserInfo, isFetching }) {
+export default function BasicInfoEdit({ userInfo, onClickInterests, onClickMedia, saveBasicInfo, setUserInfo, isFetching, selectedMajorOption, setSelectedMajorOption, majorList }) {
 
   return (
     isFetching
@@ -22,11 +22,25 @@ export default function BasicInfoEdit({ userInfo, onClickInterests, onClickMedia
             </div>
           </div>
           <div className="column" >
-            <input className="input basic-input" id="year" type="text" placeholder="Graduation Year" />
+            <input className="input basic-input" id="year" type="text" placeholder="Graduation Year" defaultValue={userInfo.grad_year ? userInfo.grad_year : ""} />
             <br />
-            <input className="input basic-input" id="major" type="text" placeholder="Major" />
+            {
+              majorList
+                ?
+                <div className="major-select">
+                  <p>Major:</p>
+                  <Select id="major-select"
+                    defaultValue={selectedMajorOption}
+                    onChange={setSelectedMajorOption}
+                    options={majorList.majors.map
+                      ((major, index) => {
+                        return { label: major.name, value: index };
+                      })} />
+                </div>
+                : null
+            }
             <br />
-            <input className="input basic-input" id="hometown" type="text" placeholder="Hometown" />
+            <input className="input basic-input" id="hometown" type="text" placeholder="Hometown" defaultValue={userInfo.hometown ? userInfo.hometown : ""} />
             <p className="user-info"><b>Tags: </b></p>
             <div>
               <label className="add-tag">Add Tag: </label>

@@ -19,6 +19,7 @@ import Loading from "../Loading/Loading";
 import InstaRedirect from "../InstaRedirect/InstaRedirect";
 import SpotifyRedirect from "../SpotifyRedirect/SpotifyRedirect";
 import UserTable from "../UserTable/UserTable";
+import Suggestions from "../Suggestions/Suggestions";
 
 export default function App() {
   const API_KEY = "658568773162c3aaffcb3981d4f5587b";
@@ -42,8 +43,14 @@ export default function App() {
   const [matchOffset, setOffset] = useState(0);
   const matchLimit = 2;
   const [fetchingMatches, setFetchingMatches] = useState(false);
+  const [suggestMatch, setSuggestMatch] = useState(false);
 
   const [token, setToken] = useState("")
+
+  const [collegeList, setCollegeList] = useState(null);
+  const [selectedCollegeOption, setSelectedCollegeOption] = useState(null);
+  const [majorList, setMajorList] = useState(null);
+  const [selectedMajorOption, setSelectedMajorOption] = useState(null);
 
   const PORT = '3001';
 
@@ -80,7 +87,7 @@ export default function App() {
   React.useEffect(() => {
     setIsFetching(true);
     if (window.performance) {
-      if (!isFetching && window.localStorage.getItem('userInfo') && !userInfo && String(window.performance.getEntriesByType("navigation")[0].type) === "reload") {
+      if (window.localStorage.getItem('userInfo') && !userInfo && String(window.performance.getEntriesByType("navigation")[0].type) === "reload") {
         refreshLogin();
       }
     }
@@ -119,7 +126,7 @@ export default function App() {
     setIsFetching(true);
     await axios.get("https://api.spotify.com/v1/me/top/artists?&limit=5", {
       headers: {
-        Authorization : `Bearer ${access_token}`
+        Authorization: `Bearer ${access_token}`
       }
     })
       .then(function (response) {
@@ -315,6 +322,10 @@ export default function App() {
     navigate('/user/media');
   }
 
+  const goToSuggest = () => {
+    navigate('/suggest');
+  }
+
   const goToMatching = () => {
     setOffset(0)
     createMatches({})
@@ -474,7 +485,8 @@ export default function App() {
 
     await axios.post(`https://localhost:${PORT}/user/basic`, {
       year: document.getElementById('year').value,
-      major: document.getElementById('major').value,
+      major: selectedMajorOption
+        ? selectedMajorOption.label : null,
       hometown: document.getElementById('hometown').value,
       tags: tags,
     })
@@ -501,21 +513,24 @@ export default function App() {
         if (response.data.typeStatus == "danger") {
           alert("Login error");
           navigate('/login')
+          setIsFetching(false)
         }
         else {
-          setUserInfo(response.data.userInfo);
           window.localStorage.setItem('userInfo', JSON.stringify({ email: email, password: password, objectId: response.data.userInfo.objectId }));
-          setTimeout(refreshLogin, 500)
+          setUserInfo(response.data.userInfo);
+          setMajorList(response.data.majors)
           setUserMatches([]);
           setToken("")
           setOffset(0)
           navigate('/user/basic');
+          setIsFetching(false)
         }
       })
       .catch(function (err) {
         console.log(err);
         window.localStorage.clear();
         navigate('/login');
+        setIsFetching(false);
       })
   }
 
@@ -536,6 +551,7 @@ export default function App() {
       })
         .then(function (response) {
           if (response.data.typeStatus === "success") {
+            setCollegeList(response.data.colleges)
             navigate('/verify');
           }
           setIsFetching(false);
@@ -551,7 +567,8 @@ export default function App() {
     axios.post(`https://localhost:${PORT}/verify`, {
       firstName: document.getElementById('firstName').value,
       lastName: document.getElementById('lastName').value,
-      university: document.getElementById('university').value,
+      university: selectedCollegeOption
+        ? selectedCollegeOption.label : null,
       dob: document.getElementById('DOB').value
     })
       .then(function (response) {
@@ -579,7 +596,7 @@ export default function App() {
           />
           <Route
             path="/verify"
-            element={<VerifyStudent onClickVerify={createVerifyParser}></VerifyStudent>}
+            element={<VerifyStudent onClickVerify={createVerifyParser} collegeList={collegeList} selectedCollegeOption={selectedCollegeOption} setSelectedCollegeOption={setSelectedCollegeOption}></VerifyStudent>}
           />
           <Route
             path="/user/basic"
@@ -587,7 +604,8 @@ export default function App() {
           />
           <Route
             path="/user/basic/edit"
-            element={<BasicInfoEdit userInfo={userInfo} onClickInterests={goToInterests} onClickMedia={goToMedia} saveBasicInfo={saveBasicInfo} setUserInfo={setUserInfo} isFetching={isFetching}></BasicInfoEdit>}
+            element={<BasicInfoEdit userInfo={userInfo} onClickInterests={goToInterests} onClickMedia={goToMedia} saveBasicInfo={saveBasicInfo} setUserInfo={setUserInfo} isFetching={isFetching}
+              selectedMajorOption={selectedMajorOption} setSelectedMajorOption={setSelectedMajorOption} majorList={majorList}></BasicInfoEdit>}
           />
           <Route
             path="/user/interests"
@@ -610,7 +628,7 @@ export default function App() {
           <Route
             path="/user/matching"
             element={<Matching isFetching={isFetching} userMatches={userMatches} getMatchesForUser={getMatchesForUser} matchOffset={matchOffset} setOffset={setOffset} matchLimit={matchLimit}
-              goToMatching={goToMatching} createMatches={createMatches} setIsFetching={setIsFetching}></Matching>}
+              goToMatching={goToMatching} createMatches={createMatches} setIsFetching={setIsFetching} goToSuggest={goToSuggest} setSuggestMatch={setSuggestMatch}></Matching>}
           />
           <Route path="*" element=
             {<NotFound />}
@@ -628,6 +646,10 @@ export default function App() {
           <Route
             path="/userTable"
             element={<UserTable />}
+          />
+          <Route
+            path="/suggest"
+            element={<Suggestions suggestMatch={suggestMatch} userInfo={userInfo} />}
           />
         </Routes>
       </main>

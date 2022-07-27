@@ -14,8 +14,8 @@ const cors = require('cors');
 
 app.use(cors());
 
-const PARSE_APP_ID = "wil1DmHQz4YSzumdV5qg5zqoyuynWwZa5jt11Ceo";
-const PARSE_JS_KEY = "p5aB5jobn5ApbufIKx3FAUjumfqlMqF1uyz4dBYy";
+const PARSE_APP_ID = "jPiXegiDMhfUXP5DI8bwMWuchNVq1hbLHs0yqeoE";
+const PARSE_JS_KEY = "mDaKwWptFrtVGyCixH6FJ9epJqn2Z6TuvznIY6H0";
 
 Parse.initialize(PARSE_APP_ID, PARSE_JS_KEY);
 Parse.serverURL = 'http://parseapi.back4app.com/';
@@ -134,7 +134,7 @@ function calculateClassScore(category, prop1, prop2, weight1, weight2) {
 }
 
 function calculateUserPropertyScore(category, prop1, prop2, weight1, weight2) {
-    if(!category.user1 || !category.user2){
+    if (!category.user1 || !category.user2) {
         return 0;
     }
     let user1Prop1 = [];
@@ -302,13 +302,10 @@ app.post('/login', async (req, res) => {
     const infoUser = req.body;
 
     try {
-        const currentUser = Parse.User.current();
-        if (currentUser) {
-            // do stuff with the user
-            await Parse.User.logOut();
-        }
         const user = await Parse.User.logIn(infoUser.email, infoUser.password);
-        res.send({ userInfo: user, loginMessage: "User logged in!", typeStatus: "success", infoUser: infoUser });
+        const rawdata = fs.readFileSync('data/majors.json');
+        const majors = JSON.parse(rawdata);
+        res.send({ userInfo: user, loginMessage: "User logged in!", typeStatus: "success", infoUser: infoUser, majors: majors });
     } catch (error) {
         handleParseError(error, res);
     }
@@ -339,10 +336,13 @@ app.post('/signup', async (req, res) => {
     user.set("preferredName", infoUser.preferredName);
     user.set("phoneNum", infoUser.phoneNum);
 
+    const rawdata = fs.readFileSync('data/us_institutions.json');
+    const colleges = JSON.parse(rawdata);
+
     try {
         await user.signUp();
         await Parse.User.logIn(infoUser.email, infoUser.password);
-        res.send({ signupMessage: "User signed up!", typeStatus: 'success', infoUser: infoUser });
+        res.send({ signupMessage: "User signed up!", typeStatus: 'success', infoUser: infoUser, colleges: colleges });
     }
     catch (error) {
         res.send({ signupMessage: error.message, typeStatus: 'danger', infoUser: infoUser });
@@ -661,7 +661,7 @@ app.get('/userTable', async (req, res) => {
         //get all users
         const query = new Parse.Query(Parse.User);
         const entries = await query.find();
-        res.send({ userTableMessage: "user table created", entries : entries, typeStatus: "success" })
+        res.send({ userTableMessage: "user table created", entries: entries, typeStatus: "success" })
     }
     catch (err) {
         res.send({ userTableMessage: "Error getting user table", typeStatus: "danger" });
