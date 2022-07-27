@@ -2,7 +2,7 @@ import * as React from "react"
 import "./InstaRedirect.css"
 
 
-export default function InstaRedirect() {
+export default function InstaRedirect({ goToLogin }) {
   const [counter, setCounter] = React.useState(5);
 
   React.useEffect(() => {
@@ -10,7 +10,7 @@ export default function InstaRedirect() {
   }, [counter]);
 
   setTimeout(function () {
-    window.location.replace('/login');
+    goToLogin()
   }, 5000);
   return (
     <div >

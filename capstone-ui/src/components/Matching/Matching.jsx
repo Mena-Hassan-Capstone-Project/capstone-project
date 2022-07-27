@@ -6,20 +6,24 @@ import { FaRegHeart } from "react-icons/fa";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { Carousel } from 'react-responsive-carousel'
 
-export default function Matching({ isFetching, userMatches, getMatchesForUser, matchOffset, setOffset, matchLimit, createMatches, goToMatching, setIsFetching }) {
+export default function Matching({ isFetching, userMatches, getMatchesForUser, matchOffset, setOffset, matchLimit, createMatches, goToMatching, setIsFetching, goToSuggest, setSuggestMatch }) {
 
     //add max 10 photos to match's media carousel
     const MAX_MEDIA = 10
-    function getMediaArray(media, igMedia){
+    function getMediaArray(media, igMedia) {
         let mediaArray = []
         let count = 0
-        for(let i = 0; i < media.length && count < MAX_MEDIA; i++){
-            mediaArray.push(media[i].data_url);
-            count ++;
+        if (media) {
+            for (let i = 0; i < media.length && count < MAX_MEDIA; i++) {
+                mediaArray.push(media[i].data_url);
+                count++;
+            }
         }
-        for(let i = 0; i < igMedia.length && count < MAX_MEDIA; i++){
-            mediaArray.push(igMedia[i]);
-            count ++;
+        if (igMedia) {
+            for (let i = 0; i < igMedia.length && count < MAX_MEDIA; i++) {
+                mediaArray.push(igMedia[i]);
+                count++;
+            }
         }
         return mediaArray
     }
@@ -37,7 +41,7 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
             ? <Loading />
             :
             userMatches.length == 0
-                ? <p>No matches yet</p>
+                ? <p>Still retrieving matches...</p>
                 :
                 <div className="matching" id="matching">
                     {
@@ -57,17 +61,17 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
                                             </div>
                                             {
                                                 match.userInfo.ig_media ?
-                                                getMediaArray(match.userInfo.media, match.userInfo.ig_media).map((photo, index) => (
-                                                    <div>
-                                                        <img key={index} className="media-carousel" src={photo} />
-                                                    </div>
-                                                ))
-                                                :
-                                                getMediaArray(match.userInfo.media, []).map((photo, index) => (
-                                                    <div>
-                                                        <img key={index} className="media-carousel" src={photo} />
-                                                    </div>
-                                                ))
+                                                    getMediaArray(match.userInfo.media, match.userInfo.ig_media).map((photo, index) => (
+                                                        <div>
+                                                            <img key={index} className="media-carousel" src={photo} />
+                                                        </div>
+                                                    ))
+                                                    :
+                                                    getMediaArray(match.userInfo.media, []).map((photo, index) => (
+                                                        <div>
+                                                            <img key={index} className="media-carousel" src={photo} />
+                                                        </div>
+                                                    ))
                                             }
                                         </Carousel>
                                         : null
@@ -107,6 +111,20 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
                                 }
                                 <p></p>
                                 {
+                                    match.userInfo.spotify_artists
+                                        ?
+                                        <div>
+                                            <p className="card-text match-interests">Top Spotify Artists: </p>
+                                            {match.userInfo.spotify_artists.map((artist, index) => (
+                                                <div key={index}>
+                                                    <p>{`${index + 1}. ${artist.name}`}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        : null
+                                }
+                                <p></p>
+                                {
                                     Array.isArray(match.interestsInfo.hobbies) && match.interestsInfo.hobbies.length > 0
                                         ?
                                         <div>
@@ -124,7 +142,7 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
                                         <div>
                                             <p><b>{`${match.userInfo.preferredName} liked you! Contact ${match.userInfo.preferredName}:`}</b></p>
                                             <p>{`Phone number: ${formatPhoneNumber(match.userInfo.phoneNum)}`}</p>
-                                            {match.userInfo.ig_username ? <p>{`Instagram Username : ${match.userInfo.ig_username}`}</p> : null}
+                                            {match.userInfo.ig_username ? <a className="p-link" href={`https://www.instagram.com/${match.userInfo.ig_username}`} target="_blank">{`Instagram Username : ${match.userInfo.ig_username}`}</a> : null}
                                         </div>
                                         :
                                         null
@@ -144,6 +162,11 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
                                             : <FaRegHeart />
                                     }
                                 </button>}
+                                <br />
+                                <button className="suggest-btn" onClick={() => {
+                                    setSuggestMatch(match.userInfo);
+                                    goToSuggest();
+                                }}>Get Suggestions</button>
                             </div>
                         ))
                     }

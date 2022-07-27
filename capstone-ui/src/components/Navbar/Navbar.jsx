@@ -8,7 +8,7 @@ export default function Navbar({ userInfo, onClickLogout, onClickMatching, goToB
           ? userInfo.preferredName
           : ""}
         </p>
-        <p className="navbar-content" onClick={onClickMatching}>Get Matched!</p>
+       {userInfo.preferredName ? <p className="navbar-content" onClick={onClickMatching}>Get Matched!</p> : null}
         <div className="stick-to-right">
           {
             userInfo

@@ -6,8 +6,7 @@ import Select from 'react-select'
 
 
 export default function InterestsEdit({ userInfo, onClickBasic, onClickMedia, saveInterests, getMovieSearch, movie, removeMovie,
-  isFetching, getTVSearch, TV, removeShow, setSelectedHobbyOption, selectedHobbyOption, hobbiesList, removeHobby, addNewHobby }) {
-  setSelectedHobbyOption(null)
+  isFetching, getTVSearch, TV, removeShow, setSelectedHobbyOption, selectedHobbyOption, hobbiesList, removeHobby, addNewHobby, onClickSpotify }) {
   const [movieClass, setMovieClass] = useState("hidden")
   const [tvClass, setTvClass] = useState("hidden")
   const [hobbyClass, setHobbyClass] = useState("hidden")
@@ -87,7 +86,6 @@ export default function InterestsEdit({ userInfo, onClickBasic, onClickMedia, sa
                 </div>
                 : null
             }
-
             {/* TV Shows */}
             <p className="interests-title">TV Shows:</p>
             {
@@ -117,6 +115,24 @@ export default function InterestsEdit({ userInfo, onClickBasic, onClickMedia, sa
                   <p className="movie-text">{TV.name}</p>
                 </div>
                 : null
+            }
+            {/* Music */}
+            <p className="interests-title">Music:</p>
+            {
+              userInfo.spotify_artists
+                ?
+                <div>
+                  <p><b>Top Spotify Artists:</b></p>
+                  {userInfo.spotify_artists.map((track, index) => (
+                    <div key={index}>
+                      <p><b>{`${index + 1}. ${track.name}`}</b></p>
+                    </div>
+                  ))}
+                </div>
+                :
+                <button className="login-btn" onClick={onClickSpotify}>
+                  Connect to Spotify
+                </button>
             }
 
             {/* Hobbies */}
@@ -177,7 +193,10 @@ export default function InterestsEdit({ userInfo, onClickBasic, onClickMedia, sa
                 </div>
                 : null
             }
-            <button className="login-btn" onClick={() => saveInterests()}>
+            <button className="login-btn" onClick={() => {
+              saveInterests();
+              setSelectedHobbyOption(null);
+            }}>
               Save
             </button>
           </div>

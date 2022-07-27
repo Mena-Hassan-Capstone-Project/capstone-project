@@ -1,0 +1,16 @@
+.event-card {
+    max-height: 1200px;
+    background-color: white;
+    margin-left: 100px;
+    margin-right: 100px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    margin-right: 100px;
+    border-radius: 20px;
+    padding: 5px;
+}
+
+.event-img{
+    max-width: 300px;
+    border-radius: 10px;
+}

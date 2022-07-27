@@ -5,7 +5,6 @@ import Loading from "../../Loading/Loading"
 
 
 export default function Media({ userInfo, onClickBasic, onClickInterests, onClickEditMedia, isFetching, onClickInsta, getInstaPhotos, uploadInstaPhotos }) {
-  const [userData, setUserData] = useState([]);
   return (
     isFetching
       ? <Loading></Loading>
@@ -38,30 +37,36 @@ export default function Media({ userInfo, onClickBasic, onClickInterests, onClic
             {
               userInfo.ig_access_token
                 ?
-                <div className="access-token">
-                  <p>{`Instagram Connected!`}</p>
-                  <button className="insta-btn" onClick={async () => {
-                    const data = await getInstaPhotos(userInfo.ig_access_token);
-                    setUserData(data)
-                    if (!userInfo.ig_media) {
-                      uploadInstaPhotos(data)
-                    }
-                  }}>
-                    Add Instagram Photos to Profile
-                  </button>
-                </div>
+                userInfo.ig_media
+                  ?
+                  <p>Instagram photos added to media!</p>
+                  :
+                  <div className="access-token">
+                    <p>{`Instagram Connected!`}</p>
+                    <button className="insta-btn" onClick={async () => {
+                      const data = await getInstaPhotos(userInfo.ig_access_token);
+                      if (!userInfo.ig_media) {
+                        uploadInstaPhotos(data)
+                      }
+                    }}>
+                      Add Instagram Photos to Profile
+                    </button>
+                  </div>
                 :
-                <button className="login-btn" onClick={onClickInsta}>
+                <button className="insta-btn" onClick={onClickInsta}>
                   Connect to Instagram
                 </button>
             }
             {
-              userData && Array.isArray(userData) ?
-                userData.map((pic, index) => (
-                  <div key={index} className="media-item">
-                    <img src={pic} className="media-img" />
-                  </div>
-                ))
+              userInfo.ig_media
+                ?
+                <div>
+                  {userInfo.ig_media.map((pic, index) => (
+                    <div key={index} className="media-item">
+                      <img src={pic} alt="" className="media-img" />
+                    </div>
+                  ))}
+                </div>
                 : null
             }
           </div>

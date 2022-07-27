@@ -17,11 +17,14 @@ import Matching from "../Matching/Matching";
 import NotFound from "../NotFound/NotFound";
 import Loading from "../Loading/Loading";
 import InstaRedirect from "../InstaRedirect/InstaRedirect";
+import SpotifyRedirect from "../SpotifyRedirect/SpotifyRedirect";
+import UserTable from "../UserTable/UserTable";
+import Suggestions from "../Suggestions/Suggestions";
 
 export default function App() {
   const API_KEY = "658568773162c3aaffcb3981d4f5587b";
   const INSTA_APP_ID = "390997746348889";
-  const RED_URI = "https://localhost:3000/insta-redirect";
+  const INSTA_RED_URI = "https://localhost:3000/insta-redirect";
   const INSTA_APP_SECRET = "facb6a96ac24a92b82f0a6b254c0ec69";
   const MOVIE_SEARCH_URL = `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=`;
   const TV_SEARCH_URL = `https://api.themoviedb.org/3/search/tv?api_key=${API_KEY}&query=`;
@@ -40,8 +43,36 @@ export default function App() {
   const [matchOffset, setOffset] = useState(0);
   const matchLimit = 2;
   const [fetchingMatches, setFetchingMatches] = useState(false);
+  const [suggestMatch, setSuggestMatch] = useState(false);
+
+  const [token, setToken] = useState("")
+
+  const [collegeList, setCollegeList] = useState(null);
+  const [selectedCollegeOption, setSelectedCollegeOption] = useState(null);
+  const [majorList, setMajorList] = useState(null);
+  const [selectedMajorOption, setSelectedMajorOption] = useState(null);
 
   const PORT = '3001';
+
+  const SCOPE = "user-top-read user-read-private user-read-email user-read-recently-played"
+  const SPOTIFY_CLIENT_ID = "070101f8397d43e6b9c27755bd380617";
+  const SPOTIFY_CLIENT_SECRET = "1c61ca64fa8f4ea7b8463d5867be592d";
+  const AUTH_ENDPOINT = "https://accounts.spotify.com/authorize"
+  const SPOTIFY_RED_URI = "https://localhost:3000/spotify-redirect";
+  const RESPONSE_TYPE = "token"
+  const AUTH_URL = `${AUTH_ENDPOINT}?client_id=${SPOTIFY_CLIENT_ID}&redirect_uri=${SPOTIFY_RED_URI}&response_type=${RESPONSE_TYPE}&scope=${SCOPE}`
+
+  React.useEffect(() => {
+
+    if (window.location.href.includes("access_token") && token == "") {
+      const queryString = window.location.href;
+      const token = queryString.split("access_token=").pop().split("&token_type")[0];
+      getSpotifyUser(token)
+      window.localStorage.setItem("token", token)
+    }
+    setToken(token)
+
+  }, [])
 
   //update matches when user info changes
   React.useEffect(() => {
@@ -49,7 +80,7 @@ export default function App() {
       if (userMatches.length == 0 && !fetchingMatches) {
         createMatches({})
       }
-      getMatchesForUser(matchLimit, 0);
+      getMatchesForUser(matchLimit + matchOffset, 0);
     }
   }, [userInfo]);
 
@@ -82,13 +113,37 @@ export default function App() {
           setUserInfo(response.data.userInfo);
           setUserMatches([]);
           setTimeout(getInterestsFromUser, 500)
-          getMatchesForUser(matchLimit, 0)
+          getMatchesForUser(matchLimit + matchOffset, 0)
           setTimeout(setFetchingFalse, 1500)
         })
         .catch(function (err) {
           console.log(err);
         })
     }
+  }
+
+  async function getSpotifyUser(access_token) {
+    setIsFetching(true);
+    await axios.get("https://api.spotify.com/v1/me/top/artists?&limit=5", {
+      headers: {
+        Authorization: `Bearer ${access_token}`
+      }
+    })
+      .then(function (response) {
+        let tracks = response.data.items
+        axios.post(`https://localhost:${PORT}/user/update`, {
+          spotify_artists: tracks
+        }).then(function (response) {
+          setIsFetching(false);
+        })
+      })
+      .catch(function (err) {
+        console.log(err);
+      })
+  }
+
+  async function getSpotifyInfo() {
+    window.open(AUTH_URL, "_blank").focus();
   }
 
   async function getInstaUsername(accessToken) {
@@ -103,7 +158,7 @@ export default function App() {
   // Invoke this function on button click or whatever other use case
   async function setupInsta() {
     let appId = INSTA_APP_ID;
-    let url = `https://api.instagram.com/oauth/authorize?client_id=${appId}&redirect_uri=${RED_URI}&scope=user_profile,user_media&response_type=code`;
+    let url = `https://api.instagram.com/oauth/authorize?client_id=${appId}&redirect_uri=${INSTA_RED_URI}&scope=user_profile,user_media&response_type=code`;
     window.open(url, "_blank").focus();
   }
 
@@ -114,7 +169,7 @@ export default function App() {
     const code = queryString.split("?code=")[1].slice(0, -2);
     await axios.post(`https://localhost:${PORT}/init-insta`, {
       code: code,
-      redirectUri: RED_URI, // needs to be registered at fb developer console
+      redirectUri: INSTA_RED_URI, // needs to be registered at fb developer console
     })
       .then(({ data }) => {
         if (data.accessToken) {
@@ -141,6 +196,7 @@ export default function App() {
               accessToken: accessToken,
               username: username
             }).then(function (response) {
+              setUserInfo({ ...userInfo, ig_access_token: accessToken, ig_username: username })
               setIsFetching(false);
             })
           })
@@ -156,6 +212,7 @@ export default function App() {
       photos: photos
     }).then(function (response) {
       setIsFetching(false);
+      setUserInfo({ ...userInfo, ig_media: photos })
     })
   }
 
@@ -214,7 +271,7 @@ export default function App() {
   //creates matches for current user
   async function createMatches(params) {
     setFetchingMatches(true)
-    if (userInfo && userInfo != 0) {
+    if (userInfo && userInfo != "") {
       await axios.post(`https://localhost:${PORT}/matches`, {
         params: params
       })
@@ -265,11 +322,14 @@ export default function App() {
     navigate('/user/media');
   }
 
+  const goToSuggest = () => {
+    navigate('/suggest');
+  }
+
   const goToMatching = () => {
-    if (userMatches.length === 0) {
-      getMatchesForUser(matchLimit, 0);
-      createMatches({})
-    }
+    setOffset(0)
+    createMatches({})
+    getMatchesForUser(matchLimit, 0);
     navigate('/user/matching');
   }
 
@@ -293,23 +353,25 @@ export default function App() {
   //retrieves matches for user
   //sets user info
   async function getMatchesForUser(limit, offset) {
-    await axios.get(`https://localhost:${PORT}/matches`, {
-      params: {
-        limit: limit,
-        offset: offset
-      }
-    })
-      .then(resp => {
-        if (resp.data.typeStatus == "success") {
-          if (offset == 0) {
-            setUserMatches(resp.data.matchesInfo);
-          }
-          else if (userMatches.length >= matchLimit && resp.data.matchesInfo[0] && !userMatches.includes(resp.data.matchesInfo[0])) {
-            let newMatches = userMatches.concat(resp.data.matchesInfo);
-            setUserMatches(newMatches);
-          }
+    if (!fetchingMatches) {
+      await axios.get(`https://localhost:${PORT}/matches`, {
+        params: {
+          limit: limit,
+          offset: offset
         }
-      });
+      })
+        .then(resp => {
+          if (resp.data.typeStatus == "success") {
+            if (offset == 0) {
+              setUserMatches(resp.data.matchesInfo);
+            }
+            else if (userMatches.length >= matchLimit && resp.data.matchesInfo[0] && !userMatches.includes(resp.data.matchesInfo[0])) {
+              let newMatches = userMatches.concat(resp.data.matchesInfo);
+              setUserMatches(newMatches);
+            }
+          }
+        });
+    }
   }
 
   //log user out
@@ -423,7 +485,8 @@ export default function App() {
 
     await axios.post(`https://localhost:${PORT}/user/basic`, {
       year: document.getElementById('year').value,
-      major: document.getElementById('major').value,
+      major: selectedMajorOption
+        ? selectedMajorOption.label : null,
       hometown: document.getElementById('hometown').value,
       tags: tags,
     })
@@ -449,20 +512,25 @@ export default function App() {
       .then(function (response) {
         if (response.data.typeStatus == "danger") {
           alert("Login error");
+          navigate('/login')
+          setIsFetching(false)
         }
         else {
-          setUserInfo(response.data.userInfo);
           window.localStorage.setItem('userInfo', JSON.stringify({ email: email, password: password, objectId: response.data.userInfo.objectId }));
-          setTimeout(refreshLogin, 500)
+          setUserInfo(response.data.userInfo);
+          setMajorList(response.data.majors)
           setUserMatches([]);
-          setSelectedHobbyOption(null)
+          setToken("")
           setOffset(0)
           navigate('/user/basic');
+          setIsFetching(false)
         }
       })
       .catch(function (err) {
         console.log(err);
         window.localStorage.clear();
+        navigate('/login');
+        setIsFetching(false);
       })
   }
 
@@ -483,6 +551,7 @@ export default function App() {
       })
         .then(function (response) {
           if (response.data.typeStatus === "success") {
+            setCollegeList(response.data.colleges)
             navigate('/verify');
           }
           setIsFetching(false);
@@ -498,7 +567,8 @@ export default function App() {
     axios.post(`https://localhost:${PORT}/verify`, {
       firstName: document.getElementById('firstName').value,
       lastName: document.getElementById('lastName').value,
-      university: document.getElementById('university').value,
+      university: selectedCollegeOption
+        ? selectedCollegeOption.label : null,
       dob: document.getElementById('DOB').value
     })
       .then(function (response) {
@@ -526,7 +596,7 @@ export default function App() {
           />
           <Route
             path="/verify"
-            element={<VerifyStudent onClickVerify={createVerifyParser}></VerifyStudent>}
+            element={<VerifyStudent onClickVerify={createVerifyParser} collegeList={collegeList} selectedCollegeOption={selectedCollegeOption} setSelectedCollegeOption={setSelectedCollegeOption}></VerifyStudent>}
           />
           <Route
             path="/user/basic"
@@ -534,7 +604,8 @@ export default function App() {
           />
           <Route
             path="/user/basic/edit"
-            element={<BasicInfoEdit userInfo={userInfo} onClickInterests={goToInterests} onClickMedia={goToMedia} saveBasicInfo={saveBasicInfo} setUserInfo={setUserInfo} isFetching={isFetching}></BasicInfoEdit>}
+            element={<BasicInfoEdit userInfo={userInfo} onClickInterests={goToInterests} onClickMedia={goToMedia} saveBasicInfo={saveBasicInfo} setUserInfo={setUserInfo} isFetching={isFetching}
+              selectedMajorOption={selectedMajorOption} setSelectedMajorOption={setSelectedMajorOption} majorList={majorList}></BasicInfoEdit>}
           />
           <Route
             path="/user/interests"
@@ -544,7 +615,7 @@ export default function App() {
             path="/user/interests/edit"
             element={<InterestsEdit userInfo={userInfo} onClickBasic={goToBasic} onClickMedia={goToMedia} saveInterests={saveInterests} getMovieSearch={getMovieSearch} movie={movie}
               removeMovie={removeMovie} isFetching={isFetching} getTVSearch={getTVSearch} TV={TV} removeShow={removeShow} selectedHobbyOption={selectedHobbyOption}
-              setSelectedHobbyOption={setSelectedHobbyOption} hobbiesList={hobbiesList} removeHobby={removeHobby} addNewHobby={addNewHobby}></InterestsEdit>}
+              setSelectedHobbyOption={setSelectedHobbyOption} hobbiesList={hobbiesList} removeHobby={removeHobby} addNewHobby={addNewHobby} onClickSpotify={getSpotifyInfo}></InterestsEdit>}
           />
           <Route
             path="/user/media"
@@ -557,17 +628,28 @@ export default function App() {
           <Route
             path="/user/matching"
             element={<Matching isFetching={isFetching} userMatches={userMatches} getMatchesForUser={getMatchesForUser} matchOffset={matchOffset} setOffset={setOffset} matchLimit={matchLimit}
-              goToMatching={goToMatching} createMatches={createMatches} setIsFetching={setIsFetching}></Matching>}
+              goToMatching={goToMatching} createMatches={createMatches} setIsFetching={setIsFetching} goToSuggest={goToSuggest} setSuggestMatch={setSuggestMatch}></Matching>}
           />
           <Route path="*" element=
             {<NotFound />}
           />
           <Route path="/insta-redirect" element=
-            {<InstaRedirect />}
+            {<InstaRedirect goToLogin={goToLogin} />}
+          />
+          <Route path="/spotify-redirect" element=
+            {<SpotifyRedirect goToLogin={goToLogin} />}
           />
           <Route
             path="/loading"
-            element={<Loading></Loading>}
+            element={<Loading />}
+          />
+          <Route
+            path="/userTable"
+            element={<UserTable />}
+          />
+          <Route
+            path="/suggest"
+            element={<Suggestions suggestMatch={suggestMatch} userInfo={userInfo} />}
           />
         </Routes>
       </main>
