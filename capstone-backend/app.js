@@ -1,6 +1,7 @@
 'use strict';
 const Parse = require('parse/node');
 const request = require('request');
+const config = require('config');
 const express = require('express');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
@@ -14,24 +15,14 @@ const cors = require('cors');
 
 app.use(cors());
 
-const PARSE_APP_ID = "jPiXegiDMhfUXP5DI8bwMWuchNVq1hbLHs0yqeoE";
-const PARSE_JS_KEY = "mDaKwWptFrtVGyCixH6FJ9epJqn2Z6TuvznIY6H0";
+const PARSE_APP_ID = config.get('PARSE_KEYS.PARSE_APP_ID');
+const PARSE_JS_KEY = config.get('PARSE_KEYS.PARSE_JS_KEY');
 
 Parse.initialize(PARSE_APP_ID, PARSE_JS_KEY);
 Parse.serverURL = 'http://parseapi.back4app.com/';
 
-const WEIGHT_MOVIE_GENRES = 0.12;
-const WEIGHT_MOVIE_TITLE = 0.03;
-const WEIGHT_SHOW_GENRES = 0.12;
-const WEIGHT_SHOW_TITLE = 0.03;
-const WEIGHT_HOBBY_CATEGORY = 0.22;
-const WEIGHT_HOBBY_NAMES = 0.8;
-const WEIGHT_MUSIC_GENRES = 0.18;
-const WEIGHT_MUSIC_ARTIST = 0.07;
-const WEIGHT_TAGS = 0.05;
-
-const INSTA_APP_ID = "390997746348889";
-const INSTA_APP_SECRET = "facb6a96ac24a92b82f0a6b254c0ec69";
+const INSTA_APP_ID = config.get('INSTA_KEYS.INSTA_APP_ID');
+const INSTA_APP_SECRET = config.get('INSTA_KEYS.INSTA_APP_SECRET');
 
 
 function handleParseError(err, res) {
@@ -164,11 +155,11 @@ function calculateUserPropertyScore(category, prop1, prop2, weight1, weight2) {
 
 function getScore(movies, shows, hobbies, tags, music) {
     //get movie genre matches
-    const movieScore = calculateClassScore(movies, "genres", "title", WEIGHT_MOVIE_GENRES, WEIGHT_MOVIE_TITLE);
-    const showScore = calculateClassScore(shows, "genres", "title", WEIGHT_SHOW_GENRES, WEIGHT_SHOW_TITLE);
-    const hobbiesScore = calculateClassScore(hobbies, "category", "name", WEIGHT_HOBBY_CATEGORY, WEIGHT_HOBBY_NAMES);
-    const musicScore = calculateUserPropertyScore(music, "genres", "name", WEIGHT_MUSIC_GENRES, WEIGHT_MUSIC_ARTIST);
-    const tagsScore = compareArrs(tags.user_1, tags.user_2, WEIGHT_TAGS);
+    const movieScore = calculateClassScore(movies, "genres", "title", config.get("MATCH_WEIGHTS.WEIGHT_MOVIE_GENRES"), config.get("MATCH_WEIGHTS.WEIGHT_MOVIE_TITLE"));
+    const showScore = calculateClassScore(shows, "genres", "title", config.get("MATCH_WEIGHTS.WEIGHT_SHOW_GENRES"), config.get("MATCH_WEIGHTS.WEIGHT_SHOW_TITLE"));
+    const hobbiesScore = calculateClassScore(hobbies, "category", "name", config.get("MATCH_WEIGHTS.WEIGHT_HOBBY_CATEGORY"), config.get("MATCH_WEIGHTS.WEIGHT_HOBBY_NAMES"));
+    const musicScore = calculateUserPropertyScore(music, "genres", "name", config.get("MATCH_WEIGHTS.WEIGHT_MUSIC_GENRES"), config.get("MATCH_WEIGHTS.WEIGHT_MUSIC_ARTIST"));
+    const tagsScore = compareArrs(tags.user_1, tags.user_2, config.get("MATCH_WEIGHTS.WEIGHT_TAGS"));
 
     return (movieScore + showScore + hobbiesScore + musicScore + tagsScore);
 }

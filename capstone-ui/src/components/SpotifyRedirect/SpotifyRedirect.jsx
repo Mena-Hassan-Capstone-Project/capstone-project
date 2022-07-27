@@ -10,7 +10,7 @@ export default function SpotifyRedirect({ goToLogin }) {
   }, [counter]);
 
   setTimeout(function () {
-    goToLogin()
+    goToLogin();
   }, 5000);
 
   return (
