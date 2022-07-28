@@ -1,10 +1,9 @@
 import * as React from "react"
-import { useState } from "react";
 import "./Media.css"
 import Loading from "../../Loading/Loading"
 
 
-export default function Media({ userInfo, onClickBasic, onClickInterests, onClickEditMedia, isFetching, onClickInsta, getInstaPhotos, uploadInstaPhotos }) {
+export default function Media({ userInfo, onClickBasic, onClickInterests, onClickEditMedia, isFetching, onClickInsta }) {
   return (
     isFetching
       ? <Loading></Loading>
@@ -39,19 +38,8 @@ export default function Media({ userInfo, onClickBasic, onClickInterests, onClic
                 ?
                 userInfo.ig_media
                   ?
-                  <p>Instagram photos added to media!</p>
-                  :
-                  <div className="access-token">
-                    <p>{`Instagram Connected!`}</p>
-                    <button className="insta-btn" onClick={async () => {
-                      const data = await getInstaPhotos(userInfo.ig_access_token);
-                      if (!userInfo.ig_media) {
-                        uploadInstaPhotos(data)
-                      }
-                    }}>
-                      Add Instagram Photos to Profile
-                    </button>
-                  </div>
+                  <p className="insta-caption">Instagram photos added to media!</p>
+                  : null
                 :
                 <button className="insta-btn" onClick={onClickInsta}>
                   Connect to Instagram

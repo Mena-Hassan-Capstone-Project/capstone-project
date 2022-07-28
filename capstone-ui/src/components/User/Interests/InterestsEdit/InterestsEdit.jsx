@@ -122,15 +122,15 @@ export default function InterestsEdit({ userInfo, onClickBasic, onClickMedia, sa
               userInfo.spotify_artists
                 ?
                 <div>
-                  <p><b>Top Spotify Artists:</b></p>
-                  {userInfo.spotify_artists.map((track, index) => (
+                  <p className="spotify-artist"><b>Top Spotify Artists:</b></p>
+                  {userInfo.spotify_artists.map((artist, index) => (
                     <div key={index}>
-                      <p><b>{`${index + 1}. ${track.name}`}</b></p>
+                      <p className="spotify-artist"><b>{`${index + 1}. ${artist.name}`}</b></p>
                     </div>
                   ))}
                 </div>
                 :
-                <button className="login-btn" onClick={onClickSpotify}>
+                <button className="login-btn spotify-btn" onClick={onClickSpotify}>
                   Connect to Spotify
                 </button>
             }

@@ -37,3 +37,7 @@
 .remove-movie {
     cursor: pointer;
 }
+
+.spotify-btn {
+    width: 200px;
+}

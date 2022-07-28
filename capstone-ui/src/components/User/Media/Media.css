@@ -40,6 +40,10 @@
     margin-bottom: 10px;
 }
 
+.insta-caption {
+    font-size: 20px;
+}
+
 @media only screen and (max-width: 600px) {
     .media-img {
         width: 200px;

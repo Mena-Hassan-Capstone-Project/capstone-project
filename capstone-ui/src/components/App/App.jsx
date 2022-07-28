@@ -85,12 +85,6 @@ export default function App() {
   }, [userInfo]);
 
   React.useEffect(() => {
-    if (userMatches.length == 0) {
-      getMatchesForUser(matchLimit + matchOffset, 0);
-    }
-  })
-
-  React.useEffect(() => {
     setIsFetching(true);
     if (window.performance) {
       if (window.localStorage.getItem('userInfo') && !userInfo && String(window.performance.getEntriesByType("navigation")[0].type) === "reload") {
@@ -105,6 +99,20 @@ export default function App() {
       postInsta();
     }
   }, []);
+
+  async function fetchInstaPhotos() {
+    try {
+      if (window.localStorage.getItem('userInfo') && userInfo?.ig_access_token) {
+        const data = await getInstaPhotos(userInfo.ig_access_token);
+        if (Array.isArray(data)) {
+          uploadInstaPhotos(data);
+        }
+      }
+    }
+    catch (err) {
+      console.log("err", err)
+    }
+  }
 
   function refreshLogin() {
     setIsFetching(true);
@@ -230,6 +238,7 @@ export default function App() {
       let instaPhotos = resp.data.map(d => d.media_url);
       return instaPhotos;
     } catch (e) {
+      console.log(e.response.data.error)
       return e.response.data.error;
     }
   }
@@ -325,6 +334,7 @@ export default function App() {
   }
 
   const goToMedia = () => {
+    fetchInstaPhotos();
     navigate('/user/media');
   }
 
@@ -526,8 +536,8 @@ export default function App() {
           setUserInfo(response.data.userInfo);
           setMajorList(response.data.majors)
           setUserMatches([]);
-          setToken("")
-          setOffset(0)
+          setToken("");
+          setOffset(0);
           navigate('/user/basic');
           setIsFetching(false)
         }
