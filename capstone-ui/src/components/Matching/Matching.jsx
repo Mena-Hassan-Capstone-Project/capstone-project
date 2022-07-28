@@ -80,7 +80,7 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
                                 <p className="card-text"><b>Match Score: {(match.scoreInfo.score * 100).toFixed(1)}%</b></p>
                                 <p className="card-text">University: {match.userInfo.university}</p>
                                 <p className="card-text">Graduation Year: {match.userInfo.grad_year}</p>
-                                <p className="card-text">Major: {match.userInfo.major}</p>
+                                <p className="card-text">Major: {match.userInfo.major?.name}</p>
                                 <p className="card-text">Hometown: {match.userInfo.hometown}</p>
                                 <p className="card-text">{match.userInfo.tags.length > 0 ? `Tags: ${match.userInfo.tags}` : ""}</p>
                                 {

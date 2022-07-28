@@ -22,7 +22,7 @@ export default function BasicInfo({ userInfo, onClickInterests, onClickMedia, go
           <div className="column col-2" >
             <div className="user-info">
               <p><b>Graduation Year: </b>{userInfo.grad_year}</p>
-              <p><b>Major: </b>{userInfo.major}</p>
+              <p><b>Major: </b>{userInfo.major?.name}</p>
               <p><b>Hometown: </b>{userInfo.hometown}</p>
               <p><b>Tags: </b></p>
               {

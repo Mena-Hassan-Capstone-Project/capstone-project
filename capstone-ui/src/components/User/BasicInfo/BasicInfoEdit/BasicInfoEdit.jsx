@@ -34,7 +34,7 @@ export default function BasicInfoEdit({ userInfo, onClickInterests, onClickMedia
                     onChange={setSelectedMajorOption}
                     options={majorList.majors.map
                       ((major, index) => {
-                        return { label: major.name, value: index };
+                        return { label: major.name, value: major};
                       })} />
                 </div>
                 : null

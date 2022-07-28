@@ -53,7 +53,7 @@ async function getUserInfo(user) {
     hobbyQuery.equalTo("User", user);
     const userHobbies = await hobbyQuery.find();
 
-    return ({ movies: userMovies, shows: userShows, hobbies: userHobbies, tags: user.get("tags"), music: user.get("spotify_artists") });
+    return ({ movies: userMovies, shows: userShows, hobbies: userHobbies, tags: user.get("tags"), music: user.get("spotify_artists"), major: user.get("major"), hometown: user.get("hometown"), gradYear: user.get("grad_year") });
 }
 
 function compareArrs(arr1, arr2, weight) {
@@ -83,12 +83,15 @@ function compareArrs(arr1, arr2, weight) {
         return 0;
     }
 
-    return (matches / (arr1.length + arr2.length)).toFixed(3) * weight;
+    return (matches / (arr1.length)).toFixed(3) * weight;
 }
 
 function calculateClassScore(category, prop1, prop2, weight1, weight2) {
     //assuming prop1 is array and prop2 is a string
 
+    if (!category?.user_1?.length || !category?.user_2?.length) {
+        return 0
+    }
     let user1Prop1 = [];
     let user1Prop2 = [];
     for (let i = 0; i < category.user_1.length; i++) {
@@ -125,43 +128,71 @@ function calculateClassScore(category, prop1, prop2, weight1, weight2) {
 }
 
 function calculateUserPropertyScore(category, prop1, prop2, weight1, weight2) {
-    if (!category.user1 || !category.user2) {
-        return 0;
+    if (!category?.user_1?.length || !category?.user_2?.length) {
+        return 0
     }
     let user1Prop1 = [];
     let user1Prop2 = [];
     for (let i = 0; i < category.user_1.length; i++) {
-        user1Prop1 = user1Prop1.concat(category.user_1[i][prop1]);
+        if (Array.isArray(category.user_1[i][prop1])) {
+            user1Prop1 = user1Prop1.concat(category.user_1[i][prop1]);
+        }
+        else {
+            user1Prop1.push(category.user_1[i][prop1]);
+        }
         user1Prop2.push(category.user_1[i][prop2]);
     }
 
     let user2Prop1 = [];
     let user2Prop2 = [];
     for (let i = 0; i < category.user_2.length; i++) {
-        user2Prop1 = user2Prop1.concat(category.user_2[i][prop1]);
+        if (Array.isArray(category.user_2[i][prop1])) {
+            user2Prop1 = user2Prop1.concat(category.user_2[i][prop1]);
+        }
+        else {
+            user2Prop1.push(category.user_2[i][prop1]);
+        }
         user2Prop2.push(category.user_2[i][prop2]);
     }
-    try {
-        let prop1Score = compareArrs(user1Prop1, user2Prop1, weight1);
-        let prop2Score = compareArrs(user1Prop2, user2Prop2, weight2);
+    let prop1Score = compareArrs(user1Prop1, user2Prop1, weight1);
+    let prop2Score = compareArrs(user1Prop2, user2Prop2, weight2);
 
-        return prop1Score + prop2Score;
+    return prop1Score + prop2Score;
+}
+
+function compareStrings(str1, str2, weight) {
+    if (!str1 || !str2) {
+        return 0
     }
-    catch (err) {
-        console.log("error", err);
-        return 0;
+    else if (str1.includes(str2) || str2.includes(str1)) {
+        return weight
+    }
+    else {
+        return 0
     }
 }
 
-function getScore(movies, shows, hobbies, tags, music) {
+function calculateGradYearScore(year1, year2, weight) {
+    let score = (4 - Math.abs(parseInt(year1) - parseInt(year2))) / 4;
+    if (score > 0) {
+        return score * weight;
+    }
+    return 0;
+}
+
+function getScore(movies, shows, hobbies, tags, music, major, hometown, gradYear) {
     //get movie genre matches
     const movieScore = calculateClassScore(movies, "genres", "title", config.get("MATCH_WEIGHTS.WEIGHT_MOVIE_GENRES"), config.get("MATCH_WEIGHTS.WEIGHT_MOVIE_TITLE"));
     const showScore = calculateClassScore(shows, "genres", "title", config.get("MATCH_WEIGHTS.WEIGHT_SHOW_GENRES"), config.get("MATCH_WEIGHTS.WEIGHT_SHOW_TITLE"));
     const hobbiesScore = calculateClassScore(hobbies, "category", "name", config.get("MATCH_WEIGHTS.WEIGHT_HOBBY_CATEGORY"), config.get("MATCH_WEIGHTS.WEIGHT_HOBBY_NAMES"));
     const musicScore = calculateUserPropertyScore(music, "genres", "name", config.get("MATCH_WEIGHTS.WEIGHT_MUSIC_GENRES"), config.get("MATCH_WEIGHTS.WEIGHT_MUSIC_ARTIST"));
     const tagsScore = compareArrs(tags.user_1, tags.user_2, config.get("MATCH_WEIGHTS.WEIGHT_TAGS"));
+    const majorScore = compareStrings(major.user_1?.name, major.user_2?.name, config.get("MATCH_WEIGHTS.WEIGHT_MAJOR"));
+    const departmentScore = compareStrings(major.user_1?.department, major.user_2?.department, config.get("MATCH_WEIGHTS.WEIGHT_DEPARTMENT"))
+    const hometownScore = compareStrings(hometown.user_1, hometown.user_2, config.get("MATCH_WEIGHTS.WEIGHT_HOMETOWN"))
+    const gradYearScore = calculateGradYearScore(gradYear.user_1, gradYear.user_2, config.get("MATCH_WEIGHTS.WEIGHT_GRADYEAR"));
 
-    return (movieScore + showScore + hobbiesScore + musicScore + tagsScore);
+    return (movieScore + showScore + hobbiesScore + musicScore + tagsScore + majorScore + departmentScore + hometownScore + gradYearScore);
 }
 
 async function getInterestQuery(currentUser, objectName) {
@@ -223,7 +254,10 @@ async function getMatches(currentUser, res) {
         const hobbiesInfo = { user_1: currentUserInfo.hobbies, user_2: matchInfo.hobbies };
         const tagsInfo = { user_1: currentUserInfo.tags, user_2: matchInfo.tags };
         const musicInfo = { user_1: currentUserInfo.music, user_2: matchInfo.music };
-        const matchScore = getScore(movieInfo, showInfo, hobbiesInfo, tagsInfo, musicInfo);
+        const majorInfo = { user_1: currentUserInfo.major, user_2: matchInfo.major };
+        const hometownInfo = { user_1: currentUserInfo.hometown, user_2: matchInfo.hometown };
+        const gradYearInfo = { user_1: currentUserInfo.gradYear, user_2: matchInfo.gradYear };
+        const matchScore = getScore(movieInfo, showInfo, hobbiesInfo, tagsInfo, musicInfo, majorInfo, hometownInfo, gradYearInfo);
 
         //check if match is already in database
         const matchQuery = new Parse.Query(Match);
@@ -237,8 +271,12 @@ async function getMatches(currentUser, res) {
         let matchResults2 = await matchQuery2.first();
 
         if (matchResults) {
-            matchResults.set("score", matchScore);
-            matchResults2.set("score", matchScore);
+            if (matchResults.get("score") != matchScore) {
+                matchResults.set("score", matchScore);
+                matchResults2.set("score", matchScore);
+                await matchResults.save()
+                await matchResults2.save()
+            }
         }
         else {
             const match = new Match();

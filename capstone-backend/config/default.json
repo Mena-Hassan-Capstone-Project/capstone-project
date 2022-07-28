@@ -5,10 +5,14 @@
         "WEIGHT_SHOW_GENRES": 0.12,
         "WEIGHT_SHOW_TITLE": 0.03,
         "WEIGHT_HOBBY_CATEGORY": 0.22,
-        "WEIGHT_HOBBY_NAMES": 0.8,
-        "WEIGHT_MUSIC_GENRES": 0.18,
-        "WEIGHT_MUSIC_ARTIST": 0.07,
-        "WEIGHT_TAGS": 0.05
+        "WEIGHT_HOBBY_NAMES": 0.08,
+        "WEIGHT_MUSIC_GENRES": 0.21,
+        "WEIGHT_MUSIC_ARTIST": 0.04,
+        "WEIGHT_TAGS": 0.05,
+        "WEIGHT_MAJOR": 0.02,
+        "WEIGHT_DEPARTMENT": 0.02,
+        "WEIGHT_HOMETOWN": 0.02,
+        "WEIGHT_GRADYEAR": 0.03
     },
     "PARSE_KEYS": {
         "PARSE_APP_ID": "jPiXegiDMhfUXP5DI8bwMWuchNVq1hbLHs0yqeoE",

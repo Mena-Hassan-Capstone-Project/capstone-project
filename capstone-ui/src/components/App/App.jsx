@@ -85,6 +85,12 @@ export default function App() {
   }, [userInfo]);
 
   React.useEffect(() => {
+    if (userMatches.length == 0) {
+      getMatchesForUser(matchLimit + matchOffset, 0);
+    }
+  })
+
+  React.useEffect(() => {
     setIsFetching(true);
     if (window.performance) {
       if (window.localStorage.getItem('userInfo') && !userInfo && String(window.performance.getEntriesByType("navigation")[0].type) === "reload") {
@@ -486,7 +492,7 @@ export default function App() {
     await axios.post(`https://localhost:${PORT}/user/basic`, {
       year: document.getElementById('year').value,
       major: selectedMajorOption
-        ? selectedMajorOption.label : null,
+        ? selectedMajorOption.value : null,
       hometown: document.getElementById('hometown').value,
       tags: tags,
     })
@@ -623,7 +629,7 @@ export default function App() {
           />
           <Route
             path="/user/media/edit"
-            element={<MediaEdit userInfo={userInfo} onClickBasic={goToBasic} onClickInterests={goToInterests} imageList={userInfo.media} maxImages={10} setUserInfo={setUserInfo} isFetching={isFetching} setIsFetching={setIsFetching}></MediaEdit>}
+            element={<MediaEdit userInfo={userInfo} onClickBasic={goToBasic} onClickInterests={goToInterests} imageList={userInfo.media ? userInfo.media : null} maxImages={10} setUserInfo={setUserInfo} isFetching={isFetching} setIsFetching={setIsFetching}></MediaEdit>}
           />
           <Route
             path="/user/matching"
