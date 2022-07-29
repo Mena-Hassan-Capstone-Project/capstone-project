@@ -25,7 +25,7 @@ export default function SignUp({ onClickSignUp, onClickLogin, isFetching }) {
             <button className="login-btn" onClick={onClickSignUp}>
               Next
             </button>
-            <p>Already Have an Account? <b onClick={onClickLogin} className="signup-link">Log In</b></p>
+            <p className="account-txt">Already Have an Account? <b onClick={onClickLogin} className="signup-link">Log In</b></p>
           </div>
       }
     </div>

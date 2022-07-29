@@ -24,18 +24,6 @@ Parse.serverURL = 'http://parseapi.back4app.com/';
 const INSTA_APP_ID = config.get('INSTA_KEYS.INSTA_APP_ID');
 const INSTA_APP_SECRET = config.get('INSTA_KEYS.INSTA_APP_SECRET');
 
-
-function handleParseError(err, res) {
-    if (err?.code) {
-        switch (err.code) {
-            case Parse.Error.INVALID_SESSION_TOKEN:
-                Parse.User.logOut();
-                res.redirect('/login');
-                break;
-        }
-    }
-}
-
 async function getUserInfo(user) {
     const Movie = Parse.Object.extend("Movie");
     const movieQuery = new Parse.Query(Movie);
@@ -336,7 +324,7 @@ app.post('/login', async (req, res) => {
         const majors = JSON.parse(rawdata);
         res.send({ userInfo: user, loginMessage: "User logged in!", typeStatus: "success", infoUser: infoUser, majors: majors });
     } catch (error) {
-        handleParseError(error, res);
+        res.send({ loginMessage: error, typeStatus: "danger", infoUser: infoUser });
     }
 })
 

@@ -149,12 +149,12 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
                                             null
                                     }
                                     {<button className="login-btn" onClick={async () => {
-                                        setIsFetching(true)
-                                        const liked = match.scoreInfo.liked
-                                        await createMatches({ matchId: match.userInfo.objectId, liked: !liked })
-                                        await getMatchesForUser(10, 0)
-                                        await goToMatching()
-                                        setIsFetching(false)
+                                        setIsFetching(true);
+                                        const liked = match.scoreInfo.liked;
+                                        await createMatches({ matchId: match.userInfo.objectId, liked: !liked });
+                                        await getMatchesForUser(matchLimit, 0);
+                                        await goToMatching();
+                                        setIsFetching(false);
                                     }}>
                                         {
                                             match.scoreInfo.liked
@@ -177,8 +177,8 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
                             ? null
                             : <button className="login-btn see-more" onClick={() => {
                                 const newOffset = parseInt(matchOffset) + parseInt(matchLimit);
-                                getMatchesForUser(matchLimit, newOffset)
-                                setOffset(newOffset)
+                                getMatchesForUser(matchLimit, newOffset);
+                                setOffset(newOffset);
                             }}>
                                 See More
                             </button>
