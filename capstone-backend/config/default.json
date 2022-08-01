@@ -21,5 +21,9 @@
     "INSTA_KEYS": {
         "INSTA_APP_ID": "390997746348889",
         "INSTA_APP_SECRET": "facb6a96ac24a92b82f0a6b254c0ec69"
+    },
+    "SPOTIFY_KEYS" : {
+         "SPOTIFY_CLIENT_ID" : "070101f8397d43e6b9c27755bd380617",
+         "SPOTIFY_CLIENT_SECRET" : "1c61ca64fa8f4ea7b8463d5867be592d"
     }
 }

@@ -1,6 +1,7 @@
 import * as React from "react"
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import { useState } from "react";
+import { Buffer } from 'buffer';
 import './App.css';
 import axios from "axios";
 import Login from '../Login/Login';
@@ -56,21 +57,23 @@ export default function App() {
 
   const SCOPE = "user-top-read user-read-private user-read-email user-read-recently-played";
   const SPOTIFY_CLIENT_ID = "070101f8397d43e6b9c27755bd380617";
-  const SPOTIFY_CLIENT_SECRET = "1c61ca64fa8f4ea7b8463d5867be592d";
   const AUTH_ENDPOINT = "https://accounts.spotify.com/authorize"
   const SPOTIFY_RED_URI = "https://localhost:3000/spotify-redirect";
-  const RESPONSE_TYPE = "token"
-  const AUTH_URL = `${AUTH_ENDPOINT}?client_id=${SPOTIFY_CLIENT_ID}&redirect_uri=${SPOTIFY_RED_URI}&response_type=${RESPONSE_TYPE}&scope=${SCOPE}`;
+  const SPOTIFY_STATE = Math.random().toString().substr(2, 8);
+  const RESPONSE_TYPE = "code"
+  const AUTH_URL = `${AUTH_ENDPOINT}?client_id=${SPOTIFY_CLIENT_ID}&redirect_uri=${SPOTIFY_RED_URI}&response_type=${RESPONSE_TYPE}&scope=${SCOPE}&state=${SPOTIFY_STATE}`;
 
   React.useEffect(() => {
 
-    if (window.location.href.includes("access_token") && token == "") {
+    if (window.location.href.includes("code") && token == "") {
       const queryString = window.location.href;
-      const token = queryString.split("access_token=").pop().split("&token_type")[0];
-      getSpotifyUser(token);
-      window.localStorage.setItem("token", token);
+      console.log("queryString", queryString)
+      const code = queryString.split("code=").pop().split("&state")[0];
+      console.log("token", code)
+      getRefreshToken(code, SPOTIFY_STATE)
+      window.localStorage.setItem("code", code);
+      setToken(code);
     }
-    setToken(token);
 
   }, []);
 
@@ -136,7 +139,31 @@ export default function App() {
     }
   }
 
-  async function getSpotifyUser(access_token) {
+  async function getRefreshToken(code, state){
+    setIsFetching(true);
+    await axios.post(`https://localhost:${PORT}/init-spotify`, {
+      code: code,
+      redirectUri: SPOTIFY_RED_URI, // needs to be registered at fb developer console
+    })
+      .then(({ data }) => {
+        console.log("refresh data", data)
+        if(data.result.access_token && data.result.refresh_token){
+          axios.post(`https://localhost:${PORT}/user/update`, {
+            spotify_access_token: data.result.access_token,
+            spotify_refresh_token: data.result.refresh_token
+          }).then(function (response) {
+            setUserInfo({ ...userInfo, spotify_access_token: data.result.access_token, spotify_refresh_token: data.result.refresh_token });
+            setIsFetching(false);
+          })
+        }
+      })
+      .catch(({ error }) => {
+        console.log("error", error);
+      })
+    setIsFetching(false);
+  }
+
+  async function getSpotifyArtists(access_token) {
     setIsFetching(true);
     await axios.get("https://api.spotify.com/v1/me/top/artists?&limit=5", {
       headers: {
@@ -144,10 +171,11 @@ export default function App() {
       }
     })
       .then(function (response) {
-        let tracks = response.data.items
+        let artists = response.data.items
         axios.post(`https://localhost:${PORT}/user/update`, {
-          spotify_artists: tracks
+          spotify_artists: artists
         }).then(function (response) {
+          setUserInfo({ ...userInfo, spotify_artists : artists });
           setIsFetching(false);
         })
       })
@@ -329,6 +357,9 @@ export default function App() {
   const goToInterests = () => {
     if (!userInfo.interests && !isFetching) {
       getInterestsFromUser();
+    }
+    if(userInfo.spotify_refresh_token){
+
     }
     navigate('/user/interests');
   }

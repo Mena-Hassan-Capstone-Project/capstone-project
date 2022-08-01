@@ -588,6 +588,12 @@ app.post('/user/update', async (req, res) => {
             if (infoUser.spotify_artists) {
                 currentUser.set("spotify_artists", infoUser.spotify_artists);
             }
+            if (infoUser.spotify_access_token) {
+                currentUser.set("spotify_access_token", infoUser.spotify_access_token);
+            }
+            if (infoUser.spotify_refresh_token) {
+                currentUser.set("spotify_refresh_token", infoUser.spotify_refresh_token);
+            }
             await currentUser.save();
             res.send({ userInfo: currentUser, updateInfoMessage: "User basic info saved!", typeStatus: "success", infoUser: infoUser });
         } else {
@@ -656,6 +662,43 @@ function requestToken(res, redirect_uri, code, userInfo, params) {
             }
         });
 }
+
+function requestSpotifyToken(res, redirect_uri, code, params) {
+    // send form based request to Instagram API
+    //auth_str = '{}:{}'.format(config.get('SPOTIFY_KEYS.SPOTIFY_CLIENT_ID'), config.get('SPOTIFY_KEYS.SPOTIFY_CLIENT_SECRET'))
+    //b64_auth_str = base64.urlsafe_b64encode(auth_str.encode()).decode()
+    console.log("got b64 string")
+    request.post({
+        url: 'https://accounts.spotify.com/api/token',
+        form: {
+            code: code,
+            redirect_uri: redirect_uri,
+            grant_type: 'authorization_code',
+            client_id : config.get('SPOTIFY_KEYS.SPOTIFY_CLIENT_ID'),
+            client_secret: config.get('SPOTIFY_KEYS.SPOTIFY_CLIENT_SECRET'),
+          },
+          json: true
+    },
+    function (err, httpResponse, body) {
+        console.log("err", err);
+        console.log("get results");
+        console.log("result", body)
+        res.send({ params: params, result: body, typeStatus: "success"});
+    });
+}
+
+app.post('/init-spotify', (req, res) => {
+    // data from frontend
+    let code = req.body.code;
+    let redirect_uri = req.body.redirectUri;
+
+    try {
+        console.log("request token")
+        requestSpotifyToken(res, redirect_uri, code, req.body);
+    } catch (e) {
+        res.send({ request: req.body, spotifyMessage: "short term access token failed", typeStatus: "danger", error: e });
+    }
+})
 
 app.post('/init-insta', async (req, res) => {
     // data from frontend

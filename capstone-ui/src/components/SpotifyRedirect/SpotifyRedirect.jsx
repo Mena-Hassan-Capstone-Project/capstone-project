@@ -3,7 +3,7 @@ import "./SpotifyRedirect.css"
 
 
 export default function SpotifyRedirect({ goToLogin }) {
-  const [counter, setCounter] = React.useState(5);
+  const [counter, setCounter] = React.useState(10);
 
   React.useEffect(() => {
     counter > 0 && setTimeout(() => setCounter(counter - 1), 1000);
@@ -11,7 +11,7 @@ export default function SpotifyRedirect({ goToLogin }) {
 
   setTimeout(function () {
     goToLogin();
-  }, 5000);
+  }, 10000);
 
   return (
     <div >
