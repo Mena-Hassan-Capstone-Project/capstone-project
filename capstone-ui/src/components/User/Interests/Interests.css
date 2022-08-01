@@ -1,5 +1,5 @@
 .interests-title {
-  font-size: 20px;
+  font-size: 25px;
 }
 
 .movie-item {
@@ -17,6 +17,10 @@
 }
 
 .movie-text {
-  font-size: 18px;
+  font-size: 20px;
   display: inline;
+}
+
+.spotify-artist {
+  font-size: 19px;
 }

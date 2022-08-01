@@ -47,15 +47,15 @@ export default function Interests({ userInfo, onClickBasic, onClickMedia, onClic
               userInfo.spotify_artists
                 ?
                 <div>
-                  <p><b>Top Spotify Artists:</b></p>
-                  {userInfo.spotify_artists.map((track, index) => (
+                  <p className="spotify-artist"><b>Top Spotify Artists:</b></p>
+                  {userInfo.spotify_artists.map((artist, index) => (
                     <div key={index}>
-                      <p><b>{`${index + 1}. ${track.name}`}</b></p>
+                      <p className="spotify-artist"><b>{`${index + 1}. ${artist.name}`}</b></p>
                     </div>
                   ))}
                 </div>
                 :
-                <p>Spotify Not Connected</p>
+                <p className="spotify-artist">Spotify Not Connected</p>
             }
             <p className="interests-title">Hobbies:</p>
             {

@@ -1,13 +1,21 @@
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    text-align: center;
+}
+
 .card {
+    font-size: 19px;
     max-height: 1200px;
+    max-width: 100%;
     background-color: white;
-    margin-left: 100px;
-    margin-right: 100px;
-    margin-top: 15px;
+    margin-left: 50px;
+    margin-right: 50px;
+    margin-top: 20px;
     margin-bottom: 15px;
-    margin-right: 100px;
     border-radius: 20px;
     padding: 5px;
+    text-align: center;
 }
 
 .match-interests {
@@ -41,9 +49,25 @@
     width: 200px;
     height: 50px;
     border-radius: 50px;
-    font-size: 18px;
+    font-size: 19px;
     font-family: 'Poppins', sans-serif;
     border: none;
     cursor: pointer;
     margin-bottom: 20px;
+}
+
+.see-more {
+    width: 170px;
+    font-size: 25px;
+}
+
+@media only screen and (max-width: 1000px) {
+    .card-grid {
+        grid-template-columns: repeat(1, 1fr);
+    }
+
+    .card {
+        margin-left: 100px;
+        margin-right: 100px;
+    }
 }
