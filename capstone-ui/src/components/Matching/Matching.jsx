@@ -9,10 +9,10 @@ import { Carousel } from 'react-responsive-carousel'
 export default function Matching({ isFetching, userMatches, getMatchesForUser, matchOffset, setOffset, matchLimit, createMatches, goToMatching, setIsFetching, goToSuggest, setSuggestMatch }) {
 
     //add max 10 photos to match's media carousel
-    const MAX_MEDIA = 10
+    const MAX_MEDIA = 10;
     function getMediaArray(media, igMedia) {
-        let mediaArray = []
-        let count = 0
+        let mediaArray = [];
+        let count = 0;
         if (media) {
             for (let i = 0; i < media.length && count < MAX_MEDIA; i++) {
                 mediaArray.push(media[i].data_url);

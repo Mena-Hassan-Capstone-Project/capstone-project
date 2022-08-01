@@ -3,8 +3,8 @@ import "./Suggestions.css"
 import { useState } from "react";
 
 export default function Suggestions({ suggestMatch, userInfo }) {
-    const TICKETMASTER_API_KEY = "NFYrlQO2ef4cUcAYyvNKkGhdEZbx7oJp"
-    const DISCOVER_URL = "https://app.ticketmaster.com/discovery/v2/events.json?latlong="
+    const TICKETMASTER_API_KEY = "NFYrlQO2ef4cUcAYyvNKkGhdEZbx7oJp";
+    const DISCOVER_URL = "https://app.ticketmaster.com/discovery/v2/events.json?latlong=";
     const [suggestions, setSuggestions] = useState(null);
     const [latLong, setLatLong] = useState(null);
     const NUM_SUGGESTIONS = 10;
@@ -19,7 +19,7 @@ export default function Suggestions({ suggestMatch, userInfo }) {
     //get suggestions once we have user location
     React.useEffect(() => {
         if (!suggestions || suggestions.length == 0) {
-            getResults(latLong)
+            getResults(latLong);
         }
     }, [latLong]);
 
@@ -27,16 +27,16 @@ export default function Suggestions({ suggestMatch, userInfo }) {
     const successfulLookup = async position => {
         const latitude = position.coords.latitude;
         const longitude = position.coords.longitude;
-        setLatLong({ lat: latitude, long: longitude })
+        setLatLong({ lat: latitude, long: longitude });
     }
 
     //get suggestions for activities to do together
     async function getResults(latLong) {
-        let matchSuggestions = []
+        let matchSuggestions = [];
         //suggest based on music
         if (userInfo?.spotify_artists && suggestMatch?.spotify_artists) {
             for (let i = 0; i < suggestMatch.spotify_artists.length; i++) {
-                let artist = suggestMatch.spotify_artists[i]
+                let artist = suggestMatch.spotify_artists[i];
                 let contains = await userInfo.spotify_artists.some(elem => {
                     return JSON.stringify(artist) === JSON.stringify(elem);
                 });
@@ -46,20 +46,28 @@ export default function Suggestions({ suggestMatch, userInfo }) {
                         .then(async (response) => {
                             const result = await response.json();
                             if (result._embedded?.events) {
-                                matchSuggestions = matchSuggestions.concat(result._embedded.events)
+                                matchSuggestions = matchSuggestions.concat(result._embedded.events);
+                                setSuggestions(matchSuggestions);
                             }
                         }).catch((error) => {
                             // Your error is here!
-                            console.log(error)
+                            console.log(error);
                         });
                 }
-                setSuggestions(matchSuggestions)
             }
         }
         if (matchSuggestions.length == 0) {
             let response = await fetch(DISCOVER_URL + `${latLong.lat},${latLong.long}&size=${NUM_SUGGESTIONS}&keyword=${userInfo?.university}&apikey=` + TICKETMASTER_API_KEY)
-            const result = await response.json();
-            setSuggestions(result._embedded.events);
+                .then(async (response) => {
+                    const result = await response.json();
+                    if (result._embedded?.events) {
+                        matchSuggestions = matchSuggestions.concat(result._embedded.events);
+                        setSuggestions(matchSuggestions);
+                    }
+                }).catch((error) => {
+                    // Your error is here!
+                    console.log(error);
+                });
         }
     }
 

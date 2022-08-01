@@ -641,7 +641,7 @@ app.post('/user/basic', async (req, res) => {
     }
 })
 
-function requestToken(res, redirect_uri, code, userInfo, params) {
+const requestToken = (res, redirect_uri, code, userInfo, params) => {
     // send form based request to Instagram API
     request.post({
         url: 'https://api.instagram.com/oauth/access_token',
@@ -663,7 +663,7 @@ function requestToken(res, redirect_uri, code, userInfo, params) {
         });
 }
 
-function requestSpotifyToken(res, redirect_uri, code, params) {
+const requestSpotifyToken = (res, redirect_uri, code, params) => {
     // send form based request to Spotify API
     request.post({
         url: 'https://accounts.spotify.com/api/token',
@@ -682,7 +682,7 @@ function requestSpotifyToken(res, redirect_uri, code, params) {
         });
 }
 
-function requestSpotifyRefreshToken(res, refresh_token, params) {
+const requestSpotifyRefreshToken = (res, refresh_token, params) => {
     // send form based request to Spotify API
     request.post({
         url: 'https://accounts.spotify.com/api/token',

@@ -69,7 +69,7 @@ export default function App() {
     if (window.location.href.includes("code") && token == "") {
       const queryString = window.location.href;
       const code = queryString.split("code=").pop().split("&state")[0];
-      getRefreshToken(code, SPOTIFY_STATE);
+      getRefreshToken(code);
       window.localStorage.setItem("code", code);
       setToken(code);
     }
@@ -139,7 +139,7 @@ export default function App() {
     }
   }
 
-  async function refreshSpotifyAccessToken() {
+  const refreshSpotifyAccessToken = async () => {
     setSpotifyRefreshed(true);
     if (userInfo.spotify_refresh_token) {
       await axios.post(`https://localhost:${PORT}/refresh-spotify`, {
@@ -155,7 +155,7 @@ export default function App() {
     setIsFetching(false);
   }
 
-  async function getRefreshToken(code, state) {
+  const getRefreshToken = async (code) => {
     if (!userInfo.spotify_refresh_token && !spotifyRefreshed) {
       setIsFetching(true);
       await axios.post(`https://localhost:${PORT}/init-spotify`, {
@@ -174,7 +174,7 @@ export default function App() {
     }
   }
 
-  async function getSpotifyArtists(access_token, refresh_token) {
+  const getSpotifyArtists = async (access_token, refresh_token) => {
     await axios.get("https://api.spotify.com/v1/me/top/artists?&limit=5", {
       headers: {
         Authorization: `Bearer ${access_token}`
@@ -198,7 +198,7 @@ export default function App() {
       })
   }
 
-  async function getSpotifyInfo() {
+  const getSpotifyInfo = async (access_token, refresh_token) => {
     window.open(AUTH_URL, "_blank").focus();
   }
 
