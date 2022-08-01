@@ -1,7 +1,6 @@
 import * as React from "react"
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import { useState } from "react";
-import { Buffer } from 'buffer';
 import './App.css';
 import axios from "axios";
 import Login from '../Login/Login';
@@ -47,6 +46,8 @@ export default function App() {
   const [suggestMatch, setSuggestMatch] = useState(false);
 
   const [token, setToken] = useState("");
+  const [spotifyRefreshed, setSpotifyRefreshed] = useState(false);
+  const [instaRefreshed, setInstaRefreshed] = useState(false);
 
   const [collegeList, setCollegeList] = useState(null);
   const [selectedCollegeOption, setSelectedCollegeOption] = useState(null);
@@ -60,17 +61,17 @@ export default function App() {
   const AUTH_ENDPOINT = "https://accounts.spotify.com/authorize"
   const SPOTIFY_RED_URI = "https://localhost:3000/spotify-redirect";
   const SPOTIFY_STATE = Math.random().toString().substr(2, 8);
-  const RESPONSE_TYPE = "code"
-  const AUTH_URL = `${AUTH_ENDPOINT}?client_id=${SPOTIFY_CLIENT_ID}&redirect_uri=${SPOTIFY_RED_URI}&response_type=${RESPONSE_TYPE}&scope=${SCOPE}&state=${SPOTIFY_STATE}`;
+  const SPOTIFY_RESPONSE_TYPE = "code";
+  const AUTH_URL = `${AUTH_ENDPOINT}?client_id=${SPOTIFY_CLIENT_ID}&redirect_uri=${SPOTIFY_RED_URI}&response_type=${SPOTIFY_RESPONSE_TYPE}&scope=${SCOPE}&state=${SPOTIFY_STATE}`;
 
   React.useEffect(() => {
 
     if (window.location.href.includes("code") && token == "") {
       const queryString = window.location.href;
-      console.log("queryString", queryString)
+      console.log("queryString", queryString);
       const code = queryString.split("code=").pop().split("&state")[0];
-      console.log("token", code)
-      getRefreshToken(code, SPOTIFY_STATE)
+      console.log("token", code);
+      getRefreshToken(code, SPOTIFY_STATE);
       window.localStorage.setItem("code", code);
       setToken(code);
     }
@@ -105,7 +106,8 @@ export default function App() {
 
   async function fetchInstaPhotos() {
     try {
-      if (window.localStorage.getItem('userInfo') && userInfo?.ig_access_token) {
+      if (window.localStorage.getItem('userInfo') && userInfo?.ig_access_token && !instaRefreshed) {
+        setInstaRefreshed(true);
         const data = await getInstaPhotos(userInfo.ig_access_token);
         if (Array.isArray(data)) {
           uploadInstaPhotos(data);
@@ -139,32 +141,42 @@ export default function App() {
     }
   }
 
-  async function getRefreshToken(code, state){
-    setIsFetching(true);
-    await axios.post(`https://localhost:${PORT}/init-spotify`, {
-      code: code,
-      redirectUri: SPOTIFY_RED_URI, // needs to be registered at fb developer console
-    })
-      .then(({ data }) => {
-        console.log("refresh data", data)
-        if(data.result.access_token && data.result.refresh_token){
-          axios.post(`https://localhost:${PORT}/user/update`, {
-            spotify_access_token: data.result.access_token,
-            spotify_refresh_token: data.result.refresh_token
-          }).then(function (response) {
-            setUserInfo({ ...userInfo, spotify_access_token: data.result.access_token, spotify_refresh_token: data.result.refresh_token });
-            setIsFetching(false);
-          })
-        }
+  async function refreshSpotifyAccessToken() {
+    setSpotifyRefreshed(true);
+    if (userInfo.spotify_refresh_token) {
+      await axios.post(`https://localhost:${PORT}/refresh-spotify`, {
+        refresh_token: userInfo.spotify_refresh_token
       })
-      .catch(({ error }) => {
-        console.log("error", error);
-      })
+        .then(({ data }) => {
+          getSpotifyArtists(data.result.access_token, userInfo.spotify_refresh_token);
+        })
+        .catch(({ error }) => {
+          console.log("error", error);
+        })
+    }
     setIsFetching(false);
   }
 
-  async function getSpotifyArtists(access_token) {
-    setIsFetching(true);
+  async function getRefreshToken(code, state) {
+    if (!userInfo.spotify_refresh_token && !spotifyRefreshed) {
+      setIsFetching(true);
+      await axios.post(`https://localhost:${PORT}/init-spotify`, {
+        code: code,
+        redirectUri: SPOTIFY_RED_URI, // needs to be registered at fb developer console
+      })
+        .then(({ data }) => {
+          if (data.result.access_token) {
+            getSpotifyArtists(data.result.access_token, data.result.refresh_token);
+          }
+        })
+        .catch(({ error }) => {
+          console.log("error", error);
+        })
+      setIsFetching(false);
+    }
+  }
+
+  async function getSpotifyArtists(access_token, refresh_token) {
     await axios.get("https://api.spotify.com/v1/me/top/artists?&limit=5", {
       headers: {
         Authorization: `Bearer ${access_token}`
@@ -173,14 +185,18 @@ export default function App() {
       .then(function (response) {
         let artists = response.data.items
         axios.post(`https://localhost:${PORT}/user/update`, {
-          spotify_artists: artists
+          spotify_artists: artists,
+          spotify_refresh_token: refresh_token
         }).then(function (response) {
-          setUserInfo({ ...userInfo, spotify_artists : artists });
+          if (spotifyRefreshed) {
+            setUserInfo({ ...userInfo, spotify_artists: artists, spotify_refresh_token: refresh_token });
+          }
           setIsFetching(false);
         })
       })
       .catch(function (err) {
         console.log(err);
+        setIsFetching(false);
       })
   }
 
@@ -358,9 +374,6 @@ export default function App() {
     if (!userInfo.interests && !isFetching) {
       getInterestsFromUser();
     }
-    if(userInfo.spotify_refresh_token){
-
-    }
     navigate('/user/interests');
   }
 
@@ -375,7 +388,7 @@ export default function App() {
 
   const goToMatching = () => {
     setOffset(0);
-    if(!fetchingMatches){
+    if (!fetchingMatches) {
       createMatches({});
     }
     getMatchesForUser(matchLimit, 0);
@@ -390,11 +403,11 @@ export default function App() {
         if (userInfo) {
           setHobbiesList(resp.data.hobbiesList);
           setUserInfo({ ...userInfo, interests: { movies: resp.data.movies, shows: resp.data.shows, hobbies: resp.data.hobbies } });
-          setIsFetching(false);
+          if (!spotifyRefreshed) {
+            refreshSpotifyAccessToken();
+          }
         }
-        else if (resp.data.typeStatus == "danger") {
-          setIsFetching(false);
-        }
+        setIsFetching(false);
       });
   }
 
@@ -431,7 +444,7 @@ export default function App() {
         setUserMatches([]);
         window.localStorage.clear();
         navigate('/login');
-        setIsFetching(false)
+        setIsFetching(false);
       })
       .catch(function (err) {
         console.log(err);
@@ -561,7 +574,6 @@ export default function App() {
         if (response.data.typeStatus == "danger") {
           alert("Login error");
           navigate('/login');
-          setIsFetching(false);
         }
         else {
           window.localStorage.setItem('userInfo', JSON.stringify({ email: email, password: password, objectId: response.data.userInfo.objectId }));
@@ -571,11 +583,11 @@ export default function App() {
           setToken("");
           setOffset(0);
           navigate('/user/basic');
-          setIsFetching(false);
         }
+        setIsFetching(false);
       })
       .catch(function (err) {
-        console.log(err);
+        console.log("err", err);
         window.localStorage.clear();
         navigate('/login');
         setIsFetching(false);
@@ -606,6 +618,7 @@ export default function App() {
         })
         .catch(function (err) {
           console.log(err);
+          setIsFetching(false);
         })
     }
   }

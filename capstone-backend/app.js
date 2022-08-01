@@ -117,7 +117,7 @@ function calculateClassScore(category, prop1, prop2, weight1, weight2) {
 
 function calculateUserPropertyScore(category, prop1, prop2, weight1, weight2) {
     if (!category?.user_1?.length || !category?.user_2?.length) {
-        return 0
+        return 0;
     }
     let user1Prop1 = [];
     let user1Prop2 = [];
@@ -150,13 +150,13 @@ function calculateUserPropertyScore(category, prop1, prop2, weight1, weight2) {
 
 function compareStrings(str1, str2, weight) {
     if (!str1 || !str2) {
-        return 0
+        return 0;
     }
     else if (str1.includes(str2) || str2.includes(str1)) {
-        return weight
+        return weight;
     }
     else {
-        return 0
+        return 0;
     }
 }
 
@@ -630,7 +630,7 @@ app.post('/user/basic', async (req, res) => {
             if (infoUser.media) {
                 currentUser.set("media", infoUser.media);
             }
-            await currentUser.save()
+            await currentUser.save();
             res.send({ userInfo: currentUser, saveInfoMessage: "User basic info saved!", typeStatus: "success", infoUser: infoUser });
         } else {
             res.send({ userInfo: "", saveInfoMessage: "Can't get current user", typeStatus: "danger", infoUser: infoUser });
@@ -664,28 +664,52 @@ function requestToken(res, redirect_uri, code, userInfo, params) {
 }
 
 function requestSpotifyToken(res, redirect_uri, code, params) {
-    // send form based request to Instagram API
-    //auth_str = '{}:{}'.format(config.get('SPOTIFY_KEYS.SPOTIFY_CLIENT_ID'), config.get('SPOTIFY_KEYS.SPOTIFY_CLIENT_SECRET'))
-    //b64_auth_str = base64.urlsafe_b64encode(auth_str.encode()).decode()
-    console.log("got b64 string")
+    // send form based request to Spotify API
     request.post({
         url: 'https://accounts.spotify.com/api/token',
         form: {
             code: code,
             redirect_uri: redirect_uri,
             grant_type: 'authorization_code',
-            client_id : config.get('SPOTIFY_KEYS.SPOTIFY_CLIENT_ID'),
+            client_id: config.get('SPOTIFY_KEYS.SPOTIFY_CLIENT_ID'),
             client_secret: config.get('SPOTIFY_KEYS.SPOTIFY_CLIENT_SECRET'),
-          },
-          json: true
+        },
+        json: true
     },
-    function (err, httpResponse, body) {
-        console.log("err", err);
-        console.log("get results");
-        console.log("result", body)
-        res.send({ params: params, result: body, typeStatus: "success"});
-    });
+        function (err, httpResponse, body) {
+            console.log("err", err);
+            res.send({ params: params, result: body, typeStatus: "success" });
+        });
 }
+
+function requestSpotifyRefreshToken(res, refresh_token, params) {
+    // send form based request to Spotify API
+    request.post({
+        url: 'https://accounts.spotify.com/api/token',
+        form: {
+            grant_type: 'refresh_token',
+            refresh_token: refresh_token,
+            client_id: config.get('SPOTIFY_KEYS.SPOTIFY_CLIENT_ID'),
+            client_secret: config.get('SPOTIFY_KEYS.SPOTIFY_CLIENT_SECRET'),
+        },
+        json: true
+    },
+        function (err, httpResponse, body) {
+            console.log("err", err);
+            res.send({ params: params, result: body, typeStatus: "success" });
+        });
+}
+
+app.post('/refresh-spotify', (req, res) => {
+    // data from frontend
+    var refresh_token = req.body.refresh_token;
+
+    try {
+        requestSpotifyRefreshToken(res, refresh_token, req.body);
+    } catch (e) {
+        res.send({ request: req.body, spotifyMessage: "refresh token failed", typeStatus: "danger", error: e });
+    }
+})
 
 app.post('/init-spotify', (req, res) => {
     // data from frontend
@@ -693,7 +717,6 @@ app.post('/init-spotify', (req, res) => {
     let redirect_uri = req.body.redirectUri;
 
     try {
-        console.log("request token")
         requestSpotifyToken(res, redirect_uri, code, req.body);
     } catch (e) {
         res.send({ request: req.body, spotifyMessage: "short term access token failed", typeStatus: "danger", error: e });
@@ -721,7 +744,7 @@ app.get('/userTable', async (req, res) => {
         //get all users
         const query = new Parse.Query(Parse.User);
         const entries = await query.find();
-        res.send({ userTableMessage: "user table created", entries: entries, typeStatus: "success" })
+        res.send({ userTableMessage: "user table created", entries: entries, typeStatus: "success" });
     }
     catch (err) {
         res.send({ userTableMessage: "Error getting user table", typeStatus: "danger" });
