@@ -68,9 +68,7 @@ export default function App() {
 
     if (window.location.href.includes("code") && token == "") {
       const queryString = window.location.href;
-      console.log("queryString", queryString);
       const code = queryString.split("code=").pop().split("&state")[0];
-      console.log("token", code);
       getRefreshToken(code, SPOTIFY_STATE);
       window.localStorage.setItem("code", code);
       setToken(code);
@@ -277,7 +275,7 @@ export default function App() {
 
   async function getInstaPhotos(accessToken) {
     try {
-      let resp = await axios.get(`https://graph.instagram.com/me/media?fields=media_type,permalink,media_url&access_token=${accessToken}`);
+      let resp = await axios.get(`https://graph.instagram.com/me/media?size=l&fields=media_type,permalink,media_url&access_token=${accessToken}`);
       resp = resp.data;
       let instaPhotos = resp.data.map(d => d.media_url);
       return instaPhotos;
@@ -582,6 +580,8 @@ export default function App() {
           setUserMatches([]);
           setToken("");
           setOffset(0);
+          setInstaRefreshed(false);
+          setSpotifyRefreshed(false);
           navigate('/user/basic');
         }
         setIsFetching(false);
