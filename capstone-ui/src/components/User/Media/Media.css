@@ -48,6 +48,11 @@
     .media-img {
         width: 200px;
         margin-right: 5px;
-        border-radius: 10px;
+    }
+}
+
+@media only screen and (max-width: 400px) {
+    .media-img {
+        width: 150px;
     }
 }

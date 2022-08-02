@@ -46,3 +46,12 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+@media only screen and (max-width: 400px) {
+  .login-btn {
+    font-size: 18px;
+  }
+  .input {
+    font-size: 18px;
+  }
+}
