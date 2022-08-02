@@ -8,7 +8,7 @@ College can be an exciting but overwhelming experience at first. Moving to a new
 `$ cd capstone-ui`
 3. Install required dependencies<br/>
 `$ npm install`
-4. Start the devleopment server<br/>
+4. Start the development server<br/>
 `$ npm start`
 5. In a different terminal, change directory into backend folder (NodeJS/Express)<br/>
 `$ cd capstone-backend`
