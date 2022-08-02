@@ -36,7 +36,7 @@ export default function Suggestions({ suggestMatch, userInfo }) {
         //suggest based on music
         if (userInfo?.spotify_artists && suggestMatch?.userInfo?.spotify_artists) {
             for (let i = 0; i < suggestMatch.userInfo.spotify_artists.length; i++) {
-                let artist = suggestMatch.userInfo.spotify_artists[i];
+                let artist = await suggestMatch.userInfo.spotify_artists[i];
                 let contains = await userInfo.spotify_artists.some(elem => {
                     return JSON.stringify(artist) === JSON.stringify(elem);
                 });
@@ -59,7 +59,7 @@ export default function Suggestions({ suggestMatch, userInfo }) {
         //suggest based on hobbies
         if (matchSuggestions.length < NUM_SUGGESTIONS && userInfo.interests?.hobbies && suggestMatch?.interestsInfo?.hobbies) {
             for (let i = 0; i < suggestMatch.interestsInfo.hobbies.length; i++) {
-                let hobby = suggestMatch.interestsInfo.hobbies[i];
+                let hobby = await suggestMatch.interestsInfo.hobbies[i];
                 let contains = await userInfo.interests.hobbies.some(elem => {
                     return JSON.stringify(hobby.name) === JSON.stringify(elem.name);
                 });

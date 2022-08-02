@@ -12,7 +12,7 @@ export default function BasicInfo({ userInfo, onClickInterests, onClickMedia, go
         <div className="row">
           <div className="column">
             <img src={userInfo.profile_photo} alt="" className="profile-img" />
-            <h2>{userInfo.preferredName}</h2>
+            <h2 className="user-name">{userInfo.preferredName}</h2>
             <div className="user-info">
               <p className="menu-item active">Basic Info</p>
               <p onClick={onClickInterests} className="menu-item">Interests</p>

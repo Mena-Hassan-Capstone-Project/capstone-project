@@ -72,3 +72,12 @@
         margin-right: 100px;
     }
 }
+
+@media only screen and (max-width: 400px) {
+    .card {
+        font-size: 18px;
+        max-height: 1300px;
+        margin-left: 30px;
+        margin-right: 30px;
+    }
+}

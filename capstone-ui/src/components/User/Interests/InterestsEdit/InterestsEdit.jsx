@@ -47,7 +47,7 @@ export default function InterestsEdit({ userInfo, onClickBasic, onClickMedia, sa
         <div className="row">
           <div className="column">
             <img src={userInfo.profile_photo} alt="" className="profile-img" />
-            <h2>{userInfo.preferredName}</h2>
+            <h2 className="user-name">{userInfo.preferredName}</h2>
             <div className="user-info">
               <p onClick={onClickBasic} className="menu-item">Basic Info</p>
               <p className="menu-item active">Interests</p>
