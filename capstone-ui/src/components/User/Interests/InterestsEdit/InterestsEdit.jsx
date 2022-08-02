@@ -12,7 +12,7 @@ export default function InterestsEdit({ userInfo, onClickBasic, onClickMedia, sa
   const [hobbyClass, setHobbyClass] = useState("hidden")
   const [selectedOption, setSelectedOption] = useState(null);
 
-  function toggleMovieClass() {
+  const toggleMovieClass = () => {
     if (movieClass == "movie-input") {
       setMovieClass("hidden")
     }
@@ -21,7 +21,7 @@ export default function InterestsEdit({ userInfo, onClickBasic, onClickMedia, sa
     }
   }
 
-  function toggleTVClass() {
+  const toggleTVClass = () => {
     if (tvClass == "movie-input") {
       setTvClass("hidden")
     }
@@ -30,7 +30,7 @@ export default function InterestsEdit({ userInfo, onClickBasic, onClickMedia, sa
     }
   }
 
-  function toggleHobbyClass() {
+  const toggleHobbyClass = () => {
     if (hobbyClass == "movie-input") {
       setHobbyClass("hidden")
     }

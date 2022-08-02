@@ -1,5 +1,6 @@
 .card-grid {
     display: grid;
+    margin-top: 10px;
     grid-template-columns: repeat(2, 1fr);
     text-align: center;
 }

@@ -13,7 +13,7 @@ export default function Navbar({ userInfo, onClickLogout, onClickMatching, goToB
           {
             userInfo
               ?
-              <button className="login-btn" onClick={onClickLogout}>
+              <button className="login-btn logout" onClick={onClickLogout}>
                 Log Out
               </button>
               :
