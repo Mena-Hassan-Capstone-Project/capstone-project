@@ -31,12 +31,12 @@ export default function Suggestions({ suggestMatch, userInfo }) {
     }
 
     //get suggestions for activities to do together
-    async function getResults(latLong) {
+    const getResults = async (latLong) => {
         let matchSuggestions = [];
         //suggest based on music
-        if (userInfo?.spotify_artists && suggestMatch?.spotify_artists) {
-            for (let i = 0; i < suggestMatch.spotify_artists.length; i++) {
-                let artist = suggestMatch.spotify_artists[i];
+        if (userInfo?.spotify_artists && suggestMatch?.userInfo?.spotify_artists) {
+            for (let i = 0; i < suggestMatch.userInfo.spotify_artists.length; i++) {
+                let artist = suggestMatch.userInfo.spotify_artists[i];
                 let contains = await userInfo.spotify_artists.some(elem => {
                     return JSON.stringify(artist) === JSON.stringify(elem);
                 });
@@ -56,18 +56,34 @@ export default function Suggestions({ suggestMatch, userInfo }) {
                 }
             }
         }
-        if (matchSuggestions.length == 0) {
-            let response = await fetch(DISCOVER_URL + `${latLong.lat},${latLong.long}&size=${NUM_SUGGESTIONS}&keyword=${userInfo?.university}&apikey=` + TICKETMASTER_API_KEY)
-                .then(async (response) => {
-                    const result = await response.json();
-                    if (result._embedded?.events) {
-                        matchSuggestions = matchSuggestions.concat(result._embedded.events);
-                        setSuggestions(matchSuggestions);
-                    }
-                }).catch((error) => {
-                    // Your error is here!
-                    console.log(error);
+        //suggest based on hobbies
+        if (matchSuggestions.length < NUM_SUGGESTIONS && userInfo.interests?.hobbies && suggestMatch?.interestsInfo?.hobbies) {
+            for (let i = 0; i < suggestMatch.interestsInfo.hobbies.length; i++) {
+                let hobby = suggestMatch.interestsInfo.hobbies[i];
+                let contains = await userInfo.interests.hobbies.some(elem => {
+                    return JSON.stringify(hobby.name) === JSON.stringify(elem.name);
                 });
+                //if they have an artist in common
+                if (contains) {
+                    await fetch(DISCOVER_URL + `${latLong.lat},${latLong.long}&size=2&keyword=${hobby.name}&apikey=` + TICKETMASTER_API_KEY)
+                        .then(async (response) => {
+                            const result = await response.json();
+                            if (result._embedded?.events) {
+                                matchSuggestions = matchSuggestions.concat(result._embedded.events);
+                            }
+                        }).catch((error) => {
+                            console.log(error);
+                        });
+                }
+                setSuggestions(matchSuggestions);
+            }
+        }
+        if (matchSuggestions.length < NUM_SUGGESTIONS) {
+            const SUGGESTIONS_SIZE = NUM_SUGGESTIONS - matchSuggestions.length;
+            let response = await fetch(DISCOVER_URL + `${latLong.lat},${latLong.long}&size=${SUGGESTIONS_SIZE}&keyword=${userInfo?.university}&apikey=` + TICKETMASTER_API_KEY);
+            const result = await response.json();
+            matchSuggestions = matchSuggestions.concat(result._embedded.events);
+            setSuggestions(matchSuggestions);
         }
     }
 

@@ -22,12 +22,25 @@ import UserTable from "../UserTable/UserTable";
 import Suggestions from "../Suggestions/Suggestions";
 
 export default function App() {
-  const API_KEY = "658568773162c3aaffcb3981d4f5587b";
+  const PORT = '3001';
+
+  const TMDB_API_KEY = "658568773162c3aaffcb3981d4f5587b";
+  const MOVIE_SEARCH_URL = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=`;
+  const TV_SEARCH_URL = `https://api.themoviedb.org/3/search/tv?api_key=${TMDB_API_KEY}&query=`;
+
   const INSTA_APP_ID = "390997746348889";
   const INSTA_RED_URI = "https://localhost:3000/insta-redirect";
   const INSTA_APP_SECRET = "facb6a96ac24a92b82f0a6b254c0ec69";
-  const MOVIE_SEARCH_URL = `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=`;
-  const TV_SEARCH_URL = `https://api.themoviedb.org/3/search/tv?api_key=${API_KEY}&query=`;
+
+  const SPOTIFY_SCOPE = "user-top-read user-read-private user-read-email user-read-recently-played";
+  const SPOTIFY_CLIENT_ID = "070101f8397d43e6b9c27755bd380617";
+  const AUTH_ENDPOINT = "https://accounts.spotify.com/authorize"
+  const SPOTIFY_RED_URI = "https://localhost:3000/spotify-redirect";
+  const SPOTIFY_STATE = Math.random().toString().substr(2, 8);
+  const SPOTIFY_RESPONSE_TYPE = "code";
+  const AUTH_URL = `${AUTH_ENDPOINT}?client_id=${SPOTIFY_CLIENT_ID}&redirect_uri=${SPOTIFY_RED_URI}&response_type=${SPOTIFY_RESPONSE_TYPE}&scope=${SPOTIFY_SCOPE}&state=${SPOTIFY_STATE}`;
+
+  const MATCH_LIMIT = 2;
 
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState("");
@@ -41,7 +54,6 @@ export default function App() {
 
   const [userMatches, setUserMatches] = useState([]);
   const [matchOffset, setOffset] = useState(0);
-  const matchLimit = 2;
   const [fetchingMatches, setFetchingMatches] = useState(false);
   const [suggestMatch, setSuggestMatch] = useState(false);
 
@@ -54,18 +66,7 @@ export default function App() {
   const [majorList, setMajorList] = useState(null);
   const [selectedMajorOption, setSelectedMajorOption] = useState(null);
 
-  const PORT = '3001';
-
-  const SCOPE = "user-top-read user-read-private user-read-email user-read-recently-played";
-  const SPOTIFY_CLIENT_ID = "070101f8397d43e6b9c27755bd380617";
-  const AUTH_ENDPOINT = "https://accounts.spotify.com/authorize"
-  const SPOTIFY_RED_URI = "https://localhost:3000/spotify-redirect";
-  const SPOTIFY_STATE = Math.random().toString().substr(2, 8);
-  const SPOTIFY_RESPONSE_TYPE = "code";
-  const AUTH_URL = `${AUTH_ENDPOINT}?client_id=${SPOTIFY_CLIENT_ID}&redirect_uri=${SPOTIFY_RED_URI}&response_type=${SPOTIFY_RESPONSE_TYPE}&scope=${SCOPE}&state=${SPOTIFY_STATE}`;
-
   React.useEffect(() => {
-
     if (window.location.href.includes("code") && token == "") {
       const queryString = window.location.href;
       const code = queryString.split("code=").pop().split("&state")[0];
@@ -73,7 +74,6 @@ export default function App() {
       window.localStorage.setItem("code", code);
       setToken(code);
     }
-
   }, []);
 
   //update matches when user info changes
@@ -82,7 +82,10 @@ export default function App() {
       if (userMatches.length == 0 && !fetchingMatches) {
         createMatches({});
       }
-      getMatchesForUser(matchLimit + matchOffset, 0);
+      getMatchesForUser(MATCH_LIMIT + matchOffset, 0);
+    }
+    if (window.localStorage.getItem('userInfo') && !userInfo.interests) {
+      getInterestsFromUser();
     }
   }, [userInfo]);
 
@@ -102,7 +105,7 @@ export default function App() {
     }
   }, []);
 
-  async function fetchInstaPhotos() {
+  const fetchInstaPhotos = async () => {
     try {
       if (window.localStorage.getItem('userInfo') && userInfo?.ig_access_token && !instaRefreshed) {
         setInstaRefreshed(true);
@@ -117,7 +120,7 @@ export default function App() {
     }
   }
 
-  function refreshLogin() {
+  const refreshLogin = () => {
     setIsFetching(true);
     const loggedInUser = window.localStorage.getItem('userInfo');
     if (loggedInUser) {
@@ -130,7 +133,7 @@ export default function App() {
           setUserInfo(response.data.userInfo);
           setUserMatches([]);
           setTimeout(getInterestsFromUser, 500);
-          getMatchesForUser(matchLimit + matchOffset, 0);
+          getMatchesForUser(MATCH_LIMIT + matchOffset, 0);
           setTimeout(setFetchingFalse, 1500);
         })
         .catch(function (err) {
@@ -198,11 +201,11 @@ export default function App() {
       })
   }
 
-  const getSpotifyInfo = async (access_token, refresh_token) => {
+  const getSpotifyInfo = async () => {
     window.open(AUTH_URL, "_blank").focus();
   }
 
-  async function getInstaUsername(accessToken) {
+  const getInstaUsername = async (accessToken) => {
     try {
       let resp = await axios.get(`https://graph.instagram.com/me?fields=id,username&access_token=${accessToken}`);
       return resp.data.username;
@@ -211,14 +214,13 @@ export default function App() {
     }
   }
 
-  // Invoke this function on button click or whatever other use case
-  async function setupInsta() {
+  const setupInsta = async () => {
     let appId = INSTA_APP_ID;
     let url = `https://api.instagram.com/oauth/authorize?client_id=${appId}&redirect_uri=${INSTA_RED_URI}&scope=user_profile,user_media&response_type=code`;
     window.open(url, "_blank").focus();
   }
 
-  async function postInsta() {
+  const postInsta = async () => {
     setIsFetching(true);
 
     const queryString = window.location.href;
@@ -240,7 +242,7 @@ export default function App() {
 
 
   //get long term access token from short term access token
-  function getAccessToken(accessToken) {
+  const getAccessToken = (accessToken) => {
     if (!isFetching) {
       setIsFetching(true);
       try {
@@ -263,7 +265,7 @@ export default function App() {
   }
 
   //get long term access token from short term access token
-  function uploadInstaPhotos(photos) {
+  const uploadInstaPhotos = (photos) => {
     axios.post(`https://localhost:${PORT}/user/update`, {
       photos: photos
     }).then(function (response) {
@@ -272,8 +274,7 @@ export default function App() {
     })
   }
 
-
-  async function getInstaPhotos(accessToken) {
+  const getInstaPhotos = async (accessToken) => {
     try {
       let resp = await axios.get(`https://graph.instagram.com/me/media?size=l&fields=media_type,permalink,media_url&access_token=${accessToken}`);
       resp = resp.data;
@@ -286,8 +287,8 @@ export default function App() {
   }
 
   //fetch results for movies on page using TMDB API
-  async function getResults(PAGE_URL) {
-    const response = await fetch(PAGE_URL);
+  const getResults = async (pageUrl) => {
+    const response = await fetch(pageUrl);
     const result = await response.json();
     return result.results;
   }
@@ -319,14 +320,14 @@ export default function App() {
       })
   }
 
-  function addNewHobby(category, hobbyIndex) {
+  const addNewHobby = (category, hobbyIndex) => {
     if (document.getElementById('enter-hobby')) {
       setNewHobby({ name: document.getElementById('enter-hobby').value, category: category, hobbyIndex: hobbyIndex });
     }
   }
 
   //creates matches for current user
-  async function createMatches(params) {
+  const createMatches = async (params) => {
     setFetchingMatches(true);
     if (userInfo && userInfo != "") {
       await axios.post(`https://localhost:${PORT}/matches`, {
@@ -369,7 +370,7 @@ export default function App() {
   }
 
   const goToInterests = () => {
-    if (!userInfo.interests && !isFetching) {
+    if (!userInfo?.interests) {
       getInterestsFromUser();
     }
     navigate('/user/interests');
@@ -389,13 +390,13 @@ export default function App() {
     if (!fetchingMatches) {
       createMatches({});
     }
-    getMatchesForUser(matchLimit, 0);
+    getMatchesForUser(MATCH_LIMIT, 0);
     navigate('/user/matching');
   }
 
   //retrieves movies, tv shows, and hobbies for user
   //sets user info
-  async function getInterestsFromUser() {
+  const getInterestsFromUser = async () => {
     await axios.get(`https://localhost:${PORT}/user/interests`)
       .then(resp => {
         if (userInfo) {
@@ -407,11 +408,12 @@ export default function App() {
         }
         setIsFetching(false);
       });
+    setIsFetching(false);
   }
 
   //retrieves matches for user
   //sets user info
-  async function getMatchesForUser(limit, offset) {
+  const getMatchesForUser = async (limit, offset) => {
     if (!fetchingMatches) {
       await axios.get(`https://localhost:${PORT}/matches`, {
         params: {
@@ -424,7 +426,7 @@ export default function App() {
             if (offset == 0) {
               setUserMatches(resp.data.matchesInfo);
             }
-            else if (userMatches.length >= matchLimit && resp.data.matchesInfo[0] && !userMatches.includes(resp.data.matchesInfo[0])) {
+            else if (userMatches.length >= MATCH_LIMIT && resp.data.matchesInfo[0] && !userMatches.includes(resp.data.matchesInfo[0])) {
               let newMatches = userMatches.concat(resp.data.matchesInfo);
               setUserMatches(newMatches);
             }
@@ -434,7 +436,7 @@ export default function App() {
   }
 
   //log user out
-  function logOut() {
+  const logOut = () => {
     axios.post(`https://localhost:${PORT}/logout`, {
     })
       .then(function (response) {
@@ -453,7 +455,7 @@ export default function App() {
 
   //remove movie from user movies
   //reloads interests
-  function removeMovie(movie) {
+  const removeMovie = (movie) => {
     setIsFetching(true);
     axios.post(`https://localhost:${PORT}/user/interests/remove`, {
       movie: movie
@@ -469,7 +471,7 @@ export default function App() {
 
   //remove show from user shows
   //reloads interests
-  function removeShow(show) {
+  const removeShow = (show) => {
     setIsFetching(true);
     axios.post(`https://localhost:${PORT}/user/interests/remove`, {
       show: show
@@ -485,7 +487,7 @@ export default function App() {
 
   //remove hobby from user hobbies
   //reloads interests
-  function removeHobby(hobby) {
+  const removeHobby = (hobby) => {
     setIsFetching(true);
     axios.post(`https://localhost:${PORT}/user/interests/remove`, {
       hobby: hobby
@@ -527,14 +529,14 @@ export default function App() {
       })
   }
 
-  function setFetchingFalse() {
+  const setFetchingFalse = () => {
     setIsFetching(false);
   }
 
   //sends basic info to backend
   const saveBasicInfo = async () => {
     setIsFetching(true);
-    var tags = [];
+    let tags = [];
     if (userInfo.tags) {
       tags = userInfo.tags;
     }
@@ -595,7 +597,10 @@ export default function App() {
   }
 
   const createSignUpParser = () => {
-    if (!document.getElementById('email').value.endsWith('.edu')) {
+    if (!document.getElementById('password').value || !document.getElementById('email').value || !document.getElementById('preferredName').value || !document.getElementById('phoneNum').value) {
+      alert('All fields are required')
+    }
+    else if (!document.getElementById('email').value.endsWith('.edu')) {
       alert('Please enter a valid .edu email');
     }
     else if (document.getElementById('password').value !== document.getElementById('confirm-password').value) {
@@ -624,22 +629,27 @@ export default function App() {
   }
 
   const createVerifyParser = () => {
-    setIsFetching(true);
-    axios.post(`https://localhost:${PORT}/verify`, {
-      firstName: document.getElementById('firstName').value,
-      lastName: document.getElementById('lastName').value,
-      university: selectedCollegeOption
-        ? selectedCollegeOption.label : null,
-      dob: document.getElementById('DOB').value
-    })
-      .then(function (response) {
-        setUserInfo(response.data.userInfo);
-        navigate('/user/basic/edit');
-        setIsFetching(false);
+    if (!document.getElementById('firstName').value || !document.getElementById('lastName').value || !selectedCollegeOption || !document.getElementById('DOB').value) {
+      alert('All fields are required')
+    }
+    else {
+      setIsFetching(true);
+      axios.post(`https://localhost:${PORT}/verify`, {
+        firstName: document.getElementById('firstName').value,
+        lastName: document.getElementById('lastName').value,
+        university: selectedCollegeOption
+          ? selectedCollegeOption.label : null,
+        dob: document.getElementById('DOB').value
       })
-      .catch(function (err) {
-        console.log(err);
-      })
+        .then(function (response) {
+          setUserInfo(response.data.userInfo);
+          navigate('/user/basic/edit');
+          setIsFetching(false);
+        })
+        .catch(function (err) {
+          console.log(err);
+        })
+    }
   }
 
   return (
@@ -688,7 +698,7 @@ export default function App() {
           />
           <Route
             path="/user/matching"
-            element={<Matching isFetching={isFetching} userMatches={userMatches} getMatchesForUser={getMatchesForUser} matchOffset={matchOffset} setOffset={setOffset} matchLimit={matchLimit}
+            element={<Matching isFetching={isFetching} userMatches={userMatches} getMatchesForUser={getMatchesForUser} matchOffset={matchOffset} setOffset={setOffset} matchLimit={MATCH_LIMIT}
               goToMatching={goToMatching} createMatches={createMatches} setIsFetching={setIsFetching} goToSuggest={goToSuggest} setSuggestMatch={setSuggestMatch}></Matching>}
           />
           <Route path="*" element=

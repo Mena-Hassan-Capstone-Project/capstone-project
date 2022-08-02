@@ -10,7 +10,8 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
 
     //add max 10 photos to match's media carousel
     const MAX_MEDIA = 10;
-    function getMediaArray(media, igMedia) {
+
+    const getMediaArray = (media, igMedia) => {
         let mediaArray = [];
         let count = 0;
         if (media) {
@@ -28,7 +29,7 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
         return mediaArray
     }
 
-    function formatPhoneNumber(phoneNumberString) {
+    const formatPhoneNumber = (phoneNumberString) => {
         let cleaned = ('' + phoneNumberString).replace(/\D/g, '');
         let match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
         if (match) {
@@ -36,6 +37,7 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
         }
         return null;
     }
+
     return (
         (isFetching || !userMatches || !Array.isArray(userMatches))
             ? <Loading />
@@ -165,7 +167,7 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
                                     </button>}
                                     <br />
                                     <button className="suggest-btn" onClick={() => {
-                                        setSuggestMatch(match.userInfo);
+                                        setSuggestMatch(match);
                                         goToSuggest();
                                     }}>Get Suggestions</button>
                                 </div>

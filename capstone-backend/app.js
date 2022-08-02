@@ -24,27 +24,24 @@ Parse.serverURL = 'http://parseapi.back4app.com/';
 const INSTA_APP_ID = config.get('INSTA_KEYS.INSTA_APP_ID');
 const INSTA_APP_SECRET = config.get('INSTA_KEYS.INSTA_APP_SECRET');
 
-async function getUserInfo(user) {
-    const Movie = Parse.Object.extend("Movie");
-    const movieQuery = new Parse.Query(Movie);
+const getUserEntries = async (className, user) => {
+    const Object = Parse.Object.extend(className);
+    const objectQuery = new Parse.Query(Object);
 
-    movieQuery.equalTo("User", user);
-    const userMovies = await movieQuery.find();
+    objectQuery.equalTo("User", user);
+    const userObjects = await objectQuery.find();
+    return userObjects
+}
 
-    const Show = Parse.Object.extend("Show");
-    const showQuery = new Parse.Query(Show);
-    showQuery.equalTo("User", user);
-    const userShows = await showQuery.find();
-
-    const Hobby = Parse.Object.extend("Hobby");
-    const hobbyQuery = new Parse.Query(Hobby);
-    hobbyQuery.equalTo("User", user);
-    const userHobbies = await hobbyQuery.find();
+const getUserInfo = async (user) => {
+    const userMovies = await getUserEntries("Movie", user);
+    const userShows = await getUserEntries("Show", user);
+    const userHobbies = await getUserEntries("Hobby", user);
 
     return ({ movies: userMovies, shows: userShows, hobbies: userHobbies, tags: user.get("tags"), music: user.get("spotify_artists"), major: user.get("major"), hometown: user.get("hometown"), gradYear: user.get("grad_year") });
 }
 
-function compareArrs(arr1, arr2, weight) {
+const compareArrs = (arr1, arr2, weight) => {
     if (!arr1 || !arr2) {
         return 0;
     }
@@ -74,9 +71,7 @@ function compareArrs(arr1, arr2, weight) {
     return (matches / (arr1.length)).toFixed(3) * weight;
 }
 
-function calculateClassScore(category, prop1, prop2, weight1, weight2) {
-    //assuming prop1 is array and prop2 is a string
-
+const calculateClassScore = (category, prop1, prop2, weight1, weight2) => {
     if (!category?.user_1?.length || !category?.user_2?.length) {
         return 0
     }
@@ -115,7 +110,7 @@ function calculateClassScore(category, prop1, prop2, weight1, weight2) {
     }
 }
 
-function calculateUserPropertyScore(category, prop1, prop2, weight1, weight2) {
+const calculateUserPropertyScore = (category, prop1, prop2, weight1, weight2) => {
     if (!category?.user_1?.length || !category?.user_2?.length) {
         return 0;
     }
@@ -148,7 +143,7 @@ function calculateUserPropertyScore(category, prop1, prop2, weight1, weight2) {
     return prop1Score + prop2Score;
 }
 
-function compareStrings(str1, str2, weight) {
+const compareStrings = (str1, str2, weight) => {
     if (!str1 || !str2) {
         return 0;
     }
@@ -160,7 +155,7 @@ function compareStrings(str1, str2, weight) {
     }
 }
 
-function calculateGradYearScore(year1, year2, weight) {
+const calculateGradYearScore = (year1, year2, weight) => {
     let score = (4 - Math.abs(parseInt(year1) - parseInt(year2))) / 4;
     if (score > 0) {
         return score * weight;
@@ -168,7 +163,7 @@ function calculateGradYearScore(year1, year2, weight) {
     return 0;
 }
 
-function getScore(movies, shows, hobbies, tags, music, major, hometown, gradYear) {
+const getScore = (movies, shows, hobbies, tags, music, major, hometown, gradYear) => {
     //get movie genre matches
     const movieScore = calculateClassScore(movies, "genres", "title", config.get("MATCH_WEIGHTS.WEIGHT_MOVIE_GENRES"), config.get("MATCH_WEIGHTS.WEIGHT_MOVIE_TITLE"));
     const showScore = calculateClassScore(shows, "genres", "title", config.get("MATCH_WEIGHTS.WEIGHT_SHOW_GENRES"), config.get("MATCH_WEIGHTS.WEIGHT_SHOW_TITLE"));
@@ -183,7 +178,7 @@ function getScore(movies, shows, hobbies, tags, music, major, hometown, gradYear
     return (movieScore + showScore + hobbiesScore + musicScore + tagsScore + majorScore + departmentScore + hometownScore + gradYearScore);
 }
 
-async function getInterestQuery(currentUser, objectName) {
+const getInterestQuery = async (currentUser, objectName) => {
     const Object = await Parse.Object.extend(objectName);
     const query = new Parse.Query(Object);
     query.equalTo("User", currentUser);
@@ -191,7 +186,7 @@ async function getInterestQuery(currentUser, objectName) {
     return await query.find();
 }
 
-async function updateMatch(params, currentUser, res) {
+const updateMatch = async (params, currentUser, res) => {
     const Match = Parse.Object.extend("Match");
     const matchQuery = new Parse.Query(Match);
     matchQuery.equalTo("user_1", currentUser.id);
@@ -212,7 +207,7 @@ async function updateMatch(params, currentUser, res) {
     res.send({ matchMessage: "Match updated", typeStatus: 'success', params: params, privateInfoResults: privateInfoResults });
 }
 
-async function createNewMatch(match, matchScore, user1, user2) {
+const createNewMatch = async (match, matchScore, user1, user2) => {
     match.set("score", matchScore);
     match.set("liked", false);
     match.set("user_1", user1);
@@ -221,7 +216,7 @@ async function createNewMatch(match, matchScore, user1, user2) {
     await match.save();
 }
 
-async function getMatches(currentUser, res) {
+const getMatches = async (currentUser, res) => {
     const query = new Parse.Query(Parse.User);
     query.notEqualTo("objectId", currentUser.id);
     const entries = await query.find();
@@ -278,7 +273,7 @@ async function getMatches(currentUser, res) {
     res.send({ matchMessage: "Matches created", typeStatus: 'success', entries: entries });
 }
 
-async function retrieveMatchData(limit, offset, currentUser) {
+const retrieveMatchData = async (limit, offset, currentUser) => {
     const Match = Parse.Object.extend("Match");
     const matchQuery = new Parse.Query(Match);
 
@@ -430,7 +425,7 @@ app.post('/verify', async (req, res) => {
     }
 })
 
-async function removeInterest(objectName, itemKey, itemValue, currentUser) {
+const removeInterest = async (objectName, itemKey, itemValue, currentUser) => {
     const Object = Parse.Object.extend(objectName);
     const query = new Parse.Query(Object);
     query.equalTo(itemKey, itemValue);
