@@ -12,7 +12,7 @@ export default function Media({ userInfo, onClickBasic, onClickInterests, onClic
         <div className="row">
           <div className="column">
             <img src={userInfo.profile_photo} alt="" className="profile-img" />
-            <h2>{userInfo.preferredName}</h2>
+            <h2 className="user-name">{userInfo.preferredName}</h2>
             <div className="user-info">
               <p onClick={onClickBasic} className="menu-item">Basic Info</p>
               <p onClick={onClickInterests} className="menu-item">Interests</p>

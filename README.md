@@ -2,6 +2,19 @@
 ## Project Description
 College can be an exciting but overwhelming experience at first. Moving to a new city and school without knowing anyone there is an intimidating prospect. Being able to connect instantly with other students based on the interest areas that you usually connect with friends on would ease the process. That’s what [app name tbd] is for! When users sign up for the app, there will be a process to verify that they are a college student at their respective campus. Users can customize their profile page with information about their interests, such as movies, TV shows, books, and hobbies. Dropdown option data for these categories will be pulled from external APIs. After adding profile information, users can choose which categories they would like to be matched based on. Users will be matched based on a similarity percentage calculated through custom logic that I will develop. Then, users can navigate to the matching page on which they will be shown one match at a time. Users will see their match’s basic information and interests color coded by similarity. They will also be able to scroll through any photos. To match, users can click the heart button and to not match, users can click the close button. If two users both match with each other, the match will show up on their home screen. Additional actions will now become available. Matches can view more details, such as when they were matched, each other's social media contact information, and  suggested activities to do together based on similarities and popular nearby activity. After a certain amount of time, matches will expire. Users can also unmatch at any time.
 
+## Getting Started
+1. Clone the repository on your local machine
+2. Change directory into frontend folder (React)<br/>
+`$ cd capstone-ui`
+3. Install required dependencies<br/>
+`$ npm install`
+4. Start the development server<br/>
+`$ npm start`
+5. In a different terminal, change directory into backend folder (NodeJS/Express)<br/>
+`$ cd capstone-backend`
+6. Run the backend server<br/>
+`$ npm start`
+
 ## Wireframes (created using Figma)
 ### Login
 <img width="756" alt="login" src="https://user-images.githubusercontent.com/34526502/176750922-bd736580-006e-4701-a14b-e972c27ae8bf.png">

@@ -44,3 +44,17 @@
   font-size: 20px;
   display: inline;
 }
+
+@media only screen and (max-width: 400px) {
+  .user-info {
+    font-size: 22px;
+  }
+
+  .user-name {
+    font-size: 25px;
+  }
+
+  .profile-img {
+    max-width: 175px;
+  }
+}
