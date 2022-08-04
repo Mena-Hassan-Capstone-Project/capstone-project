@@ -201,7 +201,7 @@ export default function App() {
       })
   }
 
-  const getSpotifyInfo = async () => {
+  const getSpotifyAuth = async () => {
     window.open(AUTH_URL, "_blank").focus();
   }
 
@@ -687,7 +687,7 @@ export default function App() {
             path="/user/interests/edit"
             element={<InterestsEdit userInfo={userInfo} onClickBasic={goToBasic} onClickMedia={goToMedia} saveInterests={saveInterests} getMovieSearch={getMovieSearch} movie={movie}
               removeMovie={removeMovie} isFetching={isFetching} getTVSearch={getTVSearch} TV={TV} removeShow={removeShow} selectedHobbyOption={selectedHobbyOption}
-              setSelectedHobbyOption={setSelectedHobbyOption} hobbiesList={hobbiesList} removeHobby={removeHobby} addNewHobby={addNewHobby} onClickSpotify={getSpotifyInfo}></InterestsEdit>}
+              setSelectedHobbyOption={setSelectedHobbyOption} hobbiesList={hobbiesList} removeHobby={removeHobby} addNewHobby={addNewHobby} onClickSpotify={getSpotifyAuth}></InterestsEdit>}
           />
           <Route
             path="/user/media"
