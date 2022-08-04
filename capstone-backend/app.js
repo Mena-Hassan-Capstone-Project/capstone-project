@@ -38,7 +38,7 @@ const getUserInfo = async (user) => {
     const userShows = await getUserEntries("Show", user);
     const userHobbies = await getUserEntries("Hobby", user);
 
-    return ({ movies: userMovies, shows: userShows, hobbies: userHobbies, tags: user.get("tags"), music: user.get("spotify_artists"), major: user.get("major"), hometown: user.get("hometown"), gradYear: user.get("grad_year") });
+    return ({ movies: userMovies, shows: userShows, hobbies: userHobbies, tags: user.get("tags"), music: user.get("spotify_artists"), major: user.get("major"), hometown: user.get("hometown"), gradYear: user.get("grad_year"), university: user.get("university") });
 }
 
 const compareArrs = (arr1, arr2, weight) => {
@@ -147,11 +147,15 @@ const compareStrings = (str1, str2, weight) => {
     if (!str1 || !str2) {
         return 0;
     }
-    else if (str1.includes(str2) || str2.includes(str1)) {
-        return weight;
-    }
     else {
-        return 0;
+        str1 = str1.toLowerCase();
+        str2 = str2.toLowerCase();
+        if (str1.includes(str2) || str2.includes(str1)) {
+            return weight;
+        }
+        else {
+            return 0;
+        }
     }
 }
 
@@ -223,11 +227,13 @@ const getMatches = async (currentUser, res) => {
 
     const Match = Parse.Object.extend("Match");
 
+    const currentUserInfo = await getUserInfo(currentUser);
     entries.forEach(async entry => {
         const matchInfo = await getUserInfo(entry);
-        const currentUserInfo = await getUserInfo(currentUser);
         //skip if entry profile incomplete or either users have no interests added
-        if ((!matchInfo.movies && !matchInfo.shows && !matchInfo.hobbies && !matchInfo.music)
+        //skip if users do not go to the same college
+        if (matchInfo.university != currentUserInfo.university ||
+            (!matchInfo.movies && !matchInfo.shows && !matchInfo.hobbies && !matchInfo.music)
             || (!currentUserInfo.movies && !currentUserInfo.shows && !currentUserInfo.hobbies && !currentUserInfo.music)) {
             return;
         }
@@ -431,7 +437,9 @@ const removeInterest = async (objectName, itemKey, itemValue, currentUser) => {
     query.equalTo(itemKey, itemValue);
     query.equalTo("User", currentUser);
     const entry = await query.find();
-    entry[0].destroy();
+    if (entry.length > 0) {
+        entry[0].destroy();
+    }
 }
 
 app.post('/user/interests/remove', async (req, res) => {
@@ -441,10 +449,10 @@ app.post('/user/interests/remove', async (req, res) => {
     try {
         if (currentUser) {
             if (removeInfo.movie) {
-                removeInterest("Movie", "api_key", removeInfo.movie.api_id, currentUser);
+                removeInterest("Movie", "api_id", removeInfo.movie.api_id, currentUser);
             }
             if (removeInfo.show) {
-                removeInterest("Show", "api_key", removeInfo.show.api_id, currentUser);
+                removeInterest("Show", "api_id", removeInfo.show.api_id, currentUser);
             }
             if (removeInfo.hobby) {
                 removeInterest("Hobby", "name", removeInfo.hobby.name, currentUser);

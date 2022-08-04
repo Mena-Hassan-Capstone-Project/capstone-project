@@ -1,7 +1,7 @@
 .verify-search-select {
     font-size: 20px;
-    margin-left: 18%;
-    margin-right: 18%;
+    width: 500px;
+    margin-left: calc(50% - 250px);
 }
 
 .verify-title {

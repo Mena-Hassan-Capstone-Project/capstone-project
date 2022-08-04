@@ -201,7 +201,7 @@ export default function App() {
       })
   }
 
-  const getSpotifyInfo = async () => {
+  const getSpotifyAuth = async () => {
     window.open(AUTH_URL, "_blank").focus();
   }
 
@@ -406,7 +406,6 @@ export default function App() {
             refreshSpotifyAccessToken();
           }
         }
-        setIsFetching(false);
       });
     setIsFetching(false);
   }
@@ -455,14 +454,14 @@ export default function App() {
 
   //remove movie from user movies
   //reloads interests
-  const removeMovie = (movie) => {
-    setIsFetching(true);
+  const removeMovie = (movie, index) => {
     axios.post(`https://localhost:${PORT}/user/interests/remove`, {
       movie: movie
     })
       .then(function (response) {
-        getInterestsFromUser();
-        setIsFetching(false);
+        let movieList = userInfo.interests.movies;
+        movieList.splice(index, 1);
+        setUserInfo({ ...userInfo, interests: { movies: movieList, shows: userInfo.interests.shows, hobbies: userInfo.interests.hobbies } });
       })
       .catch(function (err) {
         console.log(err);
@@ -471,14 +470,15 @@ export default function App() {
 
   //remove show from user shows
   //reloads interests
-  const removeShow = (show) => {
-    setIsFetching(true);
+  const removeShow = async (show, index) => {
+    //setIsFetching(true);
     axios.post(`https://localhost:${PORT}/user/interests/remove`, {
       show: show
     })
       .then(function (response) {
-        getInterestsFromUser();
-        setIsFetching(false);
+        let showList = userInfo.interests.shows;
+        showList.splice(index, 1);
+        setUserInfo({ ...userInfo, interests: { movies: userInfo.interests.movies, shows: showList, hobbies: userInfo.interests.hobbies } });
       })
       .catch(function (err) {
         console.log(err);
@@ -487,14 +487,14 @@ export default function App() {
 
   //remove hobby from user hobbies
   //reloads interests
-  const removeHobby = (hobby) => {
-    setIsFetching(true);
+  const removeHobby = (hobby, index) => {
     axios.post(`https://localhost:${PORT}/user/interests/remove`, {
       hobby: hobby
     })
       .then(function (response) {
-        getInterestsFromUser();
-        setIsFetching(false);
+        let hobbyList = userInfo.interests.hobbies;
+        hobbyList.splice(index, 1);
+        setUserInfo({ ...userInfo, interests: { movies: userInfo.interests.movies, shows: userInfo.interests.shows, hobbies: hobbyList } });
       })
       .catch(function (err) {
         console.log(err);
@@ -656,6 +656,7 @@ export default function App() {
     <div className="App">
       <main>
         <Navbar userInfo={userInfo} onClickLogout={logOut} onClickMatching={goToMatching} goToBasic={goToBasic} goToSignUp={goToSignUp} goToLogin={goToLogin} />
+        <div className="main-content">
         <Routes>
           <Route
             path="/login"
@@ -686,7 +687,7 @@ export default function App() {
             path="/user/interests/edit"
             element={<InterestsEdit userInfo={userInfo} onClickBasic={goToBasic} onClickMedia={goToMedia} saveInterests={saveInterests} getMovieSearch={getMovieSearch} movie={movie}
               removeMovie={removeMovie} isFetching={isFetching} getTVSearch={getTVSearch} TV={TV} removeShow={removeShow} selectedHobbyOption={selectedHobbyOption}
-              setSelectedHobbyOption={setSelectedHobbyOption} hobbiesList={hobbiesList} removeHobby={removeHobby} addNewHobby={addNewHobby} onClickSpotify={getSpotifyInfo}></InterestsEdit>}
+              setSelectedHobbyOption={setSelectedHobbyOption} hobbiesList={hobbiesList} removeHobby={removeHobby} addNewHobby={addNewHobby} onClickSpotify={getSpotifyAuth}></InterestsEdit>}
           />
           <Route
             path="/user/media"
@@ -723,6 +724,7 @@ export default function App() {
             element={<Suggestions suggestMatch={suggestMatch} userInfo={userInfo} />}
           />
         </Routes>
+        </div>
       </main>
     </div>
   );

@@ -60,7 +60,7 @@ export default function UserTable() {
                     <td>{item.lastName}</td>
                     <td>{item.preferredName}</td>
                     <td>{item.university}</td>
-                    <td>{item.major}</td>
+                    <td>{item.major?.name ? item.major.name : ""}</td>
                     <td>{item.grad_year}</td>
                     <td>{item.hometown}</td>
                     <td>{JSON.stringify(item.tags)}</td>

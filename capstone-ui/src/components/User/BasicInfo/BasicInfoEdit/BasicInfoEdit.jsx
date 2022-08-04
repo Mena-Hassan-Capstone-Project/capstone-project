@@ -21,7 +21,7 @@ export default function BasicInfoEdit({ userInfo, onClickInterests, onClickMedia
               <p onClick={onClickMedia} className="menu-item">Media</p>
             </div>
           </div>
-          <div className="column" >
+          <div className="column col-2" >
             <input className="input basic-input" id="year" type="text" placeholder="Graduation Year" defaultValue={userInfo.grad_year ? userInfo.grad_year : ""} />
             <br />
             {

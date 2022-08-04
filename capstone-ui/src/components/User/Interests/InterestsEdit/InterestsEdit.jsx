@@ -65,7 +65,7 @@ export default function InterestsEdit({ userInfo, onClickBasic, onClickMedia, sa
                     <p className="movie-text">{movie.title}</p>
                     <p className="movie-text remove-movie"
                       onClick={
-                        () => { removeMovie(movie) }
+                        () => { removeMovie(movie, index) }
                       }
                     > x</p>
                   </div>
@@ -95,7 +95,7 @@ export default function InterestsEdit({ userInfo, onClickBasic, onClickMedia, sa
                     <p className="movie-text">{show.title}</p>
                     <p className="movie-text remove-movie"
                       onClick={
-                        () => { removeShow(show) }
+                        () => { removeShow(show, index) }
                       }
                     > x</p>
                   </div>
@@ -144,7 +144,7 @@ export default function InterestsEdit({ userInfo, onClickBasic, onClickMedia, sa
                     <p className="movie-text">{hobby.name}</p>
                     <p className="movie-text remove-movie"
                       onClick={
-                        () => { removeHobby(hobby) }
+                        () => { removeHobby(hobby, index) }
                       }
                     > x</p>
                   </div>
