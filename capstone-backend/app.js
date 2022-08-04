@@ -644,28 +644,6 @@ app.post('/user/basic', async (req, res) => {
     }
 })
 
-const requestToken = (res, redirect_uri, code, userInfo, params) => {
-    // send form based request to Instagram API
-    request.post({
-        url: 'https://api.instagram.com/oauth/access_token',
-        form: {
-            client_id: INSTA_APP_ID,
-            client_secret: INSTA_APP_SECRET,
-            grant_type: 'authorization_code',
-            redirect_uri,
-            code
-        }
-    },
-        function (err, httpResponse, body) {
-            let result = JSON.parse(body);
-            if (result.access_token) {
-                // Got access token. Parse string response to JSON
-                let accessToken = result.access_token;
-                res.send({ params: params, userInfo: userInfo, result: result, accessToken: accessToken, typeStatus: "success" });
-            }
-        });
-}
-
 const requestSpotifyToken = (res, redirect_uri, code, params) => {
     // send form based request to Spotify API
     request.post({
@@ -725,6 +703,28 @@ app.post('/init-spotify', (req, res) => {
         res.send({ request: req.body, spotifyMessage: "short term access token failed", typeStatus: "danger", error: e });
     }
 })
+
+const requestToken = (res, redirect_uri, code, userInfo, params) => {
+    // send form based request to Instagram API
+    request.post({
+        url: 'https://api.instagram.com/oauth/access_token',
+        form: {
+            client_id: INSTA_APP_ID,
+            client_secret: INSTA_APP_SECRET,
+            grant_type: 'authorization_code',
+            redirect_uri,
+            code
+        }
+    },
+        function (err, httpResponse, body) {
+            let result = JSON.parse(body);
+            if (result.access_token) {
+                // Got access token. Parse string response to JSON
+                let accessToken = result.access_token;
+                res.send({ params: params, userInfo: userInfo, result: result, accessToken: accessToken, typeStatus: "success" });
+            }
+        });
+}
 
 app.post('/init-insta', async (req, res) => {
     // data from frontend
