@@ -105,21 +105,6 @@ export default function App() {
     }
   }, []);
 
-  const fetchInstaPhotos = async () => {
-    try {
-      if (window.localStorage.getItem('userInfo') && userInfo?.ig_access_token && !instaRefreshed) {
-        setInstaRefreshed(true);
-        const data = await getInstaPhotos(userInfo.ig_access_token);
-        if (Array.isArray(data)) {
-          uploadInstaPhotos(data);
-        }
-      }
-    }
-    catch (err) {
-      console.log("err", err);
-    }
-  }
-
   const refreshLogin = () => {
     setIsFetching(true);
     const loggedInUser = window.localStorage.getItem('userInfo');
@@ -211,6 +196,21 @@ export default function App() {
       return resp.data.username;
     } catch (e) {
       console.log(e.response.data.error);
+    }
+  }
+
+  const fetchInstaPhotos = async () => {
+    try {
+      if (window.localStorage.getItem('userInfo') && userInfo?.ig_access_token && !instaRefreshed) {
+        setInstaRefreshed(true);
+        const data = await getInstaPhotos(userInfo.ig_access_token);
+        if (Array.isArray(data)) {
+          uploadInstaPhotos(data);
+        }
+      }
+    }
+    catch (err) {
+      console.log("err", err);
     }
   }
 
@@ -390,7 +390,7 @@ export default function App() {
     if (!fetchingMatches) {
       createMatches({});
     }
-    getMatchesForUser(MATCH_LIMIT, 0);
+    getMatchesForUser(MATCH_LIMIT + matchOffset, 0);
     navigate('/user/matching');
   }
 
@@ -425,7 +425,7 @@ export default function App() {
             if (offset == 0) {
               setUserMatches(resp.data.matchesInfo);
             }
-            else if (userMatches.length >= MATCH_LIMIT && resp.data.matchesInfo[0] && !userMatches.includes(resp.data.matchesInfo[0])) {
+            else if (userMatches.length >= MATCH_LIMIT && resp.data.matchesInfo[0] && !userMatches.includes(resp.data.matchesInfo[0]) && !userMatches.includes(resp.data.matchesInfo[1])) {
               let newMatches = userMatches.concat(resp.data.matchesInfo);
               setUserMatches(newMatches);
             }
