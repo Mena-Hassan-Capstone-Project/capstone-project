@@ -431,7 +431,9 @@ const removeInterest = async (objectName, itemKey, itemValue, currentUser) => {
     query.equalTo(itemKey, itemValue);
     query.equalTo("User", currentUser);
     const entry = await query.find();
-    entry[0].destroy();
+    if (entry.length > 0) {
+        entry[0].destroy();
+    }
 }
 
 app.post('/user/interests/remove', async (req, res) => {
@@ -441,10 +443,10 @@ app.post('/user/interests/remove', async (req, res) => {
     try {
         if (currentUser) {
             if (removeInfo.movie) {
-                removeInterest("Movie", "api_key", removeInfo.movie.api_id, currentUser);
+                removeInterest("Movie", "api_id", removeInfo.movie.api_id, currentUser);
             }
             if (removeInfo.show) {
-                removeInterest("Show", "api_key", removeInfo.show.api_id, currentUser);
+                removeInterest("Show", "api_id", removeInfo.show.api_id, currentUser);
             }
             if (removeInfo.hobby) {
                 removeInterest("Hobby", "name", removeInfo.hobby.name, currentUser);
