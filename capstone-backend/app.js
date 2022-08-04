@@ -38,7 +38,7 @@ const getUserInfo = async (user) => {
     const userShows = await getUserEntries("Show", user);
     const userHobbies = await getUserEntries("Hobby", user);
 
-    return ({ movies: userMovies, shows: userShows, hobbies: userHobbies, tags: user.get("tags"), music: user.get("spotify_artists"), major: user.get("major"), hometown: user.get("hometown"), gradYear: user.get("grad_year") });
+    return ({ movies: userMovies, shows: userShows, hobbies: userHobbies, tags: user.get("tags"), music: user.get("spotify_artists"), major: user.get("major"), hometown: user.get("hometown"), gradYear: user.get("grad_year"), university: user.get("university") });
 }
 
 const compareArrs = (arr1, arr2, weight) => {
@@ -227,7 +227,9 @@ const getMatches = async (currentUser, res) => {
         const matchInfo = await getUserInfo(entry);
         const currentUserInfo = await getUserInfo(currentUser);
         //skip if entry profile incomplete or either users have no interests added
-        if ((!matchInfo.movies && !matchInfo.shows && !matchInfo.hobbies && !matchInfo.music)
+        //skip if users do not go to the same college
+        if (matchInfo.university != currentUserInfo.university ||
+            (!matchInfo.movies && !matchInfo.shows && !matchInfo.hobbies && !matchInfo.music)
             || (!currentUserInfo.movies && !currentUserInfo.shows && !currentUserInfo.hobbies && !currentUserInfo.music)) {
             return;
         }
