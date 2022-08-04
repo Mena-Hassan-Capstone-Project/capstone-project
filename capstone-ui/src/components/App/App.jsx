@@ -656,6 +656,7 @@ export default function App() {
     <div className="App">
       <main>
         <Navbar userInfo={userInfo} onClickLogout={logOut} onClickMatching={goToMatching} goToBasic={goToBasic} goToSignUp={goToSignUp} goToLogin={goToLogin} />
+        <div className="main-content">
         <Routes>
           <Route
             path="/login"
@@ -723,6 +724,7 @@ export default function App() {
             element={<Suggestions suggestMatch={suggestMatch} userInfo={userInfo} />}
           />
         </Routes>
+        </div>
       </main>
     </div>
   );

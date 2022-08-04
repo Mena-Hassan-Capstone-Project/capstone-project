@@ -1,10 +1,11 @@
 import * as React from "react"
 import "./Suggestions.css"
 import { useState } from "react";
+import Loading from "../Loading/Loading"
 
 export default function Suggestions({ suggestMatch, userInfo }) {
     const TICKETMASTER_API_KEY = "NFYrlQO2ef4cUcAYyvNKkGhdEZbx7oJp";
-    const DISCOVER_URL = "https://app.ticketmaster.com/discovery/v2/events.json?latlong=";
+    const DISCOVER_URL = "https://app.ticketmaster.com/discovery/v2/events.json?";
     const [suggestions, setSuggestions] = useState(null);
     const [latLong, setLatLong] = useState(null);
     const NUM_SUGGESTIONS = 10;
@@ -42,7 +43,7 @@ export default function Suggestions({ suggestMatch, userInfo }) {
                 });
                 //if they have an artist in common
                 if (contains) {
-                    await fetch(DISCOVER_URL + `${latLong.lat},${latLong.long}&size=2&keyword=${artist.name}&apikey=` + TICKETMASTER_API_KEY)
+                    await fetch(DISCOVER_URL + `latlong=${latLong.lat},${latLong.long}&size=2&keyword=${artist.name}&apikey=` + TICKETMASTER_API_KEY)
                         .then(async (response) => {
                             const result = await response.json();
                             if (result._embedded?.events) {
@@ -65,7 +66,7 @@ export default function Suggestions({ suggestMatch, userInfo }) {
                 });
                 //if they have an artist in common
                 if (contains) {
-                    await fetch(DISCOVER_URL + `${latLong.lat},${latLong.long}&size=2&keyword=${hobby.name}&apikey=` + TICKETMASTER_API_KEY)
+                    await fetch(DISCOVER_URL + `latlong=${latLong.lat},${latLong.long}&size=2&keyword=${hobby.name}&apikey=` + TICKETMASTER_API_KEY)
                         .then(async (response) => {
                             const result = await response.json();
                             if (result._embedded?.events) {
@@ -78,12 +79,23 @@ export default function Suggestions({ suggestMatch, userInfo }) {
                 setSuggestions(matchSuggestions);
             }
         }
+        //find college events
         if (matchSuggestions.length < NUM_SUGGESTIONS) {
             const SUGGESTIONS_SIZE = NUM_SUGGESTIONS - matchSuggestions.length;
-            let response = await fetch(DISCOVER_URL + `${latLong.lat},${latLong.long}&size=${SUGGESTIONS_SIZE}&keyword=${userInfo?.university}&apikey=` + TICKETMASTER_API_KEY);
-            const result = await response.json();
-            matchSuggestions = matchSuggestions.concat(result._embedded.events);
-            setSuggestions(matchSuggestions);
+            let university = userInfo.university.replace("University of California-", "UC");
+            let response = await fetch(DISCOVER_URL + `latlong=${latLong.lat},${latLong.long}&size=${SUGGESTIONS_SIZE}&keyword=${university}&apikey=` + TICKETMASTER_API_KEY);
+            let result = await response.json();
+            try {
+                matchSuggestions = matchSuggestions.concat(result._embedded.events);
+                setSuggestions(matchSuggestions);
+            }
+            catch (err) {
+                console.log("err", err);
+                response = await fetch(DISCOVER_URL + `latlong=${latLong.lat},${latLong.long}&size=${SUGGESTIONS_SIZE}&apikey=` + TICKETMASTER_API_KEY);
+                result = await response.json();
+                matchSuggestions = matchSuggestions.concat(result._embedded.events);
+                setSuggestions(matchSuggestions);
+            }
         }
     }
 
@@ -96,13 +108,13 @@ export default function Suggestions({ suggestMatch, userInfo }) {
                         <h1>Event suggestions:</h1>
                         {suggestions.map((suggestion, index) => (
                             <div key={index} className="event-card">
-                                <p><a href={suggestion.url ? suggestion.url : ""} target="_blank" className="p-link">{`${index + 1}. ${suggestion.name}`}</a></p>
+                                <p><a href={suggestion.url ? suggestion.url : ""} target="_blank" className="p-link suggestion-title">{`${index + 1}. ${suggestion.name}`}</a></p>
                                 <img className="event-img" src={suggestion.images[0].url} />
                             </div>
                         ))}
                     </div>
                     :
-                    <p>Still retrieving suggestions...</p>
+                    <Loading loadingText={"Retrieving"} />
             }
         </div>
     )

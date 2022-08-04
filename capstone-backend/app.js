@@ -147,11 +147,15 @@ const compareStrings = (str1, str2, weight) => {
     if (!str1 || !str2) {
         return 0;
     }
-    else if (str1.includes(str2) || str2.includes(str1)) {
-        return weight;
-    }
     else {
-        return 0;
+        str1 = str1.toLowerCase();
+        str2 = str2.toLowerCase();
+        if (str1.includes(str2) || str2.includes(str1)) {
+            return weight;
+        }
+        else {
+            return 0;
+        }
     }
 }
 
@@ -223,9 +227,9 @@ const getMatches = async (currentUser, res) => {
 
     const Match = Parse.Object.extend("Match");
 
+    const currentUserInfo = await getUserInfo(currentUser);
     entries.forEach(async entry => {
         const matchInfo = await getUserInfo(entry);
-        const currentUserInfo = await getUserInfo(currentUser);
         //skip if entry profile incomplete or either users have no interests added
         //skip if users do not go to the same college
         if (matchInfo.university != currentUserInfo.university ||

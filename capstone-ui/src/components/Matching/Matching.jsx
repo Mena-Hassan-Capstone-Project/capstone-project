@@ -43,7 +43,7 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
             ? <Loading />
             :
             userMatches.length == 0
-                ? <p>Still retrieving matches...</p>
+                ? <Loading loadingText={"Retrieving"}/>
                 :
                 <div>
                     <div className="card-grid" id="matching">
@@ -55,6 +55,7 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
                                         match.userInfo.profile_photo
                                             ?
                                             <Carousel
+                                                className="carousel"
                                                 statusFormatter={function () { }}
                                                 dynamicHeight={true}
                                                 showArrows={false}
