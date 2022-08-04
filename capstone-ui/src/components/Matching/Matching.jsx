@@ -6,7 +6,7 @@ import { FaRegHeart } from "react-icons/fa";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { Carousel } from 'react-responsive-carousel'
 
-export default function Matching({ isFetching, userMatches, getMatchesForUser, matchOffset, setOffset, matchLimit, createMatches, goToMatching, setIsFetching, goToSuggest, setSuggestMatch }) {
+export default function Matching({ isFetching, userMatches, getMatchesForUser, matchOffset, setOffset, matchLimit, createMatches, goToMatching, setIsFetching, goToSuggest, setSuggestMatch, seeMoreMatches }) {
 
     //add max 10 photos to match's media carousel
     const MAX_MEDIA = 10;
@@ -43,7 +43,7 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
             ? <Loading />
             :
             userMatches.length == 0
-                ? <Loading loadingText={"Retrieving"}/>
+                ? <Loading loadingText={"Retrieving"} />
                 :
                 <div>
                     <div className="card-grid" id="matching">
@@ -155,7 +155,7 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
                                         setIsFetching(true);
                                         const liked = match.scoreInfo.liked;
                                         await createMatches({ matchId: match.userInfo.objectId, liked: !liked });
-                                        await getMatchesForUser(matchLimit, 0);
+                                        await getMatchesForUser(matchLimit * matchOffset, 0);
                                         await goToMatching();
                                         setIsFetching(false);
                                     }}>
@@ -176,15 +176,15 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
                         }
                     </div>
                     {
-                        userMatches.length < matchLimit
-                            ? null
-                            : <button className="login-btn see-more" onClick={() => {
+                        userMatches.length >= matchLimit && seeMoreMatches
+                            ? <button className="login-btn see-more" onClick={() => {
                                 const newOffset = parseInt(matchOffset) + parseInt(matchLimit);
                                 getMatchesForUser(matchLimit, newOffset);
                                 setOffset(newOffset);
                             }}>
                                 See More
                             </button>
+                            : null
                     }
                 </div>
     )

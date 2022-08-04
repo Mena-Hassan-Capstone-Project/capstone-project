@@ -275,8 +275,9 @@ const getMatches = async (currentUser, res) => {
                 createNewMatch(match2, matchScore, entry.id, currentUser.id)
             }
         }
+
     })
-    res.send({ matchMessage: "Matches created", typeStatus: 'success', entries: entries });
+    res.send({ matchMessage: "Matches created", typeStatus: 'success' });
 }
 
 const retrieveMatchData = async (limit, offset, currentUser) => {
@@ -325,6 +326,7 @@ app.post('/login', async (req, res) => {
         const majors = JSON.parse(rawdata);
         res.send({ userInfo: user, loginMessage: "User logged in!", typeStatus: "success", infoUser: infoUser, majors: majors });
     } catch (error) {
+        console.log("error", error)
         res.send({ loginMessage: error, typeStatus: "danger", infoUser: infoUser });
     }
 })
@@ -374,7 +376,7 @@ app.post('/matches', async (req, res) => {
     const currentUser = Parse.User.current();
     try {
         if (currentUser) {
-            if (params.liked) {
+            if (params.matchId) {
                 updateMatch(params, currentUser, res);
             }
             else {

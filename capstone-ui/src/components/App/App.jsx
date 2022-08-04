@@ -55,7 +55,9 @@ export default function App() {
   const [userMatches, setUserMatches] = useState([]);
   const [matchOffset, setOffset] = useState(0);
   const [fetchingMatches, setFetchingMatches] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [suggestMatch, setSuggestMatch] = useState(false);
+  const [seeMoreMatches, setSeeMoreMatches] = useState(true);
 
   const [token, setToken] = useState("");
   const [spotifyRefreshed, setSpotifyRefreshed] = useState(false);
@@ -82,21 +84,28 @@ export default function App() {
       if (userMatches.length == 0 && !fetchingMatches) {
         createMatches({});
       }
-      getMatchesForUser(MATCH_LIMIT + matchOffset, 0);
+      if (matchOffset > 0) {
+        getMatchesForUser(MATCH_LIMIT * matchOffset, 0);
+      }
+      else {
+        getMatchesForUser(MATCH_LIMIT, 0);
+        setOffset(0);
+        setSeeMoreMatches(true);
+      }
     }
-    if (window.localStorage.getItem('userInfo') && !userInfo.interests) {
+    if (userInfo != "" && window.localStorage.getItem('userInfo') && !userInfo.interests) {
       getInterestsFromUser();
     }
   }, [userInfo]);
 
   React.useEffect(() => {
-    setIsFetching(true);
+    //setIsFetching(true);
     if (window.performance) {
       if (window.localStorage.getItem('userInfo') && !userInfo && String(window.performance.getEntriesByType("navigation")[0].type) === "reload") {
         refreshLogin();
       }
     }
-    setIsFetching(false);
+    //setIsFetching(false);
   }, []);
 
   React.useEffect(() => {
@@ -106,24 +115,31 @@ export default function App() {
   }, []);
 
   const refreshLogin = () => {
-    setIsFetching(true);
-    const loggedInUser = window.localStorage.getItem('userInfo');
-    if (loggedInUser) {
-      const foundUser = JSON.parse(loggedInUser);
-      axios.post(`https://localhost:${PORT}/login`, {
-        email: foundUser.email,
-        password: foundUser.password
-      })
-        .then(function (response) {
-          setUserInfo(response.data.userInfo);
-          setUserMatches([]);
-          setTimeout(getInterestsFromUser, 500);
-          getMatchesForUser(MATCH_LIMIT + matchOffset, 0);
-          setTimeout(setFetchingFalse, 1500);
+    if (!isRefreshing) {
+      setIsRefreshing(true);
+      const loggedInUser = window.localStorage.getItem('userInfo');
+      if (loggedInUser) {
+        const foundUser = JSON.parse(loggedInUser);
+        axios.post(`https://localhost:${PORT}/login`, {
+          email: foundUser.email,
+          password: foundUser.password
         })
-        .catch(function (err) {
-          console.log(err);
-        })
+          .then(function (response) {
+            setUserInfo(response.data.userInfo);
+            setMajorList(response.data.majors);
+            setToken("");
+            setOffset(0);
+            setUserMatches([]);
+            setInstaRefreshed(false);
+            setSpotifyRefreshed(false);
+            setIsRefreshing(false);
+            navigate('/user/basic');
+            //setTimeout(getInterestsFromUser, 500);    
+          })
+          .catch(function (err) {
+            console.log("err", err);
+          })
+      }
     }
   }
 
@@ -390,7 +406,13 @@ export default function App() {
     if (!fetchingMatches) {
       createMatches({});
     }
-    getMatchesForUser(MATCH_LIMIT + matchOffset, 0);
+    if (matchOffset != 0) {
+      getMatchesForUser(MATCH_LIMIT * matchOffset, 0);
+    }
+    else {
+      getMatchesForUser(MATCH_LIMIT, 0);
+      setSeeMoreMatches(true);
+    }
     navigate('/user/matching');
   }
 
@@ -407,31 +429,34 @@ export default function App() {
           }
         }
       });
-    setIsFetching(false);
   }
 
   //retrieves matches for user
   //sets user info
   const getMatchesForUser = async (limit, offset) => {
-    if (!fetchingMatches) {
-      await axios.get(`https://localhost:${PORT}/matches`, {
-        params: {
-          limit: limit,
-          offset: offset
-        }
-      })
-        .then(resp => {
-          if (resp.data.typeStatus == "success") {
-            if (offset == 0) {
-              setUserMatches(resp.data.matchesInfo);
-            }
-            else if (userMatches.length >= MATCH_LIMIT && resp.data.matchesInfo[0] && !userMatches.includes(resp.data.matchesInfo[0]) && !userMatches.includes(resp.data.matchesInfo[1])) {
-              let newMatches = userMatches.concat(resp.data.matchesInfo);
-              setUserMatches(newMatches);
+    await axios.get(`https://localhost:${PORT}/matches`, {
+      params: {
+        limit: limit,
+        offset: offset
+      }
+    })
+      .then(resp => {
+        if (resp.data.typeStatus == "success") {
+          if (offset == 0) {
+            setUserMatches(resp.data.matchesInfo);
+          }
+          else if (resp.data.matchesInfo.length == 0) {
+            setSeeMoreMatches(false);
+          }
+          else if (userMatches.length >= MATCH_LIMIT && resp.data.matchesInfo[0] && !userMatches.includes(resp.data.matchesInfo[0]) && !userMatches.includes(resp.data.matchesInfo[1])) {
+            let newMatches = userMatches.concat(resp.data.matchesInfo);
+            setUserMatches(newMatches);
+            if (resp.data.matchesInfo < MATCH_LIMIT) {
+              setSeeMoreMatches(false);
             }
           }
-        });
-    }
+        }
+      });
   }
 
   //log user out
@@ -584,6 +609,7 @@ export default function App() {
           setOffset(0);
           setInstaRefreshed(false);
           setSpotifyRefreshed(false);
+          setSeeMoreMatches(true);
           navigate('/user/basic');
         }
         setIsFetching(false);
@@ -657,73 +683,73 @@ export default function App() {
       <main>
         <Navbar userInfo={userInfo} onClickLogout={logOut} onClickMatching={goToMatching} goToBasic={goToBasic} goToSignUp={goToSignUp} goToLogin={goToLogin} />
         <div className="main-content">
-        <Routes>
-          <Route
-            path="/login"
-            element={<Login onClickLogin={createLoginParser} isFetching={isFetching} onClickSignUp={goToSignUp}></Login>}
-          />
-          <Route
-            path="/signup"
-            element={<SignUp onClickSignUp={createSignUpParser} onClickLogin={goToLogin} isFetching={isFetching}></SignUp>}
-          />
-          <Route
-            path="/verify"
-            element={<VerifyStudent onClickVerify={createVerifyParser} collegeList={collegeList} selectedCollegeOption={selectedCollegeOption} setSelectedCollegeOption={setSelectedCollegeOption}></VerifyStudent>}
-          />
-          <Route
-            path="/user/basic"
-            element={<BasicInfo userInfo={userInfo} onClickInterests={goToInterests} onClickMedia={goToMedia} goToEditInfo={goToEditInfo} isFetching={isFetching}></BasicInfo>}
-          />
-          <Route
-            path="/user/basic/edit"
-            element={<BasicInfoEdit userInfo={userInfo} onClickInterests={goToInterests} onClickMedia={goToMedia} saveBasicInfo={saveBasicInfo} setUserInfo={setUserInfo} isFetching={isFetching}
-              selectedMajorOption={selectedMajorOption} setSelectedMajorOption={setSelectedMajorOption} majorList={majorList}></BasicInfoEdit>}
-          />
-          <Route
-            path="/user/interests"
-            element={<Interests userInfo={userInfo} onClickBasic={goToBasic} onClickMedia={goToMedia} onClickEditInterests={goToEditInterests} isFetching={isFetching}></Interests>}
-          />
-          <Route
-            path="/user/interests/edit"
-            element={<InterestsEdit userInfo={userInfo} onClickBasic={goToBasic} onClickMedia={goToMedia} saveInterests={saveInterests} getMovieSearch={getMovieSearch} movie={movie}
-              removeMovie={removeMovie} isFetching={isFetching} getTVSearch={getTVSearch} TV={TV} removeShow={removeShow} selectedHobbyOption={selectedHobbyOption}
-              setSelectedHobbyOption={setSelectedHobbyOption} hobbiesList={hobbiesList} removeHobby={removeHobby} addNewHobby={addNewHobby} onClickSpotify={getSpotifyAuth}></InterestsEdit>}
-          />
-          <Route
-            path="/user/media"
-            element={<Media userInfo={userInfo} onClickBasic={goToBasic} onClickInterests={goToInterests} onClickEditMedia={goToEditMedia} isFetching={isFetching} onClickInsta={setupInsta} getInstaPhotos={getInstaPhotos} uploadInstaPhotos={uploadInstaPhotos}></Media>}
-          />
-          <Route
-            path="/user/media/edit"
-            element={<MediaEdit userInfo={userInfo} onClickBasic={goToBasic} onClickInterests={goToInterests} imageList={userInfo.media ? userInfo.media : null} maxImages={10} setUserInfo={setUserInfo} isFetching={isFetching} setIsFetching={setIsFetching}></MediaEdit>}
-          />
-          <Route
-            path="/user/matching"
-            element={<Matching isFetching={isFetching} userMatches={userMatches} getMatchesForUser={getMatchesForUser} matchOffset={matchOffset} setOffset={setOffset} matchLimit={MATCH_LIMIT}
-              goToMatching={goToMatching} createMatches={createMatches} setIsFetching={setIsFetching} goToSuggest={goToSuggest} setSuggestMatch={setSuggestMatch}></Matching>}
-          />
-          <Route path="*" element=
-            {<NotFound />}
-          />
-          <Route path="/insta-redirect" element=
-            {<InstaRedirect goToLogin={goToLogin} />}
-          />
-          <Route path="/spotify-redirect" element=
-            {<SpotifyRedirect goToLogin={goToLogin} />}
-          />
-          <Route
-            path="/loading"
-            element={<Loading />}
-          />
-          <Route
-            path="/userTable"
-            element={<UserTable />}
-          />
-          <Route
-            path="/suggest"
-            element={<Suggestions suggestMatch={suggestMatch} userInfo={userInfo} />}
-          />
-        </Routes>
+          <Routes>
+            <Route
+              path="/login"
+              element={<Login onClickLogin={createLoginParser} isFetching={isFetching} onClickSignUp={goToSignUp}></Login>}
+            />
+            <Route
+              path="/signup"
+              element={<SignUp onClickSignUp={createSignUpParser} onClickLogin={goToLogin} isFetching={isFetching}></SignUp>}
+            />
+            <Route
+              path="/verify"
+              element={<VerifyStudent onClickVerify={createVerifyParser} collegeList={collegeList} selectedCollegeOption={selectedCollegeOption} setSelectedCollegeOption={setSelectedCollegeOption}></VerifyStudent>}
+            />
+            <Route
+              path="/user/basic"
+              element={<BasicInfo userInfo={userInfo} onClickInterests={goToInterests} onClickMedia={goToMedia} goToEditInfo={goToEditInfo} isFetching={isFetching}></BasicInfo>}
+            />
+            <Route
+              path="/user/basic/edit"
+              element={<BasicInfoEdit userInfo={userInfo} onClickInterests={goToInterests} onClickMedia={goToMedia} saveBasicInfo={saveBasicInfo} setUserInfo={setUserInfo} isFetching={isFetching}
+                selectedMajorOption={selectedMajorOption} setSelectedMajorOption={setSelectedMajorOption} majorList={majorList}></BasicInfoEdit>}
+            />
+            <Route
+              path="/user/interests"
+              element={<Interests userInfo={userInfo} onClickBasic={goToBasic} onClickMedia={goToMedia} onClickEditInterests={goToEditInterests} isFetching={isFetching}></Interests>}
+            />
+            <Route
+              path="/user/interests/edit"
+              element={<InterestsEdit userInfo={userInfo} onClickBasic={goToBasic} onClickMedia={goToMedia} saveInterests={saveInterests} getMovieSearch={getMovieSearch} movie={movie}
+                removeMovie={removeMovie} isFetching={isFetching} getTVSearch={getTVSearch} TV={TV} removeShow={removeShow} selectedHobbyOption={selectedHobbyOption}
+                setSelectedHobbyOption={setSelectedHobbyOption} hobbiesList={hobbiesList} removeHobby={removeHobby} addNewHobby={addNewHobby} onClickSpotify={getSpotifyAuth}></InterestsEdit>}
+            />
+            <Route
+              path="/user/media"
+              element={<Media userInfo={userInfo} onClickBasic={goToBasic} onClickInterests={goToInterests} onClickEditMedia={goToEditMedia} isFetching={isFetching} onClickInsta={setupInsta} getInstaPhotos={getInstaPhotos} uploadInstaPhotos={uploadInstaPhotos}></Media>}
+            />
+            <Route
+              path="/user/media/edit"
+              element={<MediaEdit userInfo={userInfo} onClickBasic={goToBasic} onClickInterests={goToInterests} imageList={userInfo.media ? userInfo.media : null} maxImages={10} setUserInfo={setUserInfo} isFetching={isFetching} setIsFetching={setIsFetching}></MediaEdit>}
+            />
+            <Route
+              path="/user/matching"
+              element={<Matching isFetching={isFetching} userMatches={userMatches} getMatchesForUser={getMatchesForUser} matchOffset={matchOffset} setOffset={setOffset} matchLimit={MATCH_LIMIT}
+                goToMatching={goToMatching} createMatches={createMatches} setIsFetching={setIsFetching} goToSuggest={goToSuggest} setSuggestMatch={setSuggestMatch} seeMoreMatches={seeMoreMatches}></Matching>}
+            />
+            <Route path="*" element=
+              {<NotFound />}
+            />
+            <Route path="/insta-redirect" element=
+              {<InstaRedirect goToLogin={goToLogin} />}
+            />
+            <Route path="/spotify-redirect" element=
+              {<SpotifyRedirect goToLogin={goToLogin} />}
+            />
+            <Route
+              path="/loading"
+              element={<Loading />}
+            />
+            <Route
+              path="/userTable"
+              element={<UserTable />}
+            />
+            <Route
+              path="/suggest"
+              element={<Suggestions suggestMatch={suggestMatch} userInfo={userInfo} />}
+            />
+          </Routes>
         </div>
       </main>
     </div>
