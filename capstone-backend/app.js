@@ -232,49 +232,46 @@ const getMatches = async (currentUser, res) => {
     const currentUserInfo = await getUserInfo(currentUser);
     entries.forEach(async entry => {
         const matchInfo = await getUserInfo(entry);
-        //skip if users do not go to the same college
-        if (matchInfo.university != currentUserInfo.university) {
-            return;
-        }
+        //only run if users go to the same college
+        if (matchInfo.university === currentUserInfo.university) {
+            const movieInfo = { user_1: currentUserInfo.movies, user_2: matchInfo.movies };
+            const showInfo = { user_1: currentUserInfo.shows, user_2: matchInfo.shows };
+            const hobbiesInfo = { user_1: currentUserInfo.hobbies, user_2: matchInfo.hobbies };
+            const tagsInfo = { user_1: currentUserInfo.tags, user_2: matchInfo.tags };
+            const musicInfo = { user_1: currentUserInfo.music, user_2: matchInfo.music };
+            const majorInfo = { user_1: currentUserInfo.major, user_2: matchInfo.major };
+            const hometownInfo = { user_1: currentUserInfo.hometown, user_2: matchInfo.hometown };
+            const gradYearInfo = { user_1: currentUserInfo.gradYear, user_2: matchInfo.gradYear };
+            const matchScore = getScore(movieInfo, showInfo, hobbiesInfo, tagsInfo, musicInfo, majorInfo, hometownInfo, gradYearInfo);
 
-        const movieInfo = { user_1: currentUserInfo.movies, user_2: matchInfo.movies };
-        const showInfo = { user_1: currentUserInfo.shows, user_2: matchInfo.shows };
-        const hobbiesInfo = { user_1: currentUserInfo.hobbies, user_2: matchInfo.hobbies };
-        const tagsInfo = { user_1: currentUserInfo.tags, user_2: matchInfo.tags };
-        const musicInfo = { user_1: currentUserInfo.music, user_2: matchInfo.music };
-        const majorInfo = { user_1: currentUserInfo.major, user_2: matchInfo.major };
-        const hometownInfo = { user_1: currentUserInfo.hometown, user_2: matchInfo.hometown };
-        const gradYearInfo = { user_1: currentUserInfo.gradYear, user_2: matchInfo.gradYear };
-        const matchScore = getScore(movieInfo, showInfo, hobbiesInfo, tagsInfo, musicInfo, majorInfo, hometownInfo, gradYearInfo);
+            //check if match is already in database
+            const matchQuery = new Parse.Query(Match);
+            matchQuery.equalTo("user_1", currentUser.id);
+            matchQuery.equalTo("user_2", entry.id);
+            let matchResults = await matchQuery.first();
 
-        //check if match is already in database
-        const matchQuery = new Parse.Query(Match);
-        matchQuery.equalTo("user_1", currentUser.id);
-        matchQuery.equalTo("user_2", entry.id);
-        let matchResults = await matchQuery.first();
+            const matchQuery2 = new Parse.Query(Match);
+            matchQuery2.equalTo("user_2", currentUser.id);
+            matchQuery2.equalTo("user_1", entry.id);
+            let matchResults2 = await matchQuery2.first();
 
-        const matchQuery2 = new Parse.Query(Match);
-        matchQuery2.equalTo("user_2", currentUser.id);
-        matchQuery2.equalTo("user_1", entry.id);
-        let matchResults2 = await matchQuery2.first();
-
-        if (matchResults) {
-            if (matchResults.get("score") != matchScore) {
-                matchResults.set("score", matchScore);
-                matchResults2.set("score", matchScore);
-                await matchResults.save()
-                await matchResults2.save()
+            if (matchResults) {
+                if (matchResults.get("score") != matchScore) {
+                    matchResults.set("score", matchScore);
+                    matchResults2.set("score", matchScore);
+                    await matchResults.save()
+                    await matchResults2.save()
+                }
+            }
+            else {
+                const match = new Match();
+                const match2 = new Match();
+                if (matchScore) {
+                    createNewMatch(match, matchScore, currentUser.id, entry.id)
+                    createNewMatch(match2, matchScore, entry.id, currentUser.id)
+                }
             }
         }
-        else {
-            const match = new Match();
-            const match2 = new Match();
-            if (matchScore) {
-                createNewMatch(match, matchScore, currentUser.id, entry.id)
-                createNewMatch(match2, matchScore, entry.id, currentUser.id)
-            }
-        }
-
     })
     res.send({ matchMessage: "Matches created", typeStatus: 'success' });
 }
@@ -346,7 +343,7 @@ app.post('/login', async (req, res) => {
 app.post('/logout', async (req, res) => {
 
     try {
-        let query = new Parse.Query("_Session")
+        const query = new Parse.Query("_Session")
         query.equalTo("sessionToken", req.body.sessionToken)
         await query.first({ useMasterKey: true }).then(function (user) {
             if (user) {
