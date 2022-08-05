@@ -1,3 +1,7 @@
+.login {
+    padding-top: 20px;
+}
+
 .login-input {
     height: 50px;
     width: 300px;
@@ -8,6 +12,6 @@
     cursor: pointer
 }
 
-.account-txt{
+.account-txt {
     font-size: 18px;
 }

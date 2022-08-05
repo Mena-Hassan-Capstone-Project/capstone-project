@@ -12,7 +12,7 @@ export default function Login({ onClickLogin, isFetching, onClickSignUp }) {
         <h2>Log in and start connecting!</h2>
         <input className="input login-input" id="email" type="email" placeholder="Email" />
         <br />
-        <input className="input login-input" id="password" type="text" placeholder="Password" />
+        <input className="input login-input" id="password" type="password" placeholder="Password" />
         <br />
         <button className="login-btn" onClick={onClickLogin}>
           Log In

@@ -17,9 +17,11 @@ app.use(cors());
 
 const PARSE_APP_ID = config.get('PARSE_KEYS.PARSE_APP_ID');
 const PARSE_JS_KEY = config.get('PARSE_KEYS.PARSE_JS_KEY');
+const PARSE_MASTER_KEY = config.get('PARSE_KEYS.PARSE_MASTER_KEY');
 
 Parse.initialize(PARSE_APP_ID, PARSE_JS_KEY);
 Parse.serverURL = 'http://parseapi.back4app.com/';
+Parse.User.enableUnsafeCurrentUser();
 
 const INSTA_APP_ID = config.get('INSTA_KEYS.INSTA_APP_ID');
 const INSTA_APP_SECRET = config.get('INSTA_KEYS.INSTA_APP_SECRET');
@@ -230,53 +232,48 @@ const getMatches = async (currentUser, res) => {
     const currentUserInfo = await getUserInfo(currentUser);
     entries.forEach(async entry => {
         const matchInfo = await getUserInfo(entry);
-        //skip if entry profile incomplete or either users have no interests added
-        //skip if users do not go to the same college
-        if (matchInfo.university != currentUserInfo.university ||
-            (!matchInfo.movies && !matchInfo.shows && !matchInfo.hobbies && !matchInfo.music)
-            || (!currentUserInfo.movies && !currentUserInfo.shows && !currentUserInfo.hobbies && !currentUserInfo.music)) {
-            return;
-        }
+        //only run if users go to the same college
+        if (matchInfo.university === currentUserInfo.university) {
+            const movieInfo = { user_1: currentUserInfo.movies, user_2: matchInfo.movies };
+            const showInfo = { user_1: currentUserInfo.shows, user_2: matchInfo.shows };
+            const hobbiesInfo = { user_1: currentUserInfo.hobbies, user_2: matchInfo.hobbies };
+            const tagsInfo = { user_1: currentUserInfo.tags, user_2: matchInfo.tags };
+            const musicInfo = { user_1: currentUserInfo.music, user_2: matchInfo.music };
+            const majorInfo = { user_1: currentUserInfo.major, user_2: matchInfo.major };
+            const hometownInfo = { user_1: currentUserInfo.hometown, user_2: matchInfo.hometown };
+            const gradYearInfo = { user_1: currentUserInfo.gradYear, user_2: matchInfo.gradYear };
+            const matchScore = getScore(movieInfo, showInfo, hobbiesInfo, tagsInfo, musicInfo, majorInfo, hometownInfo, gradYearInfo);
 
-        const movieInfo = { user_1: currentUserInfo.movies, user_2: matchInfo.movies };
-        const showInfo = { user_1: currentUserInfo.shows, user_2: matchInfo.shows };
-        const hobbiesInfo = { user_1: currentUserInfo.hobbies, user_2: matchInfo.hobbies };
-        const tagsInfo = { user_1: currentUserInfo.tags, user_2: matchInfo.tags };
-        const musicInfo = { user_1: currentUserInfo.music, user_2: matchInfo.music };
-        const majorInfo = { user_1: currentUserInfo.major, user_2: matchInfo.major };
-        const hometownInfo = { user_1: currentUserInfo.hometown, user_2: matchInfo.hometown };
-        const gradYearInfo = { user_1: currentUserInfo.gradYear, user_2: matchInfo.gradYear };
-        const matchScore = getScore(movieInfo, showInfo, hobbiesInfo, tagsInfo, musicInfo, majorInfo, hometownInfo, gradYearInfo);
+            //check if match is already in database
+            const matchQuery = new Parse.Query(Match);
+            matchQuery.equalTo("user_1", currentUser.id);
+            matchQuery.equalTo("user_2", entry.id);
+            let matchResults = await matchQuery.first();
 
-        //check if match is already in database
-        const matchQuery = new Parse.Query(Match);
-        matchQuery.equalTo("user_1", currentUser.id);
-        matchQuery.equalTo("user_2", entry.id);
-        let matchResults = await matchQuery.first();
+            const matchQuery2 = new Parse.Query(Match);
+            matchQuery2.equalTo("user_2", currentUser.id);
+            matchQuery2.equalTo("user_1", entry.id);
+            let matchResults2 = await matchQuery2.first();
 
-        const matchQuery2 = new Parse.Query(Match);
-        matchQuery2.equalTo("user_2", currentUser.id);
-        matchQuery2.equalTo("user_1", entry.id);
-        let matchResults2 = await matchQuery2.first();
-
-        if (matchResults) {
-            if (matchResults.get("score") != matchScore) {
-                matchResults.set("score", matchScore);
-                matchResults2.set("score", matchScore);
-                await matchResults.save()
-                await matchResults2.save()
+            if (matchResults) {
+                if (matchResults.get("score") != matchScore) {
+                    matchResults.set("score", matchScore);
+                    matchResults2.set("score", matchScore);
+                    await matchResults.save()
+                    await matchResults2.save()
+                }
             }
-        }
-        else {
-            const match = new Match();
-            const match2 = new Match();
-            if (matchScore) {
-                createNewMatch(match, matchScore, currentUser.id, entry.id)
-                createNewMatch(match2, matchScore, entry.id, currentUser.id)
+            else {
+                const match = new Match();
+                const match2 = new Match();
+                if (matchScore) {
+                    createNewMatch(match, matchScore, currentUser.id, entry.id)
+                    createNewMatch(match2, matchScore, entry.id, currentUser.id)
+                }
             }
         }
     })
-    res.send({ matchMessage: "Matches created", typeStatus: 'success', entries: entries });
+    res.send({ matchMessage: "Matches created", typeStatus: 'success' });
 }
 
 const retrieveMatchData = async (limit, offset, currentUser) => {
@@ -315,16 +312,30 @@ const retrieveMatchData = async (limit, offset, currentUser) => {
     return ({ matchesInfo: matchesInfo, matchResults: matchResults, matchMessage: "Matches Retrieved!", typeStatus: "success" });
 }
 
-app.post('/login', async (req, res) => {
-    Parse.User.enableUnsafeCurrentUser();
+app.post('/reset-session', async (req, res) => {
     const infoUser = req.body;
 
     try {
-        const user = await Parse.User.logIn(infoUser.email, infoUser.password);
+        const user = await Parse.User.become(infoUser.sessionToken);
         const rawdata = fs.readFileSync('data/majors.json');
         const majors = JSON.parse(rawdata);
         res.send({ userInfo: user, loginMessage: "User logged in!", typeStatus: "success", infoUser: infoUser, majors: majors });
     } catch (error) {
+        console.log("error", error)
+        res.send({ loginMessage: error, typeStatus: "danger", infoUser: infoUser });
+    }
+})
+
+app.post('/login', async (req, res) => {
+    const infoUser = req.body;
+    try {
+        const user = await Parse.User.logIn(infoUser.email, infoUser.password);
+        const sessionToken = user.getSessionToken();
+        const rawdata = fs.readFileSync('data/majors.json');
+        const majors = JSON.parse(rawdata);
+        res.send({ userInfo: user, sessionToken: sessionToken, loginMessage: "User logged in!", typeStatus: "success", infoUser: infoUser, majors: majors });
+    } catch (error) {
+        console.log("error", error)
         res.send({ loginMessage: error, typeStatus: "danger", infoUser: infoUser });
     }
 })
@@ -332,19 +343,31 @@ app.post('/login', async (req, res) => {
 app.post('/logout', async (req, res) => {
 
     try {
-        await Parse.User.logOut();
-        res.send({ logoutMessage: "User logged out!", typeStatus: "success" });
+        const query = new Parse.Query("_Session")
+        query.equalTo("sessionToken", req.body.sessionToken)
+        await query.first({ useMasterKey: true }).then(function (user) {
+            if (user) {
+                user
+                    .destroy(
+                        { useMasterKey: true }
+                    )
+                    .then(function (res) {
+                        res.send({ logoutMessage: "User logged out!", typeStatus: "success" });
+                    })
+                    .catch(function (error) {
+                        console.log(error)
+                        return null
+                    })
+            } else {
+                res.send({ logoutMessage: "error", RegisterMessage: '', typeStatus: "danger", infoUser: user })
+            }
+        })
     } catch (error) {
         res.send({ logoutMessage: error.message, typeStatus: "danger" });
     }
 })
 
 app.post('/signup', async (req, res) => {
-    Parse.User.enableUnsafeCurrentUser();
-    const currentUser = Parse.User.current();
-    if (currentUser) {
-        await Parse.User.logOut();
-    }
     const infoUser = req.body;
     let user = new Parse.User();
 
@@ -360,7 +383,8 @@ app.post('/signup', async (req, res) => {
     try {
         await user.signUp();
         await Parse.User.logIn(infoUser.email, infoUser.password);
-        res.send({ signupMessage: "User signed up!", typeStatus: 'success', infoUser: infoUser, colleges: colleges });
+        const sessionToken = user.getSessionToken();
+        res.send({ signupMessage: "User signed up!", typeStatus: 'success', infoUser: infoUser, colleges: colleges, sessionToken: sessionToken });
     }
     catch (error) {
         res.send({ signupMessage: error.message, typeStatus: 'danger', infoUser: infoUser });
@@ -368,13 +392,12 @@ app.post('/signup', async (req, res) => {
 })
 
 app.post('/matches', async (req, res) => {
-    Parse.User.enableUnsafeCurrentUser();
 
     const params = req.body.params;
-    const currentUser = Parse.User.current();
+    const currentUser = await Parse.User.become(req.body.sessionToken);
     try {
         if (currentUser) {
-            if (params.liked) {
+            if (params.matchId) {
                 updateMatch(params, currentUser, res);
             }
             else {
@@ -391,8 +414,7 @@ app.post('/matches', async (req, res) => {
 })
 
 app.get('/matches', async (req, res) => {
-    Parse.User.enableUnsafeCurrentUser();
-    const currentUser = Parse.User.current();
+    const currentUser = await Parse.User.become(req.query["sessionToken"]);
     const limit = req.query["limit"];
     const offset = req.query["offset"];
     try {
@@ -444,8 +466,7 @@ const removeInterest = async (objectName, itemKey, itemValue, currentUser) => {
 
 app.post('/user/interests/remove', async (req, res) => {
     const removeInfo = req.body;
-    Parse.User.enableUnsafeCurrentUser();
-    const currentUser = Parse.User.current();
+    const currentUser = await Parse.User.become(removeInfo.sessionToken);
     try {
         if (currentUser) {
             if (removeInfo.movie) {
@@ -469,8 +490,7 @@ app.post('/user/interests/remove', async (req, res) => {
 });
 
 app.get('/user/interests', async (req, res) => {
-    Parse.User.enableUnsafeCurrentUser();
-    const currentUser = Parse.User.current();
+    const currentUser = await Parse.User.become(req.query["sessionToken"]);
     if (currentUser) {
         //get movies for this user
         const userMovies = await getInterestQuery(currentUser, "Movie");
@@ -491,9 +511,9 @@ app.get('/user/interests', async (req, res) => {
 });
 
 app.post('/user/interests', async (req, res) => {
-    Parse.User.enableUnsafeCurrentUser();
     const infoInterests = req.body;
 
+    const currentUser = await Parse.User.become(infoInterests.sessionToken);
     try {
         const Movie = Parse.Object.extend("Movie");
         const movie = new Movie();
@@ -507,7 +527,6 @@ app.post('/user/interests', async (req, res) => {
         const rawdata = fs.readFileSync('data/hobbies.json');
         const hobbiesList = await JSON.parse(rawdata);
 
-        const currentUser = Parse.User.current();
         if (currentUser) {
             if (infoInterests.interests.movie && infoInterests.interests.movie != "") {
                 const query = new Parse.Query(Movie);
@@ -552,7 +571,6 @@ app.post('/user/interests', async (req, res) => {
                         fs.writeFile('data/hobbies.json', newData, err => {
                             // error checking
                             if (err) throw err;
-
                         });
                     }
                     hobby.set("name", infoInterests.interests.hobby.name);
@@ -573,11 +591,10 @@ app.post('/user/interests', async (req, res) => {
 })
 
 app.post('/user/update', async (req, res) => {
-    Parse.User.enableUnsafeCurrentUser();
     const infoUser = req.body;
+    const currentUser = await Parse.User.become(infoUser.sessionToken);
 
     try {
-        const currentUser = Parse.User.current();
         if (currentUser) {
             if (infoUser.accessToken) {
                 currentUser.set("ig_access_token", infoUser.accessToken);
@@ -609,11 +626,9 @@ app.post('/user/update', async (req, res) => {
 })
 
 app.post('/user/basic', async (req, res) => {
-    Parse.User.enableUnsafeCurrentUser();
     const infoUser = req.body;
-
     try {
-        const currentUser = Parse.User.current();
+        const currentUser = await Parse.User.become(infoUser.sessionToken);
         if (currentUser) {
             if (infoUser.year && infoUser.year != "") {
                 currentUser.set("grad_year", infoUser.year);

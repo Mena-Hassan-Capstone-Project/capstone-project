@@ -28,10 +28,10 @@
 }
 
 .insta-btn {
-    font-size: 15px;
+    font-size: 20px;
     color: white;
     background-color: #BE6A6A;
-    width: 140px;
+    width: 180px;
     height: 70px;
     border-radius: 50px;
     font-family: 'Poppins', sans-serif;
@@ -48,6 +48,11 @@
     .media-img {
         width: 200px;
         margin-right: 5px;
+    }
+    .insta-btn {
+        font-size: 18px;
+        width: 160px;
+        height: 70px;
     }
 }
 
