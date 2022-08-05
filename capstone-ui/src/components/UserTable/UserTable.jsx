@@ -30,6 +30,7 @@ export default function UserTable() {
           <table>
             <thead>
               <tr>
+              <th>objectId</th>
                 <th>createdAt</th>
                 <th>username</th>
                 <th>firstName</th>
@@ -54,6 +55,7 @@ export default function UserTable() {
               {userTable.map(item => {
                 return (
                   <tr key = {item.objectId}>
+                    <td>{item.objectId}</td>
                     <td>{item.createdAt}</td>
                     <td>{item.username}</td>
                     <td>{item.firstName}</td>

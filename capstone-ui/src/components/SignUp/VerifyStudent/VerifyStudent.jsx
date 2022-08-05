@@ -29,6 +29,7 @@ export default function VerifyStudent({ onClickVerify, collegeList, selectedColl
       }
       <br />
       <div>
+        <p className="verify-title">Date of Birth:</p>
         <input className="input signup-input" placeholder="DOB" id="DOB" type="date" required />
       </div>
       <br />
