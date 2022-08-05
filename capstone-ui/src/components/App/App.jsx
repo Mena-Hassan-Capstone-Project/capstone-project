@@ -125,7 +125,6 @@ export default function App() {
             setMajorList(response.data.majors);
             setToken("");
             setOffset(0);
-            setUserMatches([]);
             setInstaRefreshed(false);
             setSpotifyRefreshed(false);
             setIsRefreshing(false);
