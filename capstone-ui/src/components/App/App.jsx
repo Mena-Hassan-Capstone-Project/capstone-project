@@ -80,7 +80,7 @@ export default function App() {
 
   //update matches when user info changes
   React.useEffect(() => {
-    if (window.localStorage.getItem('userInfo') && userInfo.interests) {
+    if (window.localStorage.getItem('sessionToken') && userInfo.interests) {
       if (userMatches.length == 0 && !fetchingMatches) {
         createMatches({});
       }
@@ -93,19 +93,17 @@ export default function App() {
         setSeeMoreMatches(true);
       }
     }
-    if (userInfo != "" && window.localStorage.getItem('userInfo') && !userInfo.interests) {
+    if (userInfo != "" && window.localStorage.getItem('sessionToken') && !userInfo.interests) {
       getInterestsFromUser();
     }
   }, [userInfo]);
 
   React.useEffect(() => {
-    //setIsFetching(true);
     if (window.performance) {
-      if (window.localStorage.getItem('userInfo') && !userInfo && String(window.performance.getEntriesByType("navigation")[0].type) === "reload") {
+      if (window.localStorage.getItem('sessionToken') && !userInfo && String(window.performance.getEntriesByType("navigation")[0].type) === "reload") {
         refreshLogin();
       }
     }
-    //setIsFetching(false);
   }, []);
 
   React.useEffect(() => {
@@ -117,12 +115,10 @@ export default function App() {
   const refreshLogin = () => {
     if (!isRefreshing) {
       setIsRefreshing(true);
-      const loggedInUser = window.localStorage.getItem('userInfo');
-      if (loggedInUser) {
-        const foundUser = JSON.parse(loggedInUser);
-        axios.post(`https://localhost:${PORT}/login`, {
-          email: foundUser.email,
-          password: foundUser.password
+      const sessionToken = window.localStorage.getItem('sessionToken');
+      if (sessionToken) {
+        axios.post(`https://localhost:${PORT}/reset-session`, {
+          sessionToken: sessionToken
         })
           .then(function (response) {
             setUserInfo(response.data.userInfo);
@@ -133,8 +129,6 @@ export default function App() {
             setInstaRefreshed(false);
             setSpotifyRefreshed(false);
             setIsRefreshing(false);
-            navigate('/user/basic');
-            //setTimeout(getInterestsFromUser, 500);    
           })
           .catch(function (err) {
             console.log("err", err);
@@ -187,6 +181,7 @@ export default function App() {
       .then(function (response) {
         let artists = response.data.items
         axios.post(`https://localhost:${PORT}/user/update`, {
+          sessionToken: window.localStorage.getItem('sessionToken'),
           spotify_artists: artists,
           spotify_refresh_token: refresh_token
         }).then(function (response) {
@@ -217,7 +212,7 @@ export default function App() {
 
   const fetchInstaPhotos = async () => {
     try {
-      if (window.localStorage.getItem('userInfo') && userInfo?.ig_access_token && !instaRefreshed) {
+      if (window.localStorage.getItem('sessionToken') && userInfo?.ig_access_token && !instaRefreshed) {
         setInstaRefreshed(true);
         const data = await getInstaPhotos(userInfo.ig_access_token);
         if (Array.isArray(data)) {
@@ -267,6 +262,7 @@ export default function App() {
             accessToken = response.data.access_token;
             let username = await getInstaUsername(accessToken);
             axios.post(`https://localhost:${PORT}/user/update`, {
+              sessionToken: window.localStorage.getItem('sessionToken'),
               accessToken: accessToken,
               username: username
             }).then(function (response) {
@@ -283,6 +279,7 @@ export default function App() {
   //get long term access token from short term access token
   const uploadInstaPhotos = (photos) => {
     axios.post(`https://localhost:${PORT}/user/update`, {
+      sessionToken: window.localStorage.getItem('sessionToken'),
       photos: photos
     }).then(function (response) {
       setIsFetching(false);
@@ -347,6 +344,7 @@ export default function App() {
     setFetchingMatches(true);
     if (userInfo && userInfo != "") {
       await axios.post(`https://localhost:${PORT}/matches`, {
+        sessionToken: window.localStorage.getItem('sessionToken'),
         params: params
       })
         .then(function (response) {
@@ -419,7 +417,11 @@ export default function App() {
   //retrieves movies, tv shows, and hobbies for user
   //sets user info
   const getInterestsFromUser = async () => {
-    await axios.get(`https://localhost:${PORT}/user/interests`)
+    await axios.get(`https://localhost:${PORT}/user/interests`, {
+      params: {
+        sessionToken: window.localStorage.getItem('sessionToken')
+      }
+    })
       .then(resp => {
         if (userInfo) {
           setHobbiesList(resp.data.hobbiesList);
@@ -437,7 +439,8 @@ export default function App() {
     await axios.get(`https://localhost:${PORT}/matches`, {
       params: {
         limit: limit,
-        offset: offset
+        offset: offset,
+        sessionToken: window.localStorage.getItem('sessionToken')
       }
     })
       .then(resp => {
@@ -462,6 +465,7 @@ export default function App() {
   //log user out
   const logOut = () => {
     axios.post(`https://localhost:${PORT}/logout`, {
+      sessionToken: window.localStorage.getItem('sessionToken')
     })
       .then(function (response) {
         setUserInfo("");
@@ -481,6 +485,7 @@ export default function App() {
   //reloads interests
   const removeMovie = (movie, index) => {
     axios.post(`https://localhost:${PORT}/user/interests/remove`, {
+      sessionToken: window.localStorage.getItem('sessionToken'),
       movie: movie
     })
       .then(function (response) {
@@ -496,8 +501,8 @@ export default function App() {
   //remove show from user shows
   //reloads interests
   const removeShow = async (show, index) => {
-    //setIsFetching(true);
     axios.post(`https://localhost:${PORT}/user/interests/remove`, {
+      sessionToken: window.localStorage.getItem('sessionToken'),
       show: show
     })
       .then(function (response) {
@@ -514,6 +519,7 @@ export default function App() {
   //reloads interests
   const removeHobby = (hobby, index) => {
     axios.post(`https://localhost:${PORT}/user/interests/remove`, {
+      sessionToken: window.localStorage.getItem('sessionToken'),
       hobby: hobby
     })
       .then(function (response) {
@@ -532,6 +538,7 @@ export default function App() {
   const saveInterests = () => {
     setIsFetching(true);
     axios.post(`https://localhost:${PORT}/user/interests`, {
+      sessionToken: window.localStorage.getItem('sessionToken'),
       interests: {
         movie: movie,
         TV: TV,
@@ -554,10 +561,6 @@ export default function App() {
       })
   }
 
-  const setFetchingFalse = () => {
-    setIsFetching(false);
-  }
-
   //sends basic info to backend
   const saveBasicInfo = async () => {
     setIsFetching(true);
@@ -570,6 +573,7 @@ export default function App() {
     }
 
     await axios.post(`https://localhost:${PORT}/user/basic`, {
+      sessionToken: window.localStorage.getItem('sessionToken'),
       year: document.getElementById('year').value,
       major: selectedMajorOption
         ? selectedMajorOption.value : null,
@@ -601,7 +605,7 @@ export default function App() {
           navigate('/login');
         }
         else {
-          window.localStorage.setItem('userInfo', JSON.stringify({ email: email, password: password, objectId: response.data.userInfo.objectId }));
+          window.localStorage.setItem('sessionToken', response.data.sessionToken);
           setUserInfo(response.data.userInfo);
           setMajorList(response.data.majors);
           setUserMatches([]);
@@ -642,6 +646,7 @@ export default function App() {
       })
         .then(function (response) {
           if (response.data.typeStatus === "success") {
+            window.localStorage.setItem('sessionToken', response.data.sessionToken);
             setCollegeList(response.data.colleges);
             navigate('/verify');
           }
@@ -661,6 +666,7 @@ export default function App() {
     else {
       setIsFetching(true);
       axios.post(`https://localhost:${PORT}/verify`, {
+        sessionToken: window.localStorage.getItem('sessionToken'),
         firstName: document.getElementById('firstName').value,
         lastName: document.getElementById('lastName').value,
         university: selectedCollegeOption

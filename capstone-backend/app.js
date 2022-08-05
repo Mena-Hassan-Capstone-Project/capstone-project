@@ -17,9 +17,11 @@ app.use(cors());
 
 const PARSE_APP_ID = config.get('PARSE_KEYS.PARSE_APP_ID');
 const PARSE_JS_KEY = config.get('PARSE_KEYS.PARSE_JS_KEY');
+const PARSE_MASTER_KEY = config.get('PARSE_KEYS.PARSE_MASTER_KEY');
 
 Parse.initialize(PARSE_APP_ID, PARSE_JS_KEY);
 Parse.serverURL = 'http://parseapi.back4app.com/';
+Parse.User.enableUnsafeCurrentUser();
 
 const INSTA_APP_ID = config.get('INSTA_KEYS.INSTA_APP_ID');
 const INSTA_APP_SECRET = config.get('INSTA_KEYS.INSTA_APP_SECRET');
@@ -230,11 +232,8 @@ const getMatches = async (currentUser, res) => {
     const currentUserInfo = await getUserInfo(currentUser);
     entries.forEach(async entry => {
         const matchInfo = await getUserInfo(entry);
-        //skip if entry profile incomplete or either users have no interests added
         //skip if users do not go to the same college
-        if (matchInfo.university != currentUserInfo.university ||
-            (!matchInfo.movies && !matchInfo.shows && !matchInfo.hobbies && !matchInfo.music)
-            || (!currentUserInfo.movies && !currentUserInfo.shows && !currentUserInfo.hobbies && !currentUserInfo.music)) {
+        if (matchInfo.university != currentUserInfo.university) {
             return;
         }
 
@@ -316,12 +315,11 @@ const retrieveMatchData = async (limit, offset, currentUser) => {
     return ({ matchesInfo: matchesInfo, matchResults: matchResults, matchMessage: "Matches Retrieved!", typeStatus: "success" });
 }
 
-app.post('/login', async (req, res) => {
-    Parse.User.enableUnsafeCurrentUser();
+app.post('/reset-session', async (req, res) => {
     const infoUser = req.body;
 
     try {
-        const user = await Parse.User.logIn(infoUser.email, infoUser.password);
+        const user = await Parse.User.become(infoUser.sessionToken);
         const rawdata = fs.readFileSync('data/majors.json');
         const majors = JSON.parse(rawdata);
         res.send({ userInfo: user, loginMessage: "User logged in!", typeStatus: "success", infoUser: infoUser, majors: majors });
@@ -331,22 +329,48 @@ app.post('/login', async (req, res) => {
     }
 })
 
+app.post('/login', async (req, res) => {
+    const infoUser = req.body;
+    try {
+        const user = await Parse.User.logIn(infoUser.email, infoUser.password);
+        const sessionToken = user.getSessionToken();
+        const rawdata = fs.readFileSync('data/majors.json');
+        const majors = JSON.parse(rawdata);
+        res.send({ userInfo: user, sessionToken: sessionToken, loginMessage: "User logged in!", typeStatus: "success", infoUser: infoUser, majors: majors });
+    } catch (error) {
+        console.log("error", error)
+        res.send({ loginMessage: error, typeStatus: "danger", infoUser: infoUser });
+    }
+})
+
 app.post('/logout', async (req, res) => {
 
     try {
-        await Parse.User.logOut();
-        res.send({ logoutMessage: "User logged out!", typeStatus: "success" });
+        let query = new Parse.Query("_Session")
+        query.equalTo("sessionToken", req.body.sessionToken)
+        await query.first({ useMasterKey: true }).then(function (user) {
+            if (user) {
+                user
+                    .destroy(
+                        { useMasterKey: true }
+                    )
+                    .then(function (res) {
+                        res.send({ logoutMessage: "User logged out!", typeStatus: "success" });
+                    })
+                    .catch(function (error) {
+                        console.log(error)
+                        return null
+                    })
+            } else {
+                res.send({ logoutMessage: "error", RegisterMessage: '', typeStatus: "danger", infoUser: user })
+            }
+        })
     } catch (error) {
         res.send({ logoutMessage: error.message, typeStatus: "danger" });
     }
 })
 
 app.post('/signup', async (req, res) => {
-    Parse.User.enableUnsafeCurrentUser();
-    const currentUser = Parse.User.current();
-    if (currentUser) {
-        await Parse.User.logOut();
-    }
     const infoUser = req.body;
     let user = new Parse.User();
 
@@ -362,7 +386,8 @@ app.post('/signup', async (req, res) => {
     try {
         await user.signUp();
         await Parse.User.logIn(infoUser.email, infoUser.password);
-        res.send({ signupMessage: "User signed up!", typeStatus: 'success', infoUser: infoUser, colleges: colleges });
+        const sessionToken = user.getSessionToken();
+        res.send({ signupMessage: "User signed up!", typeStatus: 'success', infoUser: infoUser, colleges: colleges, sessionToken: sessionToken });
     }
     catch (error) {
         res.send({ signupMessage: error.message, typeStatus: 'danger', infoUser: infoUser });
@@ -370,10 +395,9 @@ app.post('/signup', async (req, res) => {
 })
 
 app.post('/matches', async (req, res) => {
-    Parse.User.enableUnsafeCurrentUser();
 
     const params = req.body.params;
-    const currentUser = Parse.User.current();
+    const currentUser = await Parse.User.become(req.body.sessionToken);
     try {
         if (currentUser) {
             if (params.matchId) {
@@ -393,8 +417,7 @@ app.post('/matches', async (req, res) => {
 })
 
 app.get('/matches', async (req, res) => {
-    Parse.User.enableUnsafeCurrentUser();
-    const currentUser = Parse.User.current();
+    const currentUser = await Parse.User.become(req.query["sessionToken"]);
     const limit = req.query["limit"];
     const offset = req.query["offset"];
     try {
@@ -446,8 +469,7 @@ const removeInterest = async (objectName, itemKey, itemValue, currentUser) => {
 
 app.post('/user/interests/remove', async (req, res) => {
     const removeInfo = req.body;
-    Parse.User.enableUnsafeCurrentUser();
-    const currentUser = Parse.User.current();
+    const currentUser = await Parse.User.become(removeInfo.sessionToken);
     try {
         if (currentUser) {
             if (removeInfo.movie) {
@@ -471,8 +493,7 @@ app.post('/user/interests/remove', async (req, res) => {
 });
 
 app.get('/user/interests', async (req, res) => {
-    Parse.User.enableUnsafeCurrentUser();
-    const currentUser = Parse.User.current();
+    const currentUser = await Parse.User.become(req.query["sessionToken"]);
     if (currentUser) {
         //get movies for this user
         const userMovies = await getInterestQuery(currentUser, "Movie");
@@ -493,9 +514,9 @@ app.get('/user/interests', async (req, res) => {
 });
 
 app.post('/user/interests', async (req, res) => {
-    Parse.User.enableUnsafeCurrentUser();
     const infoInterests = req.body;
 
+    const currentUser = await Parse.User.become(infoInterests.sessionToken);
     try {
         const Movie = Parse.Object.extend("Movie");
         const movie = new Movie();
@@ -509,7 +530,6 @@ app.post('/user/interests', async (req, res) => {
         const rawdata = fs.readFileSync('data/hobbies.json');
         const hobbiesList = await JSON.parse(rawdata);
 
-        const currentUser = Parse.User.current();
         if (currentUser) {
             if (infoInterests.interests.movie && infoInterests.interests.movie != "") {
                 const query = new Parse.Query(Movie);
@@ -554,7 +574,6 @@ app.post('/user/interests', async (req, res) => {
                         fs.writeFile('data/hobbies.json', newData, err => {
                             // error checking
                             if (err) throw err;
-
                         });
                     }
                     hobby.set("name", infoInterests.interests.hobby.name);
@@ -575,11 +594,10 @@ app.post('/user/interests', async (req, res) => {
 })
 
 app.post('/user/update', async (req, res) => {
-    Parse.User.enableUnsafeCurrentUser();
     const infoUser = req.body;
+    const currentUser = await Parse.User.become(infoUser.sessionToken);
 
     try {
-        const currentUser = Parse.User.current();
         if (currentUser) {
             if (infoUser.accessToken) {
                 currentUser.set("ig_access_token", infoUser.accessToken);
@@ -611,11 +629,9 @@ app.post('/user/update', async (req, res) => {
 })
 
 app.post('/user/basic', async (req, res) => {
-    Parse.User.enableUnsafeCurrentUser();
     const infoUser = req.body;
-
     try {
-        const currentUser = Parse.User.current();
+        const currentUser = await Parse.User.become(infoUser.sessionToken);
         if (currentUser) {
             if (infoUser.year && infoUser.year != "") {
                 currentUser.set("grad_year", infoUser.year);
