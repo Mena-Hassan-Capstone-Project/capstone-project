@@ -1,8 +1,7 @@
-import * as React from "react"
-import "./ProfilePhoto.css"
-import ImageUploading from 'react-images-uploading';
-import axios from "axios"
-
+import * as React from "react";
+import "./ProfilePhoto.css";
+import ImageUploading from "react-images-uploading";
+import axios from "axios";
 
 export default function ProfilePhoto({ imageList }) {
   const [images, setImages] = React.useState(imageList);
@@ -13,20 +12,21 @@ export default function ProfilePhoto({ imageList }) {
     setImages(imageList);
   };
 
-  const PORT = '3001'
+  const PORT = "3001";
 
   const saveProfilePic = () => {
-    var profile_img = images[0]
-    axios.post(`https://localhost:${PORT}/user/basic`, {
-      profile_photo: profile_img.data_url,
-    })
+    var profile_img = images[0];
+    axios
+      .post(`https://localhost:${PORT}/user/basic`, {
+        profile_photo: profile_img.data_url,
+      })
       .then(function (response) {
-        console.log("Profile Response:", response)
+        console.log("Profile Response:", response);
       })
       .catch(function (err) {
-        console.log(err)
-      })
-  }
+        console.log(err);
+      });
+  };
   return (
     <div className="profilePhoto" id="profilePhoto">
       <ImageUploading
@@ -49,35 +49,47 @@ export default function ProfilePhoto({ imageList }) {
           <div className="upload__image-wrapper">
             {imageList.map((image, index) => (
               <div key={index} className="image-item">
-                <img id="profile-img" src={image['data_url']} alt="" className="profile-img" />
+                <img
+                  id="profile-img"
+                  src={image["data_url"]}
+                  alt=""
+                  className="profile-img"
+                />
                 <div className="image-item__btn-wrapper">
-                  <button className="img-btn" onClick={() => onImageUpdate(index)}>Update</button>
-                  <button className="img-btn" onClick={() => onImageRemove(index)}>Remove</button>
+                  <button
+                    className="img-btn"
+                    onClick={() => onImageUpdate(index)}
+                  >
+                    Update
+                  </button>
+                  <button
+                    className="img-btn"
+                    onClick={() => onImageRemove(index)}
+                  >
+                    Remove
+                  </button>
                 </div>
               </div>
             ))}
             &nbsp;
-            {
-              images.length === 0
-                ?
-                <button
-                  className="img-btn"
-                  onClick={
-                    () => {
-                      onImageUpload();
-                    }
-                  }
-                  {...dragProps}>
-                  Upload
-                </button>
-                :
-                document.getElementById('profile-img') == null
-                  ? console.log("loading")
-                  : saveProfilePic()
-            }
+            {images.length === 0 ? (
+              <button
+                className="img-btn"
+                onClick={() => {
+                  onImageUpload();
+                }}
+                {...dragProps}
+              >
+                Upload
+              </button>
+            ) : document.getElementById("profile-img") == null ? (
+              console.log("loading")
+            ) : (
+              saveProfilePic()
+            )}
           </div>
         )}
       </ImageUploading>
     </div>
-  )
+  );
 }

@@ -15,7 +15,7 @@
 }
 
 .tag-item {
-  background-color: #A74B4B;
+  background-color: #a74b4b;
   color: white;
   width: 120px;
   align-items: center;
@@ -46,7 +46,7 @@
 
 .add-tag {
   font-size: 16px;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
 }
 
 .major-select {

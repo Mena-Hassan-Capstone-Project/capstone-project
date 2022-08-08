@@ -1,6 +1,5 @@
-import * as React from "react"
-import "./InstaRedirect.css"
-
+import * as React from "react";
+import "./InstaRedirect.css";
 
 export default function InstaRedirect({ goToLogin }) {
   const [counter, setCounter] = React.useState(5);
@@ -10,12 +9,12 @@ export default function InstaRedirect({ goToLogin }) {
   }, [counter]);
 
   setTimeout(function () {
-    goToLogin()
+    goToLogin();
   }, 5000);
   return (
-    <div >
+    <div>
       <p className="instagram-redirect">Instagram has been connected!</p>
       <p className="instagram-redirect">{`Redirecting to login in ${counter} seconds...`}</p>
     </div>
-  )
+  );
 }

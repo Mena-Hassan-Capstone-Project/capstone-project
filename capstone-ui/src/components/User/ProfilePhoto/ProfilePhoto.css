@@ -1,17 +1,17 @@
 .img-btn {
-    color: white;
-    background-color: #BE6A6A;
-    width: 90px;
-    height: 45px;
-    border-radius: 50px;
-    font-size: 17px;
-    font-family: 'Poppins', sans-serif;
-    border: none;
-    cursor: pointer;
-    margin: 5px;
+  color: white;
+  background-color: #be6a6a;
+  width: 90px;
+  height: 45px;
+  border-radius: 50px;
+  font-size: 17px;
+  font-family: "Poppins", sans-serif;
+  border: none;
+  cursor: pointer;
+  margin: 5px;
 }
 
 .profile-img {
-    width: 200px;
-    border-radius: 10px;
+  width: 200px;
+  border-radius: 10px;
 }

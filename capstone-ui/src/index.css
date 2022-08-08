@@ -1,10 +1,10 @@
 body {
   margin: 0;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #FDE6E6;
-  font-family: 'Poppins', sans-serif;
+  background: #fde6e6;
+  font-family: "Poppins", sans-serif;
 }
 
 .main-content {
@@ -20,9 +20,9 @@ h2 {
 }
 
 .input {
-  background-color: #AC9494;
+  background-color: #ac9494;
   color: white;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 20px;
   border-radius: 10px;
   border: none;
@@ -34,12 +34,12 @@ h2 {
 
 .login-btn {
   color: white;
-  background-color: #BE6A6A;
+  background-color: #be6a6a;
   width: 130px;
   height: 50px;
   border-radius: 50px;
   font-size: 20px;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   border: none;
   cursor: pointer;
   margin-top: 20px;
@@ -47,7 +47,7 @@ h2 {
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
 

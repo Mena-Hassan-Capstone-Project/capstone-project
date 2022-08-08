@@ -1,77 +1,75 @@
 .navbar {
-    background: #58292F;
-    color: white;
-    height: 80px;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    width: 100%;
-    overflow: hidden;
-    position: fixed;
-    top: 0;
-    z-index: 2;
+  background: #58292f;
+  color: white;
+  height: 80px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  z-index: 2;
 }
 
 .navbar .content {
-    width: 100%;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 
 .welcome-navbar {
-    padding-left: 25px;
-    font-size: 20px;
-    float: left;
-    cursor: pointer;
+  padding-left: 25px;
+  font-size: 20px;
+  float: left;
+  cursor: pointer;
 }
 
 .stick-to-right {
-    width: 100%;
-    float: right;
-    display: block;
-    margin-left: 350px;
-    margin-right: 10px;
+  width: 100%;
+  float: right;
+  display: block;
+  margin-left: 350px;
+  margin-right: 10px;
 }
 
 .navbar-content {
-    font-size: 20px;
-    width: 100%;
-    margin: 0 auto;
-    flex-direction: row;
-    align-items: center;
-    padding-left: 40px;
-    cursor: pointer;
+  font-size: 20px;
+  width: 100%;
+  margin: 0 auto;
+  flex-direction: row;
+  align-items: center;
+  padding-left: 40px;
+  cursor: pointer;
 }
 
 @media only screen and (max-width: 700px) {
-
-    .stick-to-right {
-        margin-left: 75px;
-        margin-right: 5px;
-    }
+  .stick-to-right {
+    margin-left: 75px;
+    margin-right: 5px;
+  }
 }
 
 @media only screen and (max-width: 400px) {
+  .stick-to-right {
+    margin-left: 0px;
+    margin-right: 2px;
+  }
 
-    .stick-to-right {
-        margin-left: 0px;
-        margin-right: 2px;
-    }
+  .welcome-navbar {
+    padding-left: 16px;
+    font-size: 18px;
+  }
 
-    .welcome-navbar {
-        padding-left: 16px;
-        font-size: 18px;
-    }
+  .logout {
+    font-size: 18px;
+    width: 110px;
+  }
 
-    .logout {
-        font-size: 18px;
-        width: 110px;
-    }
-
-    .navbar-content {
-        font-size: 18px;
-        padding-left: 15px;
-    }
+  .navbar-content {
+    font-size: 18px;
+    padding-left: 15px;
+  }
 }
