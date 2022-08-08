@@ -416,7 +416,6 @@ export default function App() {
 
   const goToLiked = () => {
     getMatchesForUser(100, 0);
-    setSeeMoreMatches(false);
     navigate('/user/liked');
   }
 
