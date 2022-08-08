@@ -20,6 +20,7 @@ import InstaRedirect from "../InstaRedirect/InstaRedirect";
 import SpotifyRedirect from "../SpotifyRedirect/SpotifyRedirect";
 import UserTable from "../UserTable/UserTable";
 import Suggestions from "../Suggestions/Suggestions";
+import Liked from "../Liked/Liked";
 
 export default function App() {
   const PORT = '3001';
@@ -413,6 +414,12 @@ export default function App() {
     navigate('/user/matching');
   }
 
+  const goToLiked = () => {
+    getMatchesForUser(100, 0);
+    setSeeMoreMatches(false);
+    navigate('/user/liked');
+  }
+
   //retrieves movies, tv shows, and hobbies for user
   //sets user info
   const getInterestsFromUser = async () => {
@@ -686,7 +693,7 @@ export default function App() {
   return (
     <div className="App">
       <main>
-        <Navbar userInfo={userInfo} onClickLogout={logOut} onClickMatching={goToMatching} goToBasic={goToBasic} goToSignUp={goToSignUp} goToLogin={goToLogin} />
+        <Navbar userInfo={userInfo} onClickLogout={logOut} onClickMatching={goToMatching} onClickLiked={goToLiked} goToBasic={goToBasic} goToSignUp={goToSignUp} goToLogin={goToLogin} />
         <div className="main-content">
           <Routes>
             <Route
@@ -753,6 +760,11 @@ export default function App() {
             <Route
               path="/suggest"
               element={<Suggestions suggestMatch={suggestMatch} userInfo={userInfo} />}
+            />
+            <Route
+              path="/user/liked"
+              element={<Liked isFetching={isFetching} userMatches={userMatches} getMatchesForUser={getMatchesForUser} matchOffset={matchOffset} setOffset={setOffset} matchLimit={MATCH_LIMIT}
+                goToLiked={goToLiked} createMatches={createMatches} setIsFetching={setIsFetching} goToSuggest={goToSuggest} setSuggestMatch={setSuggestMatch} seeMoreMatches={seeMoreMatches} />}
             />
           </Routes>
         </div>
