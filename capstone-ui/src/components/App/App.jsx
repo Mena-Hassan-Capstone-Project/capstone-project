@@ -674,6 +674,7 @@ export default function App() {
         tags: tags,
       })
       .then(function (response) {
+        console.log("basic info resp", response);
         setUserInfo(response.data.userInfo);
         navigate("/user/basic");
         setIsFetching(false);
@@ -926,7 +927,7 @@ export default function App() {
                   userInfo={userInfo}
                   onClickBasic={goToBasic}
                   onClickInterests={goToInterests}
-                  imageList={userInfo.media ? userInfo.media : null}
+                  imageList={userInfo?.media ? userInfo.media : null}
                   maxImages={10}
                   setUserInfo={setUserInfo}
                   isFetching={isFetching}
