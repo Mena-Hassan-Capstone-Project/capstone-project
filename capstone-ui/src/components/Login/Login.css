@@ -1,17 +1,17 @@
 .login {
-    padding-top: 20px;
+  padding-top: 20px;
 }
 
 .login-input {
-    height: 50px;
-    width: 300px;
-    margin-bottom: 15px;
+  height: 50px;
+  width: 300px;
+  margin-bottom: 15px;
 }
 
 .signup-link {
-    cursor: pointer
+  cursor: pointer;
 }
 
 .account-txt {
-    font-size: 18px;
+  font-size: 18px;
 }

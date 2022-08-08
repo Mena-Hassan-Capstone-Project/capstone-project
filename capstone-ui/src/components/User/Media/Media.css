@@ -1,63 +1,63 @@
 .media-btn {
-    color: white;
-    background-color: #BE6A6A;
-    max-width: 185px;
-    height: 45px;
-    border-radius: 50px;
-    font-size: 17px;
-    font-family: 'Poppins', sans-serif;
-    border: none;
-    cursor: pointer;
-    margin: 5px;
-    margin-right: 30px;
-    margin-bottom: 30px;
+  color: white;
+  background-color: #be6a6a;
+  max-width: 185px;
+  height: 45px;
+  border-radius: 50px;
+  font-size: 17px;
+  font-family: "Poppins", sans-serif;
+  border: none;
+  cursor: pointer;
+  margin: 5px;
+  margin-right: 30px;
+  margin-bottom: 30px;
 }
 
 .media-img {
-    width: 240px;
-    border-radius: 10px;
+  width: 240px;
+  border-radius: 10px;
 }
 
 .access-token {
-    width: 150px;
+  width: 150px;
 }
 
 .insta-images {
-    width: 150px;
-    border-radius: 10px;
+  width: 150px;
+  border-radius: 10px;
 }
 
 .insta-btn {
-    font-size: 20px;
-    color: white;
-    background-color: #BE6A6A;
-    width: 180px;
-    height: 70px;
-    border-radius: 50px;
-    font-family: 'Poppins', sans-serif;
-    border: none;
-    cursor: pointer;
-    margin-bottom: 10px;
+  font-size: 20px;
+  color: white;
+  background-color: #be6a6a;
+  width: 180px;
+  height: 70px;
+  border-radius: 50px;
+  font-family: "Poppins", sans-serif;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 10px;
 }
 
 .insta-caption {
-    font-size: 20px;
+  font-size: 20px;
 }
 
 @media only screen and (max-width: 600px) {
-    .media-img {
-        width: 200px;
-        margin-right: 5px;
-    }
-    .insta-btn {
-        font-size: 18px;
-        width: 160px;
-        height: 70px;
-    }
+  .media-img {
+    width: 200px;
+    margin-right: 5px;
+  }
+  .insta-btn {
+    font-size: 18px;
+    width: 160px;
+    height: 70px;
+  }
 }
 
 @media only screen and (max-width: 400px) {
-    .media-img {
-        width: 150px;
-    }
+  .media-img {
+    width: 150px;
+  }
 }

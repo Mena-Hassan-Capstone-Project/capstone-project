@@ -1,48 +1,48 @@
 .event-card {
-    max-height: 1200px;
-    background-color: white;
-    width: 550px;
-    margin-top: 15px;
-    margin-bottom: 20px;
-    border-radius: 20px;
-    padding-bottom: 20px;
-    padding-top: 10px;
-    padding-left: 10px;
-    padding-right: 10px;
-    margin-left: calc(50% - 275px);
-    margin-right: calc(50% - 275px);
+  max-height: 1200px;
+  background-color: white;
+  width: 550px;
+  margin-top: 15px;
+  margin-bottom: 20px;
+  border-radius: 20px;
+  padding-bottom: 20px;
+  padding-top: 10px;
+  padding-left: 10px;
+  padding-right: 10px;
+  margin-left: calc(50% - 275px);
+  margin-right: calc(50% - 275px);
 }
 
 .event-img {
-    width: 500px;
-    border-radius: 10px;
+  width: 500px;
+  border-radius: 10px;
 }
 
 .suggestion-title {
-    font-size: 20px;
+  font-size: 20px;
 }
 
 @media only screen and (max-width: 1000px) {
-    .event-card {
-        width: 400px;
-        margin-left: calc(50% - 200px);
-        margin-right: calc(50% - 200px);
-    }
+  .event-card {
+    width: 400px;
+    margin-left: calc(50% - 200px);
+    margin-right: calc(50% - 200px);
+  }
 
-    .event-img {
-        max-width: 300px;
-    }
+  .event-img {
+    max-width: 300px;
+  }
 }
 
 @media only screen and (max-width: 400px) {
-    .event-card {
-        width: 300px;
-        margin-left: calc(50% - 150px);
-        margin-right: calc(50% - 150px);
-    }
+  .event-card {
+    width: 300px;
+    margin-left: calc(50% - 150px);
+    margin-right: calc(50% - 150px);
+  }
 
-    .event-img {
-        max-width: 180px;
-        border-radius: 10px;
-    }
+  .event-img {
+    max-width: 180px;
+    border-radius: 10px;
+  }
 }
