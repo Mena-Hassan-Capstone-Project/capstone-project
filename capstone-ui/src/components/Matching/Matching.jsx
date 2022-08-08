@@ -26,7 +26,7 @@ export default function Matching({ isFetching, userMatches, getMatchesForUser, m
                 count++;
             }
         }
-        return mediaArray
+        return mediaArray;
     }
 
     const formatPhoneNumber = (phoneNumberString) => {

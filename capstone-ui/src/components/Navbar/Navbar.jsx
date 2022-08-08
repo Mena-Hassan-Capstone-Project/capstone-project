@@ -1,6 +1,6 @@
 import "./Navbar.css"
 
-export default function Navbar({ userInfo, onClickLogout, onClickMatching, goToBasic, goToLogin }) {
+export default function Navbar({ userInfo, onClickLogout, onClickMatching, goToBasic, goToLogin, onClickLiked }) {
   return (
     <nav className="navbar">
       <div className="content">
@@ -9,6 +9,7 @@ export default function Navbar({ userInfo, onClickLogout, onClickMatching, goToB
           : ""}
         </p>
        {userInfo.preferredName ? <p className="navbar-content" onClick={onClickMatching}>Get Matched!</p> : null}
+       {userInfo.preferredName ? <p className="navbar-content" onClick={onClickLiked}>See Liked</p> : null}
         <div className="stick-to-right">
           {
             userInfo

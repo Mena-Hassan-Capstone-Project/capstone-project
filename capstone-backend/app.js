@@ -17,7 +17,6 @@ app.use(cors());
 
 const PARSE_APP_ID = config.get('PARSE_KEYS.PARSE_APP_ID');
 const PARSE_JS_KEY = config.get('PARSE_KEYS.PARSE_JS_KEY');
-const PARSE_MASTER_KEY = config.get('PARSE_KEYS.PARSE_MASTER_KEY');
 
 Parse.initialize(PARSE_APP_ID, PARSE_JS_KEY);
 Parse.serverURL = 'http://parseapi.back4app.com/';
@@ -32,7 +31,7 @@ const getUserEntries = async (className, user) => {
 
     objectQuery.equalTo("User", user);
     const userObjects = await objectQuery.find();
-    return userObjects
+    return userObjects;
 }
 
 const getUserInfo = async (user) => {
@@ -75,7 +74,7 @@ const compareArrs = (arr1, arr2, weight) => {
 
 const calculateClassScore = (category, prop1, prop2, weight1, weight2) => {
     if (!category?.user_1?.length || !category?.user_2?.length) {
-        return 0
+        return 0;
     }
     let user1Prop1 = [];
     let user1Prop2 = [];
@@ -177,8 +176,8 @@ const getScore = (movies, shows, hobbies, tags, music, major, hometown, gradYear
     const musicScore = calculateUserPropertyScore(music, "genres", "name", config.get("MATCH_WEIGHTS.WEIGHT_MUSIC_GENRES"), config.get("MATCH_WEIGHTS.WEIGHT_MUSIC_ARTIST"));
     const tagsScore = compareArrs(tags.user_1, tags.user_2, config.get("MATCH_WEIGHTS.WEIGHT_TAGS"));
     const majorScore = compareStrings(major.user_1?.name, major.user_2?.name, config.get("MATCH_WEIGHTS.WEIGHT_MAJOR"));
-    const departmentScore = compareStrings(major.user_1?.department, major.user_2?.department, config.get("MATCH_WEIGHTS.WEIGHT_DEPARTMENT"))
-    const hometownScore = compareStrings(hometown.user_1, hometown.user_2, config.get("MATCH_WEIGHTS.WEIGHT_HOMETOWN"))
+    const departmentScore = compareStrings(major.user_1?.department, major.user_2?.department, config.get("MATCH_WEIGHTS.WEIGHT_DEPARTMENT"));
+    const hometownScore = compareStrings(hometown.user_1, hometown.user_2, config.get("MATCH_WEIGHTS.WEIGHT_HOMETOWN"));
     const gradYearScore = calculateGradYearScore(gradYear.user_1, gradYear.user_2, config.get("MATCH_WEIGHTS.WEIGHT_GRADYEAR"));
 
     return (movieScore + showScore + hobbiesScore + musicScore + tagsScore + majorScore + departmentScore + hometownScore + gradYearScore);
@@ -259,16 +258,16 @@ const getMatches = async (currentUser, res) => {
                 if (matchResults.get("score") != matchScore) {
                     matchResults.set("score", matchScore);
                     matchResults2.set("score", matchScore);
-                    await matchResults.save()
-                    await matchResults2.save()
+                    await matchResults.save();
+                    await matchResults2.save();
                 }
             }
             else {
                 const match = new Match();
                 const match2 = new Match();
                 if (matchScore) {
-                    createNewMatch(match, matchScore, currentUser.id, entry.id)
-                    createNewMatch(match2, matchScore, entry.id, currentUser.id)
+                    createNewMatch(match, matchScore, currentUser.id, entry.id);
+                    createNewMatch(match2, matchScore, entry.id, currentUser.id);
                 }
             }
         }
@@ -321,7 +320,7 @@ app.post('/reset-session', async (req, res) => {
         const majors = JSON.parse(rawdata);
         res.send({ userInfo: user, loginMessage: "User logged in!", typeStatus: "success", infoUser: infoUser, majors: majors });
     } catch (error) {
-        console.log("error", error)
+        console.log("error", error);
         res.send({ loginMessage: error, typeStatus: "danger", infoUser: infoUser });
     }
 })
@@ -335,7 +334,7 @@ app.post('/login', async (req, res) => {
         const majors = JSON.parse(rawdata);
         res.send({ userInfo: user, sessionToken: sessionToken, loginMessage: "User logged in!", typeStatus: "success", infoUser: infoUser, majors: majors });
     } catch (error) {
-        console.log("error", error)
+        console.log("error", error);
         res.send({ loginMessage: error, typeStatus: "danger", infoUser: infoUser });
     }
 })
@@ -343,8 +342,8 @@ app.post('/login', async (req, res) => {
 app.post('/logout', async (req, res) => {
 
     try {
-        const query = new Parse.Query("_Session")
-        query.equalTo("sessionToken", req.body.sessionToken)
+        const query = new Parse.Query("_Session");
+        query.equalTo("sessionToken", req.body.sessionToken);
         await query.first({ useMasterKey: true }).then(function (user) {
             if (user) {
                 user
@@ -355,11 +354,11 @@ app.post('/logout', async (req, res) => {
                         res.send({ logoutMessage: "User logged out!", typeStatus: "success" });
                     })
                     .catch(function (error) {
-                        console.log(error)
-                        return null
+                        console.log(error);
+                        return null;
                     })
             } else {
-                res.send({ logoutMessage: "error", RegisterMessage: '', typeStatus: "danger", infoUser: user })
+                res.send({ logoutMessage: "error", RegisterMessage: '', typeStatus: "danger", infoUser: user });
             }
         })
     } catch (error) {
