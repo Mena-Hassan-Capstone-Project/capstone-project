@@ -7,7 +7,7 @@ import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { Carousel } from 'react-responsive-carousel'
 import { useState } from "react";
 
-export default function Liked({ isFetching, userMatches, getMatchesForUser, matchOffset, setOffset, matchLimit, createMatches, goToLiked, setIsFetching, goToSuggest, setSuggestMatch, seeMoreMatches }) {
+export default function Liked({ isFetching, userMatches, getMatchesForUser, createMatches, goToLiked, setIsFetching, goToSuggest, setSuggestMatch }) {
     const [numLikes, setNumLiked] = useState(0);
 
     //add max 10 photos to match's media carousel
@@ -28,7 +28,7 @@ export default function Liked({ isFetching, userMatches, getMatchesForUser, matc
                 count++;
             }
         }
-        return mediaArray
+        return mediaArray;
     }
 
     const formatPhoneNumber = (phoneNumberString) => {

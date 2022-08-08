@@ -16,10 +16,9 @@ export default function UserTable() {
   }
 
   React.useEffect(() => {
-
-    getUserTable()
-
+    getUserTable();
   }, [])
+  
   return (
     <div >
       <p className="user-table">User Table</p>
@@ -30,7 +29,7 @@ export default function UserTable() {
           <table>
             <thead>
               <tr>
-              <th>objectId</th>
+                <th>objectId</th>
                 <th>createdAt</th>
                 <th>username</th>
                 <th>firstName</th>
@@ -54,7 +53,7 @@ export default function UserTable() {
             <tbody>
               {userTable.map(item => {
                 return (
-                  <tr key = {item.objectId}>
+                  <tr key={item.objectId}>
                     <td>{item.objectId}</td>
                     <td>{item.createdAt}</td>
                     <td>{item.username}</td>
