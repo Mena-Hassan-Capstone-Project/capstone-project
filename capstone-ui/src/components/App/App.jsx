@@ -695,6 +695,7 @@ export default function App() {
         password: password,
       })
       .then(function (response) {
+        console.log("login resp", response)
         if (response.data.typeStatus == "danger") {
           alert("Login error");
           navigate("/login");
@@ -786,9 +787,18 @@ export default function App() {
           dob: document.getElementById("DOB").value,
         })
         .then(function (response) {
+          console.log("verify response", response)
           setUserInfo(response.data.userInfo);
-          navigate("/user/basic/edit");
+          setMajorList(response.data.majors);
+          setUserMatches([]);
+          setToken("");
+          setOffset(0);
+          setInstaRefreshed(false);
+          setSpotifyRefreshed(false);
+          setSelectedMajorOption(null);
+          setSeeMoreMatches(true);
           setIsFetching(false);
+          navigate("/user/basic/edit");
         })
         .catch(function (err) {
           console.log(err);

@@ -16,7 +16,8 @@
   },
   "PARSE_KEYS": {
     "PARSE_APP_ID": "jPiXegiDMhfUXP5DI8bwMWuchNVq1hbLHs0yqeoE",
-    "PARSE_JS_KEY": "mDaKwWptFrtVGyCixH6FJ9epJqn2Z6TuvznIY6H0"
+    "PARSE_JS_KEY": "mDaKwWptFrtVGyCixH6FJ9epJqn2Z6TuvznIY6H0",
+    "PARSE_MASTER_KEY" : "pomzrPbfOA25yMUpqcZitc8aN4k9hs19Z4pxwQhT"
   },
   "INSTA_KEYS": {
     "INSTA_APP_ID": "390997746348889",

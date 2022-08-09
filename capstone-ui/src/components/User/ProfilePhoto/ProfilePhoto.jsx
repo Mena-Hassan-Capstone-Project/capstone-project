@@ -16,6 +16,7 @@ export default function ProfilePhoto({ imageList }) {
 
   const saveProfilePic = () => {
     var profile_img = images[0];
+    console.log("profile img", profile_img)
     axios
       .post(`https://localhost:${PORT}/user/basic`, {
         profile_photo: profile_img.data_url,
