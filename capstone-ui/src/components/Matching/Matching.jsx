@@ -52,7 +52,7 @@ export default function Matching({
 
   return isFetching || !userMatches || !Array.isArray(userMatches) ? (
     <Loading />
-  ) : userMatches.length == 0 ? (
+  ) : userMatches.length == 0 || userMatches[0].scoreInfo.liked ? (
     <Loading loadingText={"Retrieving"} />
   ) : (
     <div>
