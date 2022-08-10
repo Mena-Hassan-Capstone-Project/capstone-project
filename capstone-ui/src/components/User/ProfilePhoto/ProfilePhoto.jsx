@@ -16,7 +16,6 @@ export default function ProfilePhoto({ imageList }) {
 
   const saveProfilePic = () => {
     var profile_img = images[0];
-    console.log("profile img", profile_img)
     axios
       .post(`https://localhost:${PORT}/user/basic`, {
         profile_photo: profile_img.data_url,
@@ -40,10 +39,8 @@ export default function ProfilePhoto({ imageList }) {
         {({
           imageList,
           onImageUpload,
-          onImageRemoveAll,
           onImageUpdate,
           onImageRemove,
-          isDragging,
           dragProps,
         }) => (
           // write your building UI
@@ -62,12 +59,6 @@ export default function ProfilePhoto({ imageList }) {
                     onClick={() => onImageUpdate(index)}
                   >
                     Update
-                  </button>
-                  <button
-                    className="img-btn"
-                    onClick={() => onImageRemove(index)}
-                  >
-                    Remove
                   </button>
                 </div>
               </div>

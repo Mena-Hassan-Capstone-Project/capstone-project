@@ -17,7 +17,7 @@ export default function Liked({
   goToSuggest,
   setSuggestMatch,
 }) {
-  const [numLikes, setNumLiked] = useState(0);
+  const [numLikes, setNumLiked] = useState([]);
 
   //add max 10 photos to match's media carousel
   const MAX_MEDIA = 10;

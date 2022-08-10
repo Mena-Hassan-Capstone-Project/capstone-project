@@ -7,7 +7,7 @@ const request = require("request");
 
 const PARSE_APP_ID = config.get("PARSE_KEYS.PARSE_APP_ID");
 const PARSE_JS_KEY = config.get("PARSE_KEYS.PARSE_JS_KEY");
-const PARSE_MASTER_KEY = config.get("PARSE_KEYS.PARSE_MASTER_KEY")
+const PARSE_MASTER_KEY = config.get("PARSE_KEYS.PARSE_MASTER_KEY");
 
 Parse.initialize(PARSE_APP_ID, PARSE_JS_KEY, PARSE_MASTER_KEY);
 Parse.serverURL = "http://parseapi.back4app.com/";
@@ -128,7 +128,6 @@ router.post("/verify", async (req, res) => {
   try {
     const currentUser = await Parse.User.become(infoUser.sessionToken);
     if (currentUser) {
-      console.log("current user")
       currentUser.set("firstName", infoUser.firstName);
       currentUser.set("lastName", infoUser.lastName);
       currentUser.set("university", infoUser.university);
@@ -139,7 +138,7 @@ router.post("/verify", async (req, res) => {
 
       res.send({
         userInfo: currentUser,
-        majors : majors,
+        majors: majors,
         verifyMessage: "User verified!",
         typeStatus: "success",
         infoUser: infoUser,

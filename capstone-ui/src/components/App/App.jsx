@@ -529,22 +529,24 @@ export default function App() {
 
   //log user out
   const logOut = () => {
-    axios
-      .post(`https://localhost:${PORT}/logout`, {
-        sessionToken: window.localStorage.getItem("sessionToken"),
-      })
-      .then(function (response) {
-        setUserInfo("");
-        setUserMatches([]);
-        window.localStorage.clear();
-        navigate("/login");
-        setIsFetching(false);
-      })
-      .catch(function (err) {
-        console.log(err);
-        window.localStorage.clear();
-        setIsFetching(false);
-      });
+    if (window.localStorage.getItem("sessionToken")) {
+      axios
+        .post(`https://localhost:${PORT}/logout`, {
+          sessionToken: window.localStorage.getItem("sessionToken"),
+        })
+        .then(function (response) {
+          setUserInfo("");
+          setUserMatches([]);
+          window.localStorage.clear();
+          navigate("/login");
+          setIsFetching(false);
+        })
+        .catch(function (err) {
+          console.log(err);
+          window.localStorage.clear();
+          setIsFetching(false);
+        });
+    }
   };
 
   //remove movie from user movies
@@ -674,7 +676,6 @@ export default function App() {
         tags: tags,
       })
       .then(function (response) {
-        console.log("basic info resp", response);
         setUserInfo(response.data.userInfo);
         navigate("/user/basic");
         setIsFetching(false);
@@ -695,7 +696,6 @@ export default function App() {
         password: password,
       })
       .then(function (response) {
-        console.log("login resp", response)
         if (response.data.typeStatus == "danger") {
           alert("Login error");
           navigate("/login");
@@ -787,7 +787,6 @@ export default function App() {
           dob: document.getElementById("DOB").value,
         })
         .then(function (response) {
-          console.log("verify response", response)
           setUserInfo(response.data.userInfo);
           setMajorList(response.data.majors);
           setUserMatches([]);
@@ -967,11 +966,21 @@ export default function App() {
             <Route path="*" element={<NotFound />} />
             <Route
               path="/insta-redirect"
-              element={<InstaRedirect goToLogin={goToLogin} />}
+              element={
+                <InstaRedirect
+                  goToBasic={goToBasic}
+                  refreshLogin={refreshLogin}
+                />
+              }
             />
             <Route
               path="/spotify-redirect"
-              element={<SpotifyRedirect goToLogin={goToLogin} />}
+              element={
+                <SpotifyRedirect
+                  goToBasic={goToBasic}
+                  refreshLogin={refreshLogin}
+                />
+              }
             />
             <Route path="/loading" element={<Loading />} />
             <Route path="/userTable" element={<UserTable />} />
