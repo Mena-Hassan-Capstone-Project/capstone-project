@@ -529,22 +529,24 @@ export default function App() {
 
   //log user out
   const logOut = () => {
-    axios
-      .post(`https://localhost:${PORT}/logout`, {
-        sessionToken: window.localStorage.getItem("sessionToken"),
-      })
-      .then(function (response) {
-        setUserInfo("");
-        setUserMatches([]);
-        window.localStorage.clear();
-        navigate("/login");
-        setIsFetching(false);
-      })
-      .catch(function (err) {
-        console.log(err);
-        window.localStorage.clear();
-        setIsFetching(false);
-      });
+    if (window.localStorage.getItem("sessionToken")) {
+      axios
+        .post(`https://localhost:${PORT}/logout`, {
+          sessionToken: window.localStorage.getItem("sessionToken"),
+        })
+        .then(function (response) {
+          setUserInfo("");
+          setUserMatches([]);
+          window.localStorage.clear();
+          navigate("/login");
+          setIsFetching(false);
+        })
+        .catch(function (err) {
+          console.log(err);
+          window.localStorage.clear();
+          setIsFetching(false);
+        });
+    }
   };
 
   //remove movie from user movies
@@ -674,7 +676,6 @@ export default function App() {
         tags: tags,
       })
       .then(function (response) {
-        console.log("basic info resp", response);
         setUserInfo(response.data.userInfo);
         navigate("/user/basic");
         setIsFetching(false);
@@ -787,8 +788,16 @@ export default function App() {
         })
         .then(function (response) {
           setUserInfo(response.data.userInfo);
-          navigate("/user/basic/edit");
+          setMajorList(response.data.majors);
+          setUserMatches([]);
+          setToken("");
+          setOffset(0);
+          setInstaRefreshed(false);
+          setSpotifyRefreshed(false);
+          setSelectedMajorOption(null);
+          setSeeMoreMatches(true);
           setIsFetching(false);
+          navigate("/user/basic/edit");
         })
         .catch(function (err) {
           console.log(err);
@@ -957,11 +966,21 @@ export default function App() {
             <Route path="*" element={<NotFound />} />
             <Route
               path="/insta-redirect"
-              element={<InstaRedirect goToLogin={goToLogin} />}
+              element={
+                <InstaRedirect
+                  goToBasic={goToBasic}
+                  refreshLogin={refreshLogin}
+                />
+              }
             />
             <Route
               path="/spotify-redirect"
-              element={<SpotifyRedirect goToLogin={goToLogin} />}
+              element={
+                <SpotifyRedirect
+                  goToBasic={goToBasic}
+                  refreshLogin={refreshLogin}
+                />
+              }
             />
             <Route path="/loading" element={<Loading />} />
             <Route path="/userTable" element={<UserTable />} />

@@ -7,8 +7,9 @@ const request = require("request");
 
 const PARSE_APP_ID = config.get("PARSE_KEYS.PARSE_APP_ID");
 const PARSE_JS_KEY = config.get("PARSE_KEYS.PARSE_JS_KEY");
+const PARSE_MASTER_KEY = config.get("PARSE_KEYS.PARSE_MASTER_KEY");
 
-Parse.initialize(PARSE_APP_ID, PARSE_JS_KEY);
+Parse.initialize(PARSE_APP_ID, PARSE_JS_KEY, PARSE_MASTER_KEY);
 Parse.serverURL = "http://parseapi.back4app.com/";
 Parse.User.enableUnsafeCurrentUser();
 
@@ -64,7 +65,7 @@ router.post("/logout", async (req, res) => {
       if (user) {
         user
           .destroy({ useMasterKey: true })
-          .then(function (res) {
+          .then(function () {
             res.send({
               logoutMessage: "User logged out!",
               typeStatus: "success",
@@ -103,7 +104,7 @@ router.post("/signup", async (req, res) => {
 
   try {
     await user.signUp();
-    await Parse.User.logIn(infoUser.email, infoUser.password);
+    //await Parse.User.logIn(infoUser.email, infoUser.password);
     const sessionToken = user.getSessionToken();
     res.send({
       signupMessage: "User signed up!",
@@ -122,19 +123,22 @@ router.post("/signup", async (req, res) => {
 });
 
 router.post("/verify", async (req, res) => {
-  Parse.User.enableUnsafeCurrentUser();
   const infoUser = req.body;
 
   try {
-    const currentUser = Parse.User.current();
+    const currentUser = await Parse.User.become(infoUser.sessionToken);
     if (currentUser) {
       currentUser.set("firstName", infoUser.firstName);
       currentUser.set("lastName", infoUser.lastName);
       currentUser.set("university", infoUser.university);
       currentUser.set("DOB", infoUser.dob);
       await currentUser.save();
+      const rawdata = fs.readFileSync("data/majors.json");
+      const majors = JSON.parse(rawdata);
+
       res.send({
         userInfo: currentUser,
+        majors: majors,
         verifyMessage: "User verified!",
         typeStatus: "success",
         infoUser: infoUser,

@@ -53,7 +53,7 @@ export default function Matching({
   return isFetching || !userMatches || !Array.isArray(userMatches) ? (
     <Loading />
   ) : userMatches.length == 0 ? (
-    <Loading loadingText={"Retrieving"} />
+    <h3>No matches yet. Please check back later!</h3>
   ) : (
     <div>
       <div className="card-grid" id="matching">

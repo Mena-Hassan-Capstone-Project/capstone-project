@@ -39,10 +39,8 @@ export default function ProfilePhoto({ imageList }) {
         {({
           imageList,
           onImageUpload,
-          onImageRemoveAll,
           onImageUpdate,
           onImageRemove,
-          isDragging,
           dragProps,
         }) => (
           // write your building UI
@@ -61,12 +59,6 @@ export default function ProfilePhoto({ imageList }) {
                     onClick={() => onImageUpdate(index)}
                   >
                     Update
-                  </button>
-                  <button
-                    className="img-btn"
-                    onClick={() => onImageRemove(index)}
-                  >
-                    Remove
                   </button>
                 </div>
               </div>

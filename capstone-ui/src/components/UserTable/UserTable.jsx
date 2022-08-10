@@ -8,7 +8,6 @@ export default function UserTable() {
 
   const PORT = "3001";
   async function getUserTable() {
-    //setIsFetching(true);
     await axios.get(`https://localhost:${PORT}/userTable`).then((resp) => {
       setUserTable(resp.data.entries);
     });
