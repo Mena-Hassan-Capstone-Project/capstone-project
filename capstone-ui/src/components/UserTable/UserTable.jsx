@@ -7,11 +7,12 @@ export default function UserTable() {
   const [userTable, setUserTable] = useState(null);
 
   const PORT = "3001";
-  async function getUserTable() {
+
+  const getUserTable = async function () {
     await axios.get(`https://localhost:${PORT}/userTable`).then((resp) => {
       setUserTable(resp.data.entries);
     });
-  }
+  };
 
   React.useEffect(() => {
     getUserTable();

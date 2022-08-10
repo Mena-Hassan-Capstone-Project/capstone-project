@@ -53,7 +53,7 @@ export default function Matching({
   return isFetching || !userMatches || !Array.isArray(userMatches) ? (
     <Loading />
   ) : userMatches.length == 0 ? (
-    <h3>No matches yet. Please check back later!</h3>
+    <Loading loadingText={"Retrieving"} />
   ) : (
     <div>
       <div className="card-grid" id="matching">
@@ -200,7 +200,7 @@ export default function Matching({
                     matchId: match.userInfo.objectId,
                     liked: !liked,
                   });
-                  await getMatchesForUser(matchLimit * matchOffset, 0);
+                  await getMatchesForUser(matchLimit * matchOffset, 0, false);
                   await goToMatching();
                   setIsFetching(false);
                 }}
@@ -226,7 +226,7 @@ export default function Matching({
           className="login-btn see-more"
           onClick={() => {
             const newOffset = parseInt(matchOffset) + parseInt(matchLimit);
-            getMatchesForUser(matchLimit, newOffset);
+            getMatchesForUser(matchLimit, newOffset, false);
             setOffset(newOffset);
           }}
         >

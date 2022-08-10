@@ -87,9 +87,9 @@ export default function App() {
         createMatches({});
       }
       if (matchOffset > 0) {
-        getMatchesForUser(MATCH_LIMIT * matchOffset, 0);
+        getMatchesForUser(MATCH_LIMIT * matchOffset, 0, false);
       } else {
-        getMatchesForUser(MATCH_LIMIT, 0);
+        getMatchesForUser(MATCH_LIMIT, 0, false);
         setOffset(0);
         setSeeMoreMatches(true);
       }
@@ -449,21 +449,31 @@ export default function App() {
   };
 
   const goToMatching = () => {
+    setIsFetching(true);
     setOffset(0);
     if (!fetchingMatches) {
       createMatches({});
     }
     if (matchOffset != 0) {
-      getMatchesForUser(MATCH_LIMIT * matchOffset, 0);
+      getMatchesForUser(MATCH_LIMIT * matchOffset, 0, false);
     } else {
-      getMatchesForUser(MATCH_LIMIT, 0);
+      getMatchesForUser(MATCH_LIMIT, 0, false);
       setSeeMoreMatches(true);
     }
+    setIsFetching(false);
     navigate("/user/matching");
   };
 
   const goToLiked = () => {
-    getMatchesForUser(100, 0);
+    setIsFetching(true);
+    setOffset(0);
+    if (matchOffset != 0) {
+      getMatchesForUser(MATCH_LIMIT * matchOffset, 0, true);
+    } else {
+      getMatchesForUser(MATCH_LIMIT, 0, true);
+      setSeeMoreMatches(true);
+    }
+    setIsFetching(false);
     navigate("/user/liked");
   };
 
@@ -496,12 +506,13 @@ export default function App() {
 
   //retrieves matches for user
   //sets user info
-  const getMatchesForUser = async (limit, offset) => {
+  const getMatchesForUser = async (limit, offset, liked) => {
     await axios
       .get(`https://localhost:${PORT}/matches`, {
         params: {
           limit: limit,
           offset: offset,
+          liked: liked,
           sessionToken: window.localStorage.getItem("sessionToken"),
         },
       })
@@ -685,12 +696,12 @@ export default function App() {
       });
   };
 
-  const createLoginParser = async () => {
+  const createLoginParser = () => {
     window.localStorage.clear();
     setIsFetching(true);
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-    await axios
+    axios
       .post(`https://localhost:${PORT}/login`, {
         email: email,
         password: password,
@@ -724,7 +735,7 @@ export default function App() {
       });
   };
 
-  const createSignUpParser = () => {
+  const createSignUpParser = async () => {
     if (
       !document.getElementById("password").value ||
       !document.getElementById("email").value ||
@@ -741,7 +752,7 @@ export default function App() {
       alert("Passwords do not match");
     } else {
       setIsFetching(true);
-      axios
+      await axios
         .post(`https://localhost:${PORT}/signup`, {
           email: document.getElementById("email").value,
           password: document.getElementById("password").value,
@@ -997,11 +1008,15 @@ export default function App() {
                   isFetching={isFetching}
                   userMatches={userMatches}
                   getMatchesForUser={getMatchesForUser}
-                  goToLiked={goToLiked}
+                  matchOffset={matchOffset}
+                  setOffset={setOffset}
+                  matchLimit={MATCH_LIMIT}
+                  goToMatching={goToMatching}
                   createMatches={createMatches}
                   setIsFetching={setIsFetching}
                   goToSuggest={goToSuggest}
                   setSuggestMatch={setSuggestMatch}
+                  seeMoreMatches={seeMoreMatches}
                 />
               }
             />

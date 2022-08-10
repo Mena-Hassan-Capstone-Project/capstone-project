@@ -351,11 +351,13 @@ const getMatches = async (currentUser, res) => {
   res.send({ matchMessage: "Matches created", typeStatus: "success" });
 };
 
-const retrieveMatchData = async (limit, offset, currentUser) => {
+const retrieveMatchData = async (limit, offset, liked, currentUser) => {
   const Match = Parse.Object.extend("Match");
   const matchQuery = new Parse.Query(Match);
+  let likedBool = liked === "true";
 
   matchQuery.equalTo("user_1", currentUser.id);
+  matchQuery.equalTo("liked", likedBool);
   matchQuery.descending("score");
   matchQuery.limit(parseInt(limit));
   matchQuery.skip(parseInt(offset));
@@ -421,9 +423,15 @@ router.get("/", async (req, res) => {
   const currentUser = await Parse.User.become(req.query["sessionToken"]);
   const limit = req.query["limit"];
   const offset = req.query["offset"];
+  const liked = req.query["liked"];
   try {
     if (currentUser) {
-      let matchData = await retrieveMatchData(limit, offset, currentUser);
+      let matchData = await retrieveMatchData(
+        limit,
+        offset,
+        liked,
+        currentUser
+      );
       res.send(matchData);
     } else {
       res.send({
