@@ -29,6 +29,9 @@ export default function ProfilePhoto({ imageList }) {
   };
   return (
     <div className="profilePhoto" id="profilePhoto">
+      {
+        images
+        ?
       <ImageUploading
         multiple
         value={images}
@@ -82,6 +85,8 @@ export default function ProfilePhoto({ imageList }) {
           </div>
         )}
       </ImageUploading>
+      : null
+      }
     </div>
   );
 }
