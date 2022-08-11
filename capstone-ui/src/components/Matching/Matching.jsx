@@ -208,16 +208,6 @@ export default function Matching({
                 {match.scoreInfo.liked ? <FaHeart /> : <FaRegHeart />}
               </button>
             }
-            <br />
-            <button
-              className="suggest-btn"
-              onClick={() => {
-                setSuggestMatch(match);
-                goToSuggest();
-              }}
-            >
-              Get Suggestions
-            </button>
           </div>
         ))}
       </div>

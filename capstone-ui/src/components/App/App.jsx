@@ -82,14 +82,15 @@ export default function App() {
 
   //update matches when user info changes
   React.useEffect(() => {
+    const liked = false;
     if (window.localStorage.getItem("sessionToken") && userInfo.interests) {
       if (userMatches.length == 0 && !fetchingMatches) {
         createMatches({});
       }
       if (matchOffset > 0) {
-        getMatchesForUser(MATCH_LIMIT * matchOffset, 0, false);
+        getMatchesForUser(MATCH_LIMIT * matchOffset, 0, liked);
       } else {
-        getMatchesForUser(MATCH_LIMIT, 0, false);
+        getMatchesForUser(MATCH_LIMIT, 0, liked);
         setOffset(0);
         setSeeMoreMatches(true);
       }
@@ -760,6 +761,7 @@ export default function App() {
           phoneNum: document.getElementById("phoneNum").value,
         })
         .then(function (response) {
+          console.log("signup resp", response);
           if (response.data.typeStatus === "success") {
             window.localStorage.setItem(
               "sessionToken",

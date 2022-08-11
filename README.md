@@ -1,6 +1,6 @@
 # Capstone Project
 ## Project Description
-College can be an exciting but overwhelming experience at first. Moving to a new city and school without knowing anyone there is an intimidating prospect. Being able to connect instantly with other students based on the interest areas that you usually connect with friends on would ease the process. That’s what [app name tbd] is for! When users sign up for the app, there will be a process to verify that they are a college student at their respective campus. Users can customize their profile page with information about their interests, such as movies, TV shows, books, and hobbies. Dropdown option data for these categories will be pulled from external APIs. After adding profile information, users can choose which categories they would like to be matched based on. Users will be matched based on a similarity percentage calculated through custom logic that I will develop. Then, users can navigate to the matching page on which they will be shown one match at a time. Users will see their match’s basic information and interests color coded by similarity. They will also be able to scroll through any photos. To match, users can click the heart button and to not match, users can click the close button. If two users both match with each other, the match will show up on their home screen. Additional actions will now become available. Matches can view more details, such as when they were matched, each other's social media contact information, and  suggested activities to do together based on similarities and popular nearby activity. After a certain amount of time, matches will expire. Users can also unmatch at any time.
+College can be an exciting but overwhelming experience at first. Moving to a new city and school without knowing anyone there is an intimidating prospect. Being able to connect instantly with other students based on the interest areas that you usually connect with friends on would ease the process. That’s what Campus Connect is for! When users sign up, they input their school email and choose their respective campus. Users can customize their profile page with information about their interests, such as movies, TV shows, music, and hobbies. Dropdown option data for these categories will be pulled from external APIs. Users can connect their Spotify account to collect their music tastes. They can also upload photos for matches to scroll through and add photos from their Instagram account. Users will be matched based on a similarity percentage calculated through custom logic that I will develop using metrics that are asosciated with strong frienships. Then, users can navigate to the matching page on which they will be shown one match at a time. Users will see their match’s basic information, interests, and can scroll through their media. To match, users can click the heart button. If two users both match with each other, the match will show up on their, additional actions will now become available. If a user likes another user, the user they liked will be able to see their private contact information, such as phone number and Instagram handle. Matches can view more details, such as suggested activities to do together based on similarities and popular nearby activity. Users can also unmatch at any time.
 
 ## Getting Started
 1. Clone the repository on your local machine
@@ -14,6 +14,12 @@ College can be an exciting but overwhelming experience at first. Moving to a new
 `$ cd capstone-backend`
 6. Run the backend server<br/>
 `$ npm start`
+
+## Relevant Documentation
+[Matching Algorithm Explanation](https://docs.google.com/document/d/1--g7Vf_NjiCX2FCV-mtEOeLF15B1s_q0vrWOC7ffhLE/edit?usp=sharing)<br/>
+[Code Explanations](https://docs.google.com/document/d/1ilYLq371p1IQOr4JNLo6QwvZKE0D7P9o1bA-kBHjrTE/edit?usp=sharing)<br/>
+Database Schema:<br/>
+<img width="677" alt="Screen Shot 2022-08-11 at 11 57 27 AM" src="https://user-images.githubusercontent.com/34526502/184218085-734a9eb3-f5de-4e32-bf16-0762b49ac594.png">
 
 ## Wireframes (created using Figma)
 ### Login
@@ -51,7 +57,6 @@ College can be an exciting but overwhelming experience at first. Moving to a new
 - As a college student, I want to eliminate the awkwardness of first meeting someone by having similar interests to talk about.
 - As a college student, I want to connect with other students on social media before arriving on campus.
 - As a college student, I want a safe way to make new friends.
-
 
 ## Endpoints
 <img width="630" alt="Screen Shot 2022-06-30 at 2 48 12 PM" src="https://user-images.githubusercontent.com/34526502/176784560-92f2d1d0-fe37-41f0-a484-f3d9b61ad5db.png">

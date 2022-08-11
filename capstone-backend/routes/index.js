@@ -104,7 +104,6 @@ router.post("/signup", async (req, res) => {
 
   try {
     await user.signUp();
-    //await Parse.User.logIn(infoUser.email, infoUser.password);
     const sessionToken = user.getSessionToken();
     res.send({
       signupMessage: "User signed up!",
