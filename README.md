@@ -16,11 +16,10 @@ College can be an exciting but overwhelming experience at first. Moving to a new
 `$ npm start`
 
 ## Relevant Documentation
-[Matching Algorithm Explanation](https://docs.google.com/document/d/1--g7Vf_NjiCX2FCV-mtEOeLF15B1s_q0vrWOC7ffhLE/edit?usp=sharing)
-[Code Explanations](https://docs.google.com/document/d/1ilYLq371p1IQOr4JNLo6QwvZKE0D7P9o1bA-kBHjrTE/edit?usp=sharing)
-Database Schema:
+[Matching Algorithm Explanation](https://docs.google.com/document/d/1--g7Vf_NjiCX2FCV-mtEOeLF15B1s_q0vrWOC7ffhLE/edit?usp=sharing)<br/>
+[Code Explanations](https://docs.google.com/document/d/1ilYLq371p1IQOr4JNLo6QwvZKE0D7P9o1bA-kBHjrTE/edit?usp=sharing)<br/>
+Database Schema:<br/>
 <img width="677" alt="Screen Shot 2022-08-11 at 11 57 27 AM" src="https://user-images.githubusercontent.com/34526502/184218085-734a9eb3-f5de-4e32-bf16-0762b49ac594.png">
-
 
 ## Wireframes (created using Figma)
 ### Login
