@@ -16,12 +16,13 @@ College can be an exciting but overwhelming experience at first. Moving to a new
 `$ npm start`
 
 ## Relevant Documentation
+[Demo Video](https://youtu.be/jewolQkwE00)<br/>
 [Matching Algorithm Explanation](https://docs.google.com/document/d/1--g7Vf_NjiCX2FCV-mtEOeLF15B1s_q0vrWOC7ffhLE/edit?usp=sharing)<br/>
 [Code Explanations](https://docs.google.com/document/d/1ilYLq371p1IQOr4JNLo6QwvZKE0D7P9o1bA-kBHjrTE/edit?usp=sharing)<br/>
 Database Schema:<br/>
 <img width="677" alt="Screen Shot 2022-08-11 at 11 57 27 AM" src="https://user-images.githubusercontent.com/34526502/184218085-734a9eb3-f5de-4e32-bf16-0762b49ac594.png">
 
-## Wireframes (created using Figma)
+## Screens
 ### Login
 <img width="756" alt="login" src="https://user-images.githubusercontent.com/34526502/176750922-bd736580-006e-4701-a14b-e972c27ae8bf.png">
 
@@ -57,13 +58,3 @@ Database Schema:<br/>
 - As a college student, I want to eliminate the awkwardness of first meeting someone by having similar interests to talk about.
 - As a college student, I want to connect with other students on social media before arriving on campus.
 - As a college student, I want a safe way to make new friends.
-
-## Endpoints
-<img width="630" alt="Screen Shot 2022-06-30 at 2 48 12 PM" src="https://user-images.githubusercontent.com/34526502/176784560-92f2d1d0-fe37-41f0-a484-f3d9b61ad5db.png">
-
-## Data Models
-### User:
-<img width="569" alt="Screen Shot 2022-06-30 at 7 30 00 PM" src="https://user-images.githubusercontent.com/34526502/176812079-a8976078-05f1-4cd4-b595-45e0f682021c.png">
-
-### Match:
-<img width="567" alt="Screen Shot 2022-06-30 at 7 30 19 PM" src="https://user-images.githubusercontent.com/34526502/176812126-563e6f04-711f-4baf-83c5-170bff56732b.png">
