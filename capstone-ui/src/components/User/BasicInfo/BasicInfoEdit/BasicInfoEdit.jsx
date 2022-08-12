@@ -25,9 +25,8 @@ export default function BasicInfoEdit({
             imageList={
               userInfo.profile_photo
                 ? [{ data_url: userInfo.profile_photo }]
-                : null
+                : []
             }
-            maxImages={1}
           ></ProfilePhoto>
           <h2 className="user-name">{userInfo.preferredName}</h2>
           <div className="user-info">
