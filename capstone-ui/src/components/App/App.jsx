@@ -529,10 +529,25 @@ export default function App() {
             !userMatches.includes(resp.data.matchesInfo[0]) &&
             !userMatches.includes(resp.data.matchesInfo[1])
           ) {
-            let newMatches = userMatches.concat(resp.data.matchesInfo);
-            setUserMatches(newMatches);
-            if (resp.data.matchesInfo < MATCH_LIMIT) {
-              setSeeMoreMatches(false);
+            let duplicate = false;
+            for (let i = 0; i < userMatches.length; i++) {
+              if (
+                resp.data.matchesInfo[0].userInfo.objectId ==
+                  userMatches[i].userInfo.objectId ||
+                resp.data.matchesInfo[1].userInfo.objectId ==
+                  userMatches[i].userInfo.objectId
+              ) {
+                duplicate = true;
+              }
+            }
+            if (!duplicate) {
+              let newMatches = userMatches.concat(resp.data.matchesInfo);
+              setUserMatches(newMatches);
+              if (resp.data.matchesInfo < MATCH_LIMIT) {
+                setSeeMoreMatches(false);
+              }
+            } else {
+              window.reload();
             }
           }
         }
@@ -761,7 +776,6 @@ export default function App() {
           phoneNum: document.getElementById("phoneNum").value,
         })
         .then(function (response) {
-          console.log("signup resp", response);
           if (response.data.typeStatus === "success") {
             window.localStorage.setItem(
               "sessionToken",
