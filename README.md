@@ -22,28 +22,6 @@ College can be an exciting but overwhelming experience at first. Moving to a new
 Database Schema:<br/>
 <img width="677" alt="Screen Shot 2022-08-11 at 11 57 27 AM" src="https://user-images.githubusercontent.com/34526502/184218085-734a9eb3-f5de-4e32-bf16-0762b49ac594.png">
 
-## Screens
-### Login
-<img width="756" alt="login" src="https://user-images.githubusercontent.com/34526502/176750922-bd736580-006e-4701-a14b-e972c27ae8bf.png">
-
-### Create Account
-<img width="756" alt="create account" src="https://user-images.githubusercontent.com/34526502/176751005-4178b81b-a073-47dc-bda2-b84ff33c393c.png">
-<img width="756" alt="confirm" src="https://user-images.githubusercontent.com/34526502/176751045-dbe7f750-54ad-4718-b8f6-892c46761c9d.png">
-
-### User Profile - Add Basic Info, Interests, and Media
-<img width="757" alt="profile - basic info" src="https://user-images.githubusercontent.com/34526502/176751157-9d8fe427-e91a-4e92-8928-06dc15f38736.png">
-<img width="377" alt="profile - interests" src="https://user-images.githubusercontent.com/34526502/176751199-97939ab1-ad13-4304-9ab6-d780cddb3c30.png">
-<img width="628" alt="profile - media" src="https://user-images.githubusercontent.com/34526502/176751210-1231ffa3-66c9-4488-a0fa-26fa781c4f32.png">
-
-### Matching Page
-<img width="365" alt="matching" src="https://user-images.githubusercontent.com/34526502/176751262-3a0321cf-0eb7-4fda-8821-fec8066a5a98.png">
-
-### Home - see all matches
-<img width="755" alt="home" src="https://user-images.githubusercontent.com/34526502/176751328-0092bb5b-676d-45f0-9bc0-35f12b4e1ee4.png">
-
-### Detail view - when a match is clicked on
-<img width="365" alt="detail view" src="https://user-images.githubusercontent.com/34526502/176751472-f77bba4b-5e74-4692-9a01-aaeaf91f0e65.png">
-
 
 ## User Stories
 1. Users Roles
